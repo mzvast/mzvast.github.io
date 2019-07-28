@@ -1,0 +1,53 @@
+## 背景
+
+简单说就是subtree比submodule更好用。
+
+## 使用举例
+
+参数说明
+
+- LOCAL_DIR: 本地文件夹名字
+- GIT_URL: 远端GIT仓库地址
+- BRANCH_NAME: 分支名字
+- `--squash`参数表示不拉取历史信息，而只生成一条commit信息
+- REMOTE_ALIAS: 远端仓库别名
+
+### Add
+
+添加subtree到目录中
+
+```shell
+git subtree add --prefix=LOCAL_DIR GIT_URL BRANCH_NAME --squash
+```
+
+### Pull
+
+拉取subtree更新
+
+```shell
+git subtree pull --prefix=LOCAL_DIR GIT_URL BRANCH_NAME --squash
+```
+
+### Push
+
+推送subtree改动
+
+```shell
+git subtree push --prefix=LOCAL_DIR GIT_URL BRANCH_NAME
+```
+
+### 简化git subtree命令中的GIT_URL
+
+```shell
+git remote add -f REMOTE_ALIAS GIT_URL
+# 使用
+git subtree add --prefix=LOCAL_DIR REMOTE_ALIAS BRANCH_NAME --squash
+git subtree pull --prefix=LOCAL_DIR REMOTE_ALIAS BRANCH_NAME --squash
+git subtree push --prefix=LOCAL_DIR REMOTE_ALIAS BRANCH_NAME
+```
+
+### Credits
+
+[git submodule vs git subtree](http://wiki.baidu.com/pages/viewpage.action?pageId=49971581)
+
+[git subtree](https://segmentfault.com/a/1190000012002151)

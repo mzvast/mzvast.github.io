@@ -1,0 +1,150 @@
+## 背景
+
+2018 年以来的跑了许久的 react 项目，一直是基于 cra（create-react-app）官方脚手架并且不 eject，通过 react-app-rewired 进行自定义配置的。当时虽然有不少第三方的 ts（typescript）化方案，但不少官方支持且需要 eject 且需要第三方 ts loader，所以都在可升级性上有硬伤。而快到年底的时候，Babel7 出来，并且 babel 官方支持 typescript，与此同时 Facebook 将 cra2.0 加入了 ts 的支持，支持生成 ts 项目([cra-doc](https://facebook.github.io/create-react-app/docs/adding-typescript))。
+
+本文尝试将我们工程的升级过程和采坑进行总结和分享。
+
+原工程主要配置是
+
+-   create-react-app (1.x )
+-   flow
+-   react-app-rewired (1.x)
+
+目标升级后的配置是
+
+-   create-react-app (2.x )
+-   typescript
+-   react-app-rewired (2.x)
+
+## 步骤拆解
+
+### 1、升级 cra 版本
+
+首先升级`react-scripts react-app-rewired`到 2.x 版本
+
+### 2、重命名文件名
+
+将 src 下的 js 和 jsx 文件改成 tsx 文件。可以利用`find ./src -name "*.jsx" -exec sh -c 'mv "$0" "${0%.jsx}.tsx"' {} \;`和`find ./src -name "*.js" -exec sh -c 'mv "$0" "${0%.jsx}.tsx"' {} \;`两条指令。
+
+### 3、启动项目
+
+运行`npm start`，cra 会检测到项目是 typescript 工程然后为你产生一个 tsconfig.json 文件。建议将 compilerOptions 的 strict 值改成 false，以避免过分严格的 any 检查导致项目编不过。这个文件大致长这样:
+
+```json
+{
+    "compilerOptions": {
+        "target": "es5",
+        "lib": ["dom", "dom.iterable", "esnext"],
+        "allowJs": true,
+        "skipLibCheck": true,
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
+        "strict": false, // default is true
+        "forceConsistentCasingInFileNames": true,
+        "module": "esnext",
+        "moduleResolution": "node",
+        "resolveJsonModule": true,
+        "isolatedModules": true,
+        "noEmit": true,
+        "jsx": "preserve"
+    },
+    "include": ["src"]
+}
+```
+
+### 4、快捷安装 typings
+
+可以全局安装[types-installer](https://github.com/nfour/types-installer)来进行自动化的依赖解析和安装。
+
+```javascript
+$ npm i -g types-installer
+$ types-installer
+```
+
+### 5、修复所有编译错误
+
+这是工作量最大也是最复杂的步骤。根据工程文件多少可能会花费 1 天到若干天的工作量。但既然选择了开始，就请坚信结果是美好的。
+
+### 一个 比较复杂的带有 redux 的 react 组件的通常 ts 写法
+
+-   这里 redux 的 state 和 dispatch 的 any 声明是可以通过引入 store 文件来实现的，偷懒了。
+-   RouteComponentProps 是为了 withRouter 可以正确识别 this.props.history 等 react-router 属性。
+-   CSSProperties 是为了让 style 对象可以正确被识别。当然工程中用的是 styled-components 就不需要这条了。
+
+```typescript
+import React, {Component, CSSProperties} from 'react';
+import {Route, withRouter, RouteComponentProps} from 'react-router-dom';
+import {connect} from 'react-redux';
+interface OwnProps {}
+interface StateProps {}
+interface DispatchProps {}
+type Props = OwnProps & StateProps & DispatchProps & RouteComponentProps;
+type State = {};
+class Hello extends Component<Props, State> {
+    state: State = {};
+    static defaultProps = {};
+    render() {
+        const myStyle = {
+            background: 'red'
+        } as CSSProperties;
+        return <div style={myStyle}>hellow</div>;
+    }
+}
+const mapStateToProps = (state: any) => ({
+    state
+});
+const mapDispatchToProps = (dispatch: any) => ({dispatch});
+export default connect(
+    mapStateToProps,
+    mapDispatchToProps
+)(withRouter(Hellow));
+```
+
+### absolute 引用的解决方案
+
+在通常的工程中，我们会设定 alias 来方便绝对地址的引用，比如用@记号来指向 src 路径。
+
+通常在 config-overrides 里面这么配置
+
+```javascript
+module.exports = {
+    webpack: function(config, env) {
+        config.resolve = {
+            ...config.resolve,
+            alias: {
+                '@': path.resolve(__dirname, 'src')
+            }
+        };
+    }
+};
+```
+
+这个在 cra 的 typescript 工程中编译是可以的，但 typescript 解析器默认是不支持的（会出现红色波浪线告诉你@无法识别），通过改 tsconfig 的方法并没有得到官方的支持。经过探索和试验，目前最完美的方案就是软链接src路径到node_modules/@。而且以后官方支持配置之后，也可以方便的切过去。
+
+对 package.json 部分配置如下。
+
+```json
+{
+    "scripts": {
+        "postinstall": "yarn link-modules",
+        "unlink-modules": "rimraf node_modules/@",
+        "link-modules": "globstar --node -- lnk \"./src/*\" \"./node_modules/@/\"",
+        "relink-modules": "yarn unlink-modules && yarn link-modules"
+    }
+}
+```
+
+需要的依赖则可以用指令安装:
+
+```shell
+yarn add -D rimraf lnk-cli globstar
+```
+现在只要运行`yarn`或者`npm i` 就会自动链接src到node_modules/@了。
+## 总结
+
+typescript 在复杂大型企业项目中越来越体现出其优势，我们将会坚定不移的转到 typescript 上来。
+
+## Refs
+
+[Typescript Tips Series: Proper Typing of react-redux Connected Components](https://medium.com/knerd/typescript-tips-series-proper-typing-of-react-redux-connected-components-eda058b6727d)
+[cra adding-typescript](https://facebook.github.io/create-react-app/docs/adding-typescript)

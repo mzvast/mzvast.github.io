@@ -1,0 +1,86 @@
+## 自定义字体
+
+通常自定义字体在 css 中用@font-face 定义
+加载方式是懒加载。（即用到的时候才会开始下载）
+
+```html
+<html>
+<head>
+  <title>Web Font Sample</title>
+  <style type="text/css" media="screen, print">
+    @font-face {
+      font-family: "Bitstream Vera Serif Bold";
+      src: url("https://mdn.mozillademos.org/files/2468/VeraSeBd.ttf");
+    }
+
+    body { font-family: "Bitstream Vera Serif Bold", serif }
+  </style>
+</head>
+<body>
+  This is Bitstream Vera Serif Bold.
+</body>
+</html>
+```
+
+## Javascript 控制字体的载入
+
+### Font Face Observer
+
+```javascript
+var font = new FontFaceObserver('Source Han Sans');
+
+font.load('中国').then(function() {
+    console.log('Source Han Sans has available');
+});
+```
+
+#### 加载模式举例
+
+[web-font-loading-patterns](https://www.bramstein.com/writing/web-font-loading-patterns.html)
+
+-   Ba­sic font load­ing
+-   Load­ing groups of fonts
+-   Load­ing fonts with a time­out
+-   Pri­ori­tised load­ing
+-   Cus­tom font dis­play
+-   Op­ti­mise for caching
+
+## CSS 控制字体的载入
+
+### font-display
+
+#### 时间线
+
+| 阶段    | 作用                                                                                  |
+| ------- | ------------------------------------------------------------------------------------- |
+| block   | 字体未加载，用到该字体的元素必须实现 invisible 回落，在此期间如果下载完成，则正常显示 |
+| swap    | 字体未加载，用到该字体的元素必须有一种回落字体，在此期间如果下载完成，则正常显示      |
+| failure | 字体加载失败，调用回落字体                                                            |
+
+#### 属性值和意义
+
+```css
+/* Keyword values */
+font-display: auto|block|swap|fallback|optional;
+```
+
+| 值       | 解释                                                                             |
+| -------- | -------------------------------------------------------------------------------- |
+| auto     | The font display strategy is defined by the user agent                           |
+| block    | Gives the font face a short block period and an infinite swap period.            |
+| swap     | Gives the font face an extremely small block period and an infinite swap period. |
+| fallback | Gives the font face an extremely small block period and a short swap period.     |
+| optional | Gives the font face an extremely small block period and no swap period.          |
+
+#### 兼容性
+
+safari，chrome>60
+
+### 最佳选择
+
+font-display: swap;
+
+## Refs
+
+[fontfaceobserver](https://fontfaceobserver.com/)
+[font-display](https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display)

@@ -1,0 +1,29 @@
+## 主要技术路线及其限制
+
+### 基于的库及其作用
+
+- [styled-components](https://www.styled-components.com/)：JSS（CSS in JS）基础
+
+- [styled-system](https://github.com/jxnblk/styled-system)：增加styled-components的扩展性和API统一性
+
+- [styled-theming](https://jamie.build/styled-theming.html)：提供模块化和多维度的主题定义模式，避免形成全局巨大主题对象，提高主题可维护性
+
+### 1.风格约束
+
+- 避免直接导入css文件。全局css可转制到全局wrapper组件中。
+
+- 在组件内样式以css模板字符串定义为主，避免css对象。
+
+- 避免在组件内定义classname。但是全局wrapper组件中依然可定义classname例如`.button .navbar`等，但全局wrapper中以最通用的reset功能的样式定义为主（例如display属性）。
+
+### 2.基于主题的组件样式定制
+
+- 组件样式分为预置全局reset样式、全局主题样式，以及各个组件的主题样式。
+
+- 组件自带样式可以由多个维度定义，例如mode是light/dark，size是normal/compact。组件可以选择性的继承全局主题样式。
+
+- 组件自带样式支持覆盖（基于styled-system）。
+
+### 3.由css框架转制react组件库的启发
+
+[pure-components](https://github.com/whoisryosuke/pure-components/tree/master)是一个由pure-css框架转制成的react组件库，他的[实践思路](https://dev.to/whoisryosuke/styled-components-using-pure-css-framework-3npf?newly-registered-user=true)与上述的思路类似。
