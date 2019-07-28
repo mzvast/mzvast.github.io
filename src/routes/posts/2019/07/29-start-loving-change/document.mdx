@@ -1,0 +1,48 @@
+这次分享三个话题
+
+## 新的部落格
+
+一直想把blog换成基于react和mdx，做却一直没有动力去做，一直拖延，这次终于强迫自己，花了大半个周天调研和迁移。
+
+blog系统变更在我手中经历过三次，第一次wp，以后是hexo，然后hugo，现在新的react+mdx，三次重建，个中滋味谁能懂。
+
+- wp足够沙雕，当年第一台VPS的时候就迫不及待的安上了lamp全家桶和wp，那段时光似乎像阳光洒满了大地。
+但好景不长，wp但漏洞频出，还有一次被黑了，（显示出我对root权限对管理如此不在意，自此对VPS安全格外重视）
+
+- hexo, 选择的原因可能是当时看到hexo有直接倒入wp的插件，于是就信了hexo的邪。好景不长，这东西可玩性并不强。
+
+- hugo，由于一次尝试发现build速度极快，而且主题也比较好看，就选择了，并进行了迁移。hex和hugo的md都差不多，大同小异。但是当你要改主题的时候发现这特么是Go语言的模版，难用的一批，艰难的修改了一些个样式，后来更新文章的频率也越来越低，我最喜欢的capser主题的作者好像那一波之后也没有在更新了。在搞hugo的期间，我尝试搭建了travisCI的自动化部署，使得代码和发布分离了，初次尝试赶紧非常良好。但是当时hugo的代码高亮着色器太烂了，要用python装个依赖才能用，又是go又是python，着实麻烦。一直心心念念想要换成基于react和mdx（这两个都是超爱）。hexo和hugo都在md的头部加了一串metaData，甚是令人眼烦，而且他们又不能使用react组件，真的是非常的不自在呢。
+
+- 乌云密布的调研。gatsby，nextjs这些都试过了，感觉非常糟糕，有种过度抽象的感觉，可能他们在某些专项领域有其独到之处，但对于一个普通写作者的角度来看是太重了。思忖着最理想的就是cra+mdx，但是自己写太费时间，一方面是主题视觉不好操作，另一方面静态代码生成我没有到位的了解，上次公司官网的上线前夕想用SSG做SEO，却发现headless的方案效果不稳定，就对此持观望态度。一切发生了变化，知道我遇见一个基于[navi](https://github.com/frontarm/navi)的cra+mdx的SSG的脚手架[create-react-blog](https://github.com/frontarm/create-react-blog)，当我看到的star数我有点慌，但是运行以后，简直是强无敌。可以遇见的是navi将会对我们项目的性能优化带来启发，而且create-react-blog这个项目的[脚手架CLI代码](https://github.com/frontarm/create-react-blog/blob/master/create-react-blog.js)也是非常精简和实用, 先立个flag我要给这个脚手架写个代码分析。
+
+- react + navi + mdx，大致可以描述这个blog的组成。基本上已经走在了最前沿了，除了没有用styled-component，然而似乎没有用的必要，作为内容生产者的模版来说，样式用简单的css就可以描述了。至少是熟悉的技术栈，这样发现bug也可以自己修，还可以提PR来改进项目，想想就很美好呢。
+
+### 缺点和需要改进的地方
+
+- 已知bug
+    - 在第二页点击底部的About、Tags、Source会爆炸404.
+
+- 评论系统
+    - 默认没有加入discuss，👿，这个暂时忍两天，总得想办法让人评论的。
+
+## 本周待定主题
+
+### Deliberate Practice
+
+- 以写促学
+
+### Sleep is your superpower
+
+- health damage
+
+- relating to asmr
+
+### Conventional Commits & lerna
+
+### create-react-blog脚手架代码分析
+
+### 我的omnifocus system设定分享
+
+### 前端架构分层描述
+
+### Travis CI与Github项目的结合使用
