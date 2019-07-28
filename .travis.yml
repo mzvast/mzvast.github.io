@@ -1,0 +1,29 @@
+language: node_js
+
+node_js:
+  - "8"
+
+branches:
+  only:
+    - source
+
+env:
+ global:
+   - GH_REF: github.com/mzvast/mzvast.github.io.git
+
+cache: yarn
+
+install:
+  - yarn
+
+script:
+  - npm run build
+
+after_script:
+  - cd ./build
+  - git init
+  - git config user.name "mzvast"
+  - git config user.email "mzvast@gmail.com"
+  - git add .
+  - git commit -m "Update docs"
+  - git push --force --quiet "https://${GH_TOKEN}@${GH_REF}" master:master
