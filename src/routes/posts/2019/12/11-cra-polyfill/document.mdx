@@ -1,0 +1,55 @@
+浏览器兼容性是老生常谈了，以往都是直接引入babel-polyfill完事。这样造成包体积变大了很多，因为照顾少数浏览器的体验而使得优秀的浏览器体验也跟着变差了。
+以create-react-app为例，本文探讨目前polyfill的几种姿势。
+
+
+## 1、生成一个精确支持浏览器的包（CRA官方姿势）
+ 
+ 纵观[CRA文档](https://create-react-app.dev/docs/supported-browsers-features/)浏览器支持部分。看完可能不清楚“Supported Language Features”和“Configuring Supported Browsers“为什么会分两节来叙述。
+
+其实这两节的内在逻辑是““Supported Language Features”是提供了polyfill，“Configuring Supported Browsers“是按需（目标浏览器的支持度）裁剪了polyfill的内容。也就是前者是全集（直接引入全部补丁），后者是子集（干掉浏览器已经支持的补丁）。
+
+需要做两件事：
+1、在entrypint（即在index.tsx中）导入core-js（第一节的内容）
+2、配置好正确的browserlist（第二节的内容）
+
+### babel-preset-env
+
+会做类似以下的事情
+
+In:
+```javascript
+import "core-js";
+```
+Out (different based on environment):
+```javascript
+import "core-js/modules/es.string.pad-start";
+import "core-js/modules/es.string.pad-end";
+```
+
+
+
+### browserslist
+
+帮助筛选polyfill的去留。
+```json
+"browserslist": {
+        "production": [
+            ">0.2%",
+            "not dead",
+            "not op_mini all",
+            "ios_saf 10"
+        ],
+        "development": [
+            "last 1 chrome version",
+            "last 1 firefox version",
+            "last 1 safari version"
+        ]
+    }
+```
+[这个站点](https://browsersl.ist/?q=%3E0.2%25%2C+not+dead%2C+not+op_mini+all%2C+ios_saf+10),可以直观的帮助我们看到适配的浏览器。
+
+两者的互动关系，具体的实现有待研究（todo）
+
+## 2、按需加载polyfill（todo）
+
+
