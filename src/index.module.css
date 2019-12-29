@@ -9,6 +9,11 @@
   box-sizing: border-box;
 }
 
+:global *::selection {
+  color: white;
+  background-color: var(--primary-color-light);
+}
+
 :global html {
   color: rgba(0, 0, 0, 0.9);
   font: 100%/1.75 Morriweather, Georgia, serif;
