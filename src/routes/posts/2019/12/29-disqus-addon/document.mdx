@@ -45,12 +45,14 @@ function BlogPostLayout({blogRoot}: BlogPostLayoutProps) {
     let {title, data, url} = useCurrentRoute();
     let {connect, content, head} = useView()!;
     let {MDXComponent, readingTime} = content;
+    /* NEW_CODE start */
     const disqusShortname = 'miaocode';
     const disqusConfig: any = {
         url: 'https://mzvast.github.io' + url.pathname,
         identifier: data.slug,
         title: title
     };
+    /* NEW_CODE end */
     console.log('useCurrentRoute::title, data, url', title, data, url);
     // The content for posts is an MDX component, so we'll need
     // to use <MDXProvider> to ensure that links are rendered
