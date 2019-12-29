@@ -48,10 +48,10 @@ PygmentsCodeFences = true
 我做了个直观易懂的配置，基本都是常见命令。云端构建一次平均20多秒。
 直接上配置文件`travis.yml`：
 
-- 注意要先生成GH_TOKEN[(官方教程链接)](https://help.github.com/articles/creating-a-personal-access-token-for-the-command-line/)。也就是在下图所示页面生成一个token：![](http://mzvast.github.io/picorz-img/Picorz-pasteshot--2017-11-14T23:43:35+08:00)
+- 注意要先生成GH_TOKEN[(官方教程链接)](https://help.github.com/articles/creating-a-personal-access-token-for-the-command-line/)。也就是在下图所示页面生成一个token：![](http://mzvast.github.io/picorz-img/Picorz-pasteshot--2017-11-14T234335+0800)
 - 然后把这个token添加到[Travis](https://travis-ci.org/)的环境变量里去。如下图所示
-![](http://mzvast.github.io/picorz-img/Picorz-pasteshot--2017-11-14T23:50:39+08:00)
-![](http://mzvast.github.io/picorz-img/Picorz-pasteshot--2017-11-14T23:48:23+08:00)。
+![](http://mzvast.github.io/picorz-img/Picorz-pasteshot--2017-11-14T235039+0800)
+![](http://mzvast.github.io/picorz-img/Picorz-pasteshot--2017-11-14T234823+0800)。
 - 最后简单介绍构建脚本的编写[(构建的生命周期)](https://docs.travis-ci.com/user/customizing-the-build/#The-Build-Lifecycle)。由于直接用go get < github url >的方式下载到的不是稳定版，为了和本地环境一致，需要用下载编译后可执行文件的方式，并可以指定版本号。因此，并不需要CI安装了go语言。
 
 ``` bash
