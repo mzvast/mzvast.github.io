@@ -1,0 +1,131 @@
+## 你可以从本文了解到
+
+- 为什么要用代码生成器
+- hygen如何使用来提高工作效率
+
+## 背景
+
+最初是因为换了基于create-react-blog的框架，这是一个比较素的框架（相比其他带cli的框架而言），每次写新post需要创建1个文件夹和两个文件，并填充一堆信息，非常繁琐，即使可以复制粘贴。但是，这种创作体验并不理想，让写作的人决定自己的新post是基于旧post改改而来的，体验不纯粹。
+
+因为创作门槛比原来高，所以创作的热情相对而言更低了。当我站在2020年6月30日回看这半年一篇都没有发表，我着实决定这个事情到了不得不做的地步。不是难，只是懒。我要用一小段的调研和开发，降低创作启动门槛。
+
+## 为什么要用代码生成器
+
+这是一个js工程，有着丰富的node工具链生态，我们可以基于开源的代码生成器，打造属于这个项目的定制代码生成器。[hygen](https://github.com/jondot/hygen)就是本文选择的(谷歌query：node cli code generator)。【todo：hygen源码分析】
+
+## 我所做的工作
+
+1. 将hygen安装和初始化
+2. 调试编写模板，数据处理
+3. 增加cli交互提示
+4. 整合到npm script
+
+下面分步介绍
+
+### hygen安装和初始化
+
+
+```bash
+yarn add hygen //依赖安装到项目维度
+./node_modules/.bin/hygen init self // 在项目中初始化hygen
+./node_modules/.bin/hygen generator new post // 创建叫post的generator
+```
+
+### 调试编写模板，数据处理
+
+以本工程为例，在_templates/post下新增文件
+```
+_templates
+├── generator
+│   ├── help
+│   │   └── index.ejs.t
+│   ├── new
+│   │   └── hello.ejs.t
+│   └── with-prompt
+│       ├── hello.ejs.t
+│       └── prompt.ejs.t
+└── post
+    └── new
+        ├── document.ejs.t   /* ADDED */
+        ├── post.ejs.t       /* ADDED */
+        └── prompt.js        /* ADDED */
+```
+
+以`post.ejs.t`为例，这个文件包含了一个post的元数据，编写如下
+
+```javascript
+---
+to: src/routes/posts/<%= h.getDate() + '-' + h.inflection.dasherize(title) %>/post.ts
+---
+export default {
+    title: '<%= title%>',
+    tags: <%- JSON.stringify(tags.split(',')) %>, // 进行了序列化和unescape
+    spoiler: '<%= spoiler%>',
+    getContent: () => import('./document.mdx'),
+}
+```
+这里`h.inflection.dasherize`用到了内置helper函数来处理文件名，而`h.getDate()`则是我们扩展的helper函数（定义在项目根目录的.hygen.js文件中），用户获取日期字符串，示例如下：
+```javascript
+// .hygen.js
+module.exports = {
+    helpers: {
+        getDate: () => {
+            let d = new Date()
+            let year = d.getFullYear();
+            let month = d.getMonth();
+            let day = d.getDate();
+            return `${year}/${month}/${day}` // 斜线代表文件夹层级
+        }
+    }
+}
+
+```
+
+此时我就可以使用如下命令创建post了
+```bash
+./node_modules/.bin/hygen post new --title title --spoiler spoiler --tags tag1,tag2
+```
+
+### 增加cli交互提示
+
+为了减少用户的记忆点，我们可以采用交互式输入框，这就是prompt.js文件起到的作用了，其中定义了我们需要用户输入的元数据。
+
+```javascript
+// _templates/post/new/prompt.js
+module.exports = [
+    {
+        type: 'input',
+        name: 'title',
+        message: "What's your post's title?"
+    },
+    {
+        type: 'input',
+        name: 'spoiler',
+        message: "What's your post's spoiler?"
+    },
+    {
+        type: 'input',
+        name: 'tags',
+        message: "What's your post's tags?"
+    }
+]
+```
+
+### 整合到npm script
+
+最后，再精简用户的记忆点，将生成器的脚本整合到package.json文件中。
+
+```json
+{
+    //...
+  "scripts": {
+    //...
+    "create": "hygen post new" // ADDED
+  },
+}
+
+```
+
+## 总结
+
+整个代码生成器的定制工作的核心出发点就是减少一切记忆点，对用户的干扰和分心减少到最低，使创作者专注于内容创作而不是编写代码。
