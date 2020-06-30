@@ -1,0 +1,116 @@
+## 你可以从本文了解到
+
+1. 本文背景
+2. 用WebRTC构建屏幕分享应用 
+
+本文对应的代码[在此](https://github.com/mzvast/how2webrtc)。
+
+## 本文背景
+
+首先，本文不是WebRTC零基础教程。记录和分享在编写屏幕分享demo时候遇到的问题。
+
+代码的master分支是修改自[building-a-video-chat-in-javascript](https://dev.to/michaelneu/i-webrtc-you-building-a-video-chat-in-javascript-2j38)，develop分支对协议进行了重构和模块化改进，并增加各种清理能力。
+
+## 用WebRTC构建屏幕分享应用 
+
+我们的场景是1个教师(A)，1个学生端(B)。老师可以发起投屏，看到学生屏幕内容。
+完整的offer/answer机制如下：
+
+- A 告知 B 要开始投屏了(`A --> B`)
+- B 创建一个RTCPeerConnection对象，使用.createOffer()方法产生一个offer（一个SDP会话描述）
+- B 用他的offer调用setLocalDescription()
+- B 将offer字符串化，并使用信令机制将其发送给A(`A <-- B`)
+- A用B的offer调用setRemoteDescription()，以便她的RTCPeerConnection知道B的设置。
+- A调用createAnswer()，成功的回调是传入一个本地的会话描述：A的answer。
+- 通过调用setLocalDescription()将其answer设置为本地描述。
+- A然后使用信令机制将她的字符串化的answer发回给B(`A --> B`)。
+- B使用setRemoteDescription()将A的应答设置为远程会话描述
+
+AB还需要交换网路信息，“查找候选人（find candidate）”这个表达是指使用ICE框架查找网络接口和端口的过程。
+
+- B 使用onicecandidate handler创建一个RTCPeerConnection对象。
+- handler在网络候选人变得可用时被调用。
+- 在handler中，B通过他们的信令通道将字符串化的候选数据发送给A。
+- 当A从B那里获得候选消息时，她调用addIceCandidate()，将候选项添加到远端描述中。
+
+JSEP支持ICE Candidate Trickling，它允许主叫方(caller)在最初的offer之后递增地向被叫方提供候选项（candidates），并使被叫方开始在通话中进行操作并建立连接而不用等所有候选项到达。
+
+### 对端发现与信令服务器
+
+可以用任何消息服务实现，比如websocket，mqtt等。
+
+### 在信令之后：使用 ICE来对付NAT和防火墙
+
+对于元数据信令，WebRTC应用程序使用中介服务器，但对于实际的媒体和数据流，一旦建立对话的话，RTCPeerConnection就会尝试点对点地直接连接客户端。
+
+在简单的情况中，每个WebRTC端点都有一个唯一的地址，可以与其他端进行交换以便直接通信。
+![](https://michaelyou.github.io/img/without_nat.png)
+
+实际上大多数设备都是处在一层或者多层NAT之后的，其中有一些包含可以阻挡某些端口和协议的防病毒软件，还有很多设备是在代理和公司防火墙之后的。防火墙和NAT实际上可以由相同的设备实现，比如说家庭WiFi路由器。
+![](https://michaelyou.github.io/img/nat_real_world.png)
+
+WebRTC应用程序可以使用ICE框架来消除实际网络的复杂性。为了实现这一点，你的应用程序必须将 ICE服务器的URL传递给RTCPeerConnection，就像下面所描述的那样。
+
+ICE试图找到连接对方的最佳途径。它会并行地尝试所有可能性，并选择最有效的选项。 ICE首先尝试使用从设备操作系统和网卡获取的主机地址进行连接；如果不成功的话（对于NAT后面的设备就会失败）， ICE会使用 STUN服务器获取外部地址，如果还是失败的话，则通过 TURN中继服务器路由数据。
+
+换句话说：
+
+- STUN服务器是用来获取外部地址的。
+
+- TURN服务器是用来在直接连接（点到点）失败的情况下进行中继数据流量的
+
+每个 TURN服务器都支持 STUN： TURN服务器也是一个增加了内置中继功能的 STUN服务器。 ICE还可以应付NAT设置的复杂性：实际上，NAT“打孔”可能不仅仅需要一个公共IP:端口地址。
+
+STUN 和/或 TURN服务器的URL（可选择地）由iceServers配置对象中的WebRTC应用程序指定，该配置对象是RTCPeerConnection构造函数的第一个参数。对于本项目来说，值看起来是这样的
+
+```typescript
+const webrtc = new RTCPeerConnection({
+      iceServers: [
+        {
+          urls: ["stun:stun.stunprotocol.org"],
+        },
+        {
+          url: "turn:relay.backups.cz",
+          credential: "webrtc",
+          username: "webrtc",
+        },
+        {
+          url: "turn:relay.backups.cz?transport=tcp",
+          credential: "webrtc",
+          username: "webrtc",
+        },
+      ],
+    });
+```
+
+一旦RTCPeerConnection具有该信息， ICE的作用就会自动发生：RTCPeerConnection使用 ICE框架 来计算到对端之间的最佳路径，并根据需要使用 STUN和 TURN服务器。
+
+### STUN
+
+NAT给设备提供了一个IP地址以使用专用局域网，但是这个地址不能在外部使用。由于没有公用地址，WebRTC端对端就无法进行通信。而WebRTC使用STUN来解决这个问题。
+
+STUN服务器位于公共网络上，并且有一个简单的任务：检查传入请求的IP地址（来自运行在NAT后面的应用程序），并将该地址作为响应发送回去。换句话说，应用程序使用 STUN服务器从公共角度发现其IP:端口。这个过程使得WebRTC一端为自己获得一个可公开访问的地址，然后通过信令机制将其传递给另一端以建立直接连接。（实际上不同NAT工作方式都有所不同，可能有多个NAT层，但是原理是一样的）。
+
+因为 STUN服务器不需要做太多的工作或者记特别多的东西，所以相对低规格的 STUN服务器就可以处理大量的请求。
+
+根据webrtcstats.com的统计（2013年），大多数WebRTC通话都成功地使用 STUN进行连接，有86%。尽管对于防火墙之后的两端之间的呼叫以及复杂的NAT配置，成功通话量会更少一些。
+![](https://michaelyou.github.io/img/stun.png)
+
+### TURN
+
+RTCPeerConnection尝试通过UDP建立对等端之间的直接通信。如果失败的话，RTCPeerConnection就会使用TCP进行连接。如果使用TCP还失败的话，可以用 TURN服务器作为后备，在终端之间转发数据。
+
+重申： TURN用于中继对等端之间的音频/视频/数据流，而不是信令数据。
+
+TURN服务器具有公共地址，因此即使对等端位于防火墙或代理之后也可以与其他人联系。 TURN服务器有一个概念上来讲简单的任务—中继数据流—但是与 STUN服务器不同的是，他们会消耗大量的带宽。换句话说， TURN服务器需要更加的强大。
+![](https://michaelyou.github.io/img/turn.png)
+
+上图显示了 TURN的作用：单纯的 STUN没有成功建立连接，所以每个对等端还需要使用 TURN服务器。
+
+关于如何搭建STUN和TURN服务器参见[真实世界中的WebRTC：STUN, TURN and signaling](https://michaelyou.github.io/2018/08/01/%E7%9C%9F%E5%AE%9E%E4%B8%96%E7%95%8C%E4%B8%AD%E7%9A%84WebRTC/)
+## Refs
+
+- [building-a-video-chat-in-javascript](https://dev.to/michaelneu/i-webrtc-you-building-a-video-chat-in-javascript-2j38)
+- [what-is-webrtc-and-how-to-setup-stun-turn-server-for-webrtc-communication](https://medium.com/av-transcode/what-is-webrtc-and-how-to-setup-stun-turn-server-for-webrtc-communication-63314728b9d0)
+- [WebRTC：连接建立过程的网络穿透](https://zhuanlan.zhihu.com/p/75387873)
+- [真实世界中的WebRTC：STUN, TURN and signaling](https://michaelyou.github.io/2018/08/01/%E7%9C%9F%E5%AE%9E%E4%B8%96%E7%95%8C%E4%B8%AD%E7%9A%84WebRTC/)
