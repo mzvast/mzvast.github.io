@@ -10,6 +10,7 @@
     "blueimp-md5": "2.3.0",
     "disqus-react": "^1.0.7",
     "feed": "2.0.2",
+    "hygen": "^5.0.3",
     "import-all.macro": "2.0.3",
     "lodash": "4.17.11",
     "navi": "^0.13.3",
@@ -33,7 +34,8 @@
     "eject": "react-scripts eject",
     "serve": "navi-scripts serve",
     "deploy": "netlify deploy --dir=build",
-    "deploy:prod": "netlify deploy --dir=build --prod"
+    "deploy:prod": "netlify deploy --dir=build --prod",
+    "create": "hygen post new"
   },
   "eslintConfig": {
     "extends": "react-app"
