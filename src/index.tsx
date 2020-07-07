@@ -7,6 +7,7 @@ import HelmetProvider from 'react-navi-helmet-async'
 import './index.module.css'
 import routes from './routes'
 import * as serviceWorker from './serviceWorker'
+import ThemeService from './service/ThemeService'
 
 // `register()` is responsible for exporting your app's pages and App
 // component to the static renderer, and for starting the app with the
@@ -19,6 +20,7 @@ register({
   // This will only be called when loading your app in the browser. It won't
   // be called when performing static generation.
   async main() {
+    ThemeService.syncTheme();
     let navigation = createBrowserNavigation({ routes })
 
     // Wait until the navigation has loaded the page's content, or failed to do

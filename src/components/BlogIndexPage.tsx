@@ -6,6 +6,7 @@ import ArticleSummary from './ArticleSummary'
 import Bio from './Bio'
 import Pagination from './Pagination'
 import styles from './BlogIndexPage.module.css'
+import ThemeService from '../service/ThemeService'
 
 interface BlogIndexPageProps {
   blogRoot: string
@@ -32,7 +33,7 @@ function BlogIndexPage({
             }else{
               theme = 'light';
             }
-            document.body.setAttribute('class', theme);
+            ThemeService.setTheme(theme);
           }}>switch theme</button>
         </h1>
         <Bio />
