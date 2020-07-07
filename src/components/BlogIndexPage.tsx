@@ -25,6 +25,15 @@ function BlogIndexPage({
       <header>
         <h1 className={styles.title}>
           <Link href={blogRoot}>{siteMetadata.title}</Link>
+          <button className={styles.themeButton} onClick={()=>{
+            let theme = document.body.getAttribute('class');
+            if (theme==='light') {
+              theme = 'dark';
+            }else{
+              theme = 'light';
+            }
+            document.body.setAttribute('class', theme);
+          }}>switch theme</button>
         </h1>
         <Bio />
       </header>

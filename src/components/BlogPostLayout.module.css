@@ -17,7 +17,7 @@
   margin-bottom: 0;
 }
 .header .title > a {
-  color: black;
+  color: var(--textTitle);
 }
 
 .footer {

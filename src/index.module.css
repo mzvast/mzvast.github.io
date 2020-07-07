@@ -18,7 +18,17 @@
   color: rgba(0, 0, 0, 0.9);
   font: 100%/1.75 Morriweather, Georgia, serif;
 }
-
+:global body.light{
+  --bg: #fff;
+  --textNormal: #222;
+  --textTitle: black;
+}
+:global body.dark{
+  --bg: #282c35;
+  --textNormal: hsla(0,0%,100%,0.88);
+  --textTitle: #fff;
+  --primary-color: rgb(255, 167, 196);
+}
 :global body {
   font-kerning: normal;
   font-family: 'Merriweather','Georgia',serif;
@@ -27,7 +37,10 @@
   margin: 0;
   padding: 0;
   word-wrap: break-word;
+  background-color: var(--bg);
+  color: var(--textNormal);
 }
+
 
 :global(pre),
 :global(code) {

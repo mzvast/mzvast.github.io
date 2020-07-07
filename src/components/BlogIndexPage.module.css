@@ -6,10 +6,26 @@
   margin-top: 0;
   margin-bottom: 2.625rem;
   text-rendering: optimizeLegibility;
+  display: flex;
+  align-items: center;
 }
 .title a {
-  color: black;
+  color: var(--textTitle);
   text-decoration: none;
+}
+.themeButton {
+  -webkit-tap-highlight-color: transparent;
+  background-color: var(--textTitle);
+  border: none;
+  outline:none;
+  color: var(--bg);
+  line-height: 2em;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 0 10px;
+  cursor: pointer;
 }
 
 .articlesList,
