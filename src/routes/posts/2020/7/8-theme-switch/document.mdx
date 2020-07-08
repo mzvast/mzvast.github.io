@@ -1,0 +1,79 @@
+## 你可以从本文了解到
+
+- 夜间模式/主题切换
+
+## 缘起
+
+之所以想起“夜间模式”这个主题，是因为看到了[这篇文章](https://dev.to/mohammadfarmaan/the-best-way-to-dark-mode-your-website-1g7f?utm_source=digest_mailer&utm_medium=email&utm_campaign=digest_email)，而且这个主题已经躺在我的todoList里面很久了。
+
+## N种方式
+
+我梳理了一下主要有以下几种主题切换方式
+
+### link.href切换
+
+适用场景：没有采用预编译，样式可以通过文件级别隔离。
+
+例如上面文章中的示例：
+```javascript
+function switchSheet() {
+  let theme = document.getElementById("theme");
+
+  if (theme.getAttribute("href") == "light-mode.css") {
+    theme.href = "dark-mode.css";
+  } else {
+    theme.href = "light-mode.css";
+  }
+}
+```
+
+### styled-components ThemeProvider切换
+
+适用场景：工程基于styled-components，样式采用全局theme值。
+
+### CSS var切换
+
+适用场景：基于css module或者SCSS之类，样式可以采用全局定义的css variable，通过切换body的class进行切换。
+
+以本blog工程的改造为例，示例如下：
+```css
+/* index.module.css */
+:global body.light{
+  --bg: #fff;
+  --textNormal: #222;
+  --textTitle: black;
+}
+:global body.dark{
+  --bg: #282c35;
+  --textNormal: hsla(0,0%,100%,0.88);
+  --textTitle: #fff;
+  --primary-color: rgb(255, 167, 196);
+}
+:global body {
+/* ... */
+  background-color: var(--bg);
+  color: var(--textNormal);
+}
+```
+
+```typescript
+class ThemeService {
+    constructor() {}
+    // app挂载时读取并应用上次的theme
+    syncTheme() {
+        const theme = this.getTheme();
+        document.body.setAttribute('class', theme);
+    }
+    // 设定theme并持久化
+    setTheme(theme) {
+        localStorage.setItem('theme', theme);
+        document.body.setAttribute('class', theme);
+    }
+    // 读取定制的theme，给默认值light
+    getTheme() {
+        return localStorage.getItem('theme') || 'light';
+    }
+}
+
+export default new ThemeService();
+```
