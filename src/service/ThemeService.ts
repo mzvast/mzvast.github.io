@@ -1,5 +1,4 @@
 class ThemeService {
-    constructor() {}
     syncTheme() {
         const theme = this.getTheme();
         document.body.setAttribute('class', theme);
