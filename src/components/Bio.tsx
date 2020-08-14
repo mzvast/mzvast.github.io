@@ -8,7 +8,7 @@ interface BioProps {
 
 function Bio(props: BioProps) {
   let photoURL = getGravatarURL({
-    email: "wangyang65@baidu.com",
+    email: "mzvast@gmail.com",
     size: 56,
   })
 
