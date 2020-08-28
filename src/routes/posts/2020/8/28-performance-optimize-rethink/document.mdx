@@ -16,7 +16,10 @@ import longlist from './longlist.png';
 
 存在的问题主要有：
 
-1.图片尺寸大，下载慢。非常占用 Android 壳的缓存，约 70-80M。 2.切换 Tab 卡（尤其在长列表间切换的时候） 3.自定义字体占据 30M，字体 swap 时间长 4.长列表越往下滑动越卡。
+1. 图片尺寸大，下载慢。非常占用 Android 壳的缓存，约 70-80M。 
+2. 切换 Tab 卡（尤其在长列表间切换的时候） 
+3. 自定义字体占据 30M，字体 swap 时间长 
+4. 长列表越往下滑动越卡。
 
 ## 优化策略
 
@@ -26,6 +29,7 @@ import longlist from './longlist.png';
 
 1.  尺寸在看得清的情况下尽可能小(size 够用就行)
 2.  高压缩比格式（quality 能接受就行）
+3.  尽可能少的研发
 
 -   方案 1 （❌）
 
@@ -93,7 +97,7 @@ import longlist from './longlist.png';
 
     字体渲染提速 5 倍
 
--   前端代码片段
+-   前端CSS代码片段
 
     ```css
     @font-face {
@@ -108,15 +112,15 @@ import longlist from './longlist.png';
 
 ## 长列表
 
-### 原理
+### 虚拟渲染-原理
 
-只渲染用户视口区域的元素，超出区域的都用空白撑开高度。
+只渲染用户视口区域的元素，其他区域仅撑开高度保持滚动条位置准确。
 
 <img src={longlist} />
 
 在 React 下面可以采用[react-window](https://github.com/bvaughn/react-window).
 
-#### 简单看一下核心数据结构
+#### 简单看一下react-window核心数据结构
 
 ```typescript
 type ItemMetadata = {|
@@ -182,7 +186,6 @@ render 函数
 getRowData = () => {
     const {activeKey, tabsData} = this.props;
     const list = tabsData[activeKey];
-
     let rowData = [];
     rowData.push({
         type: ELEMENT_TYPES.TOP_MARGIN,
@@ -233,40 +236,21 @@ renderRow = memo(({data, index, style}) => {
     console.log('renderRow::item', item);
     if (item instanceof Array) {
         return (
-            <div style={style}>
-                <LineWrap>
-                    {item.map((item, index) => (
-                        <LessonItem
-                            data={item}
-                            key={item.planId}
-                            handleClick={this.props.onLessonItemClick}
-                        />
-                    ))}
-                </LineWrap>
-            </div>
+            // ...
         );
     } else if (item.type === ELEMENT_TYPES.FEED_SUBJECT) {
         return (
-            <div style={style}>
-                <SubjectTitleWrapper>
-                    <SubjectTitle>
-                        <SubjectTitleText>{item.text}</SubjectTitleText>
-                        <SubjectTitleLine />
-                    </SubjectTitle>
-                    {item.isFirstSubject && <FilterButton />}
-                </SubjectTitleWrapper>
-            </div>
+        //    ...
         );
     } else if (item.type === ELEMENT_TYPES.TOP_MARGIN) {
         return (
-            <div style={style}>
-                <Box height="1.5rem"></Box>
-            </div>
+        //    ...
         );
     } else if (item.type === ELEMENT_TYPES.FEED_LOADER) {
         return (
+            // 菊花
             <div style={style}>
-                <FeedLoader></FeedLoader>
+                <FeedLoader></FeedLoader> 
             </div>
         );
     }
@@ -313,6 +297,19 @@ class FeedLoader extends PureComponent<Props, State> {
 export default FeedLoader;
 ```
 
+但这样做存在一个问题，在顺序加载过一次list项目之后，菊花的行高会被缓存在itemMetadataMap（offset，size）中。这使得我们后来数据到达之后将菊花替换成feeditem之后所占用的行高没有改变，造成样式重叠。 
+
+具体可以通过研究源码得知整个渲染的顺序如下：
+
+1.	GetRowData：获取list数据
+2.	GetItemSize：预分配行高（立即缓存）
+3.	RenderRow：渲染行元素
+
+因此，我们可以在新数据插入之后，重置菊花位置的高度
+```jsx
+this.listEl.resetAfterIndex(this.rowData.length - 1);
+```
+
 ## 优先加载
 
 ### 问题描述
@@ -334,6 +331,10 @@ export default FeedLoader;
 
 由于懒加载组件用了 react-lazy-load-image-component，然后在 Github 上有同学提了功能需求的[issue](https://github.com/Aljullu/react-lazy-load-image-component/issues/76)，然后我[魔改了一下](https://github.com/mzvast/react-lazy-load-image-component/commit/870fa9abd9219b670d7e70fe60a1d86c02115107)
 
+
+### 还可以改进的地方
+
+可以知道，react-window中渲染过的元素进行过一次高度计算后，就会缓存，所以在window进行resize的时候，需要重新计算高度。因为产品场景没有这方面需求，所以没做，但从理论上是有考虑的。
 
 ## 总结
 
