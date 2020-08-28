@@ -1,0 +1,349 @@
+import bg from './bg.png';
+import longlist from './longlist.png';
+
+## 你可以从本文了解到以下方面的优化思路
+
+1. 图片
+2. 字体
+3. 长列表
+4. 优先加载
+
+## 背景
+
+在混合 H5 项目 A 中，有一个大量图片的信息流页面，并且需要在多个 Tab 切换。如下图所示（已脱敏）。
+
+<img src={bg} />
+
+存在的问题主要有：
+
+1.图片尺寸大，下载慢。非常占用 Android 壳的缓存，约 70-80M。 2.切换 Tab 卡（尤其在长列表间切换的时候） 3.自定义字体占据 30M，字体 swap 时间长 4.长列表越往下滑动越卡。
+
+## 优化策略
+
+### 图片
+
+核心：体积控制
+
+1.  尺寸在看得清的情况下尽可能小(size 够用就行)
+2.  高压缩比格式（quality 能接受就行）
+
+-   方案 1 （❌）
+
+    自己压缩全部图片
+    优点：自主可控
+    缺点：灵活性差和研发部署成本高
+
+-   方案 2（✅）
+
+    使用第三方图片存储的实时处理能力（[百度云 BOS](https://cloud.baidu.com/doc/BOS/s/Zk2l2mq0v)）
+
+    优点：灵活性好和研发部署成本低
+    缺点：相对低的可控性
+
+-   效果
+
+    加载速度提升 26 倍，体积缩小 95%
+
+-   代码片段
+
+    ```typescript
+    import canUseWebP from './canUseWebP';
+    //BOS 图片优化 https://cloud.baidu.com/doc/BOS/s/Zk2l2mq0v
+
+    // small 350
+    // mid 640
+    // large 1280
+    // size向上靠拢，尽可能应用缓存
+    const getLevelUpSize = (size: number) => {
+        if (size <= 350) {
+            return 350;
+        } else if (size <= 640) {
+            return 640;
+        } else {
+            return 1280;
+        }
+    };
+
+    const getBosPicUrl = (src, sizeInPx = Infinity, ImgQuality = 50) => {
+        const isBosPic = src.indexOf('bcebos') !== -1;
+        if (!isBosPic) return src; // 不是bos图，不处理
+        const format = canUseWebP ? 'f_webp' : 'f_jpg';
+        const dpr = window.devicePixelRatio;
+        const size = 'w_' + Math.floor(getLevelUpSize(sizeInPx) * dpr);
+        const quality = 'q_' + ImgQuality;
+        // const display = 'd_progressive';
+        const command = [size, format, quality].join(',');
+        return `${src}@${command}`;
+    };
+
+    export default getBosPicUrl;
+    ```
+
+### 字体
+
+-   痛点
+
+    体积非常大，动辄 30M，卡慢，体验差
+
+-   策略
+
+    Android 壳 cacheWebview 内置字体文件，通过自定义拦截器路径拦截
+
+-   效果
+
+    字体渲染提速 5 倍
+
+-   前端代码片段
+
+    ```css
+    @font-face {
+        font-family: 'NotoSansCJKsc-Medium';
+        /* src: url('./assets/fonts/NotoSansCJKsc-Medium.otf') format('opentype'); */
+        src: local('NotoSansCJKsc-Medium'), local('Droid Sans Fallback'),
+            url('YOUR_DOMAIN/FILE_NAME'), url('FALLBACK_URL');
+        font-weight: bold;
+        font-display: swap;
+    }
+    ```
+
+## 长列表
+
+### 原理
+
+只渲染用户视口区域的元素，超出区域的都用空白撑开高度。
+
+<img src={longlist} />
+
+在 React 下面可以采用[react-window](https://github.com/bvaughn/react-window).
+
+#### 简单看一下核心数据结构
+
+```typescript
+type ItemMetadata = {|
+  offset: number, // 当前item距离屏幕顶部的距离
+  size: number, // 当前item的高度
+|};
+// 一个window实例的数据结构
+type InstanceProps = {|
+  itemMetadataMap: { [index: number]: ItemMetadata }, // 缓存已计算过的item
+  estimatedItemSize: number, // item默认高度
+  lastMeasuredIndex: number, // 最后计算的item
+|};
+
+```
+
+render 函数
+
+```jsx
+<Wrap>
+    <AutoSizer>
+        {({height, width}) => (
+            <VariableSizeList
+                height={height}
+                itemCount={this.rowData.length}
+                itemSize={this.getItemSize}
+                itemData={this.rowData}
+                itemKey={this.getItemKey}
+                width={width}
+                ref={(node) => (this.listEl = node)}
+                onScroll={this.onScroll}
+            >
+                {this.renderRow}
+            </VariableSizeList>
+        )}
+    </AutoSizer>
+    <ScrollToTop
+        onoff={this.state.isRrocketShow}
+        scrollCB={this.hideRocket}
+        target={this.listEl}
+    />
+</Wrap>
+```
+
+#### 我们需要提供的数据
+
+1. itemData（列表全数据）
+2. 滚动事件（一方面组件内部使用），控制回到顶部小火箭的显隐。
+3. itemKey 方法，确定每个元素在 list 中唯一的标识符号（react 渲染用）
+4. itemSize 方法，获取每个元素的 height
+   基于这些，虚拟渲染组件会合成一个 itemMetadataMap.
+
+#### 从 List 到 Gird
+
+业务需要对内容定制。一个是横高度不固定，底部会有菊花。所以对内容的类型进行了分类。
+
+    Array：一行卡片。其中每个卡片的类型是FEED_ITEM，4个一行，计算生成。
+    FEED_SUBJECT：XX标题
+    TOP_MARGIN：顶部占位块（纯布局用）
+    FEED_LOADER：底部更多菊花
+
+```jsx
+// list数据模型的生成
+getRowData = () => {
+    const {activeKey, tabsData} = this.props;
+    const list = tabsData[activeKey];
+
+    let rowData = [];
+    rowData.push({
+        type: ELEMENT_TYPES.TOP_MARGIN,
+    });
+    for (let i = 0; i < list.length; i++) {
+        const item = list[i];
+        if (
+            i === 0 ||
+            list[i - 1].teachingMetadata[0]['subject'] !==
+                item.teachingMetadata[0]['subject']
+        ) {
+            rowData.push({
+                type: ELEMENT_TYPES.FEED_SUBJECT,
+                text: item.teachingMetadata[0]['subject'],
+                isFirstSubject: i === 0,
+            });
+        }
+        let last = rowData[rowData.length - 1];
+        if (last instanceof Array && last.length < 4) {
+            last.push({
+                type: ELEMENT_TYPES.FEED_ITEM,
+                ...item,
+            });
+        } else {
+            rowData.push([
+                {
+                    type: ELEMENT_TYPES.FEED_ITEM,
+                    ...item,
+                },
+            ]);
+        }
+    }
+
+    if (this.getFeedLoader()) {
+        rowData.push({
+            type: ELEMENT_TYPES.FEED_LOADER,
+        });
+    }
+    return rowData;
+};
+// 渲染某一行
+renderRow = memo(({data, index, style}) => {
+    // const rowData = this.rowData; //this.getRowData();
+    const item = data[index];
+    if (!item) {
+        return null;
+    }
+    console.log('renderRow::item', item);
+    if (item instanceof Array) {
+        return (
+            <div style={style}>
+                <LineWrap>
+                    {item.map((item, index) => (
+                        <LessonItem
+                            data={item}
+                            key={item.planId}
+                            handleClick={this.props.onLessonItemClick}
+                        />
+                    ))}
+                </LineWrap>
+            </div>
+        );
+    } else if (item.type === ELEMENT_TYPES.FEED_SUBJECT) {
+        return (
+            <div style={style}>
+                <SubjectTitleWrapper>
+                    <SubjectTitle>
+                        <SubjectTitleText>{item.text}</SubjectTitleText>
+                        <SubjectTitleLine />
+                    </SubjectTitle>
+                    {item.isFirstSubject && <FilterButton />}
+                </SubjectTitleWrapper>
+            </div>
+        );
+    } else if (item.type === ELEMENT_TYPES.TOP_MARGIN) {
+        return (
+            <div style={style}>
+                <Box height="1.5rem"></Box>
+            </div>
+        );
+    } else if (item.type === ELEMENT_TYPES.FEED_LOADER) {
+        return (
+            <div style={style}>
+                <FeedLoader></FeedLoader>
+            </div>
+        );
+    }
+}, areEqual);
+
+// 计算行高
+getItemSize = (index) => {
+    const row = this.rowData[index];
+    if (row instanceof Array) {
+        return (16.44 + 2) * window['remBase'];
+    } else if (row.type === ELEMENT_TYPES.FEED_SUBJECT) {
+        return (2.75 + 1.5) * window['remBase'];
+    } else if (row.type === ELEMENT_TYPES.TOP_MARGIN) {
+        return 1.5 * window['remBase'];
+    } else if (row.type === ELEMENT_TYPES.FEED_LOADER) {
+        return 4.4 * window['remBase'];
+    }
+};
+```
+
+#### 菊花组件
+
+由于虚拟渲染天生基于观察者模式，因此菊花可以在 didMount 时候发起网络请求。
+
+```jsx
+class FeedLoader extends PureComponent<Props, State> {
+    state: State;
+
+    static defaultProps = {};
+
+    render() {
+        return <BottomLoading />;
+    }
+
+    componentDidMount() {
+        console.log('FeedLoader fetching data::');
+        this.loadMore();
+    }
+
+    loadMore = () => {
+        HomeControl.loadMore(); // 发起网络请求
+    };
+}
+export default FeedLoader;
+```
+
+## 优先加载
+
+### 问题描述
+
+浏览器并发连接数限制，在正常顺序加载的模式下，用户可能滑动了一屏，会等很久才刷出图，造成用户体验较差。
+
+### 方案原理
+
+1.用户看到图片占位图，开始加载。 
+
+2.图片还没加载完，就超出可见区域，抛弃。
+
+### 如何正确抛弃
+
+1.一个图片在 set 了 src 之后，一旦开始，则无法结束（即使是将图片从 DOM 中移除，网络连接也并不会立刻断开）。
+需要更为激进的策略，即将图片的 src 置空，从而抛弃未完成加载的图片。 
+
+2.可见性管理+图片加载的生命周期管理
+
+由于懒加载组件用了 react-lazy-load-image-component，然后在 Github 上有同学提了功能需求的[issue](https://github.com/Aljullu/react-lazy-load-image-component/issues/76)，然后我[魔改了一下](https://github.com/mzvast/react-lazy-load-image-component/commit/870fa9abd9219b670d7e70fe60a1d86c02115107)
+
+
+## 总结
+
+### 对于问题
+- 搞清楚问题是什么
+- 分清楚主要问题和次要问题
+- 问题的主要方面和次要方面
+
+### 对于某个具体技术
+- 掌握原理（文档/源码）
+- 搞清数据结构关系
+- 优先使用第三方/开源产品
+- ***自己的贡献***
