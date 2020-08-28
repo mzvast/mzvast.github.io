@@ -1,0 +1,56 @@
+## 你可以从本文了解到
+
+1. 为什么要在 headers 中传递认证信息
+2. 有哪些方案，各自优缺点如何
+
+## 为什么要在 headers 中传递认证信息
+
+可视为独立的一层身份控制机制，后台可以加在某个域的根 controller 下面，根据用户身份“分发”给为不同身份的人设计的不同的子 controller 处理。
+
+那么 HTTP 报文的 header 中可以加认证信息的地方主要有 cookie 和自定义字段这两种位置了。（不考虑在 query 中带身份信息）
+
+以下只讨论由客户端写入认证信息的场景。
+
+## Cookie 中写入认证信息
+
+众所周知，Cookie 在 Chrome80 后，对三方 Cookie 策略进行了调整。
+
+### 名词解释
+
+-   First-party cookie
+    -   匹配用户当前访问站点（浏览器地址栏 URI）的域名 cookie
+    -   如：用户访问 vredu.baidu.com，页面中\*.baidu.com 的请求会携带.baidu.com 域下的 cookie，为 first-party cookie
+-   Third-party cookie（第三方 cookie）
+    -   非 first-party cookie
+    -   如：百度统计（hm.baidu.com）收到的请求，来自于用户访问第三方站点 kuaishou.com 的页面中嵌入的百度统计的链接，此时.baidu.com 域下的 cookie 就是 third-party cookie
+
+本地起 devServer 所代理的域名是 A`c.baidu.com`
+假如开发环境的后台服务器域名是 B`a.b.baidu.com`
+
+在这种情况下，由请求 B 得到的 token 写入 A 的 cookie。这导致再次请求 B，在非 https 环境下，这次第三方 cookie 传递将会被浏览器阻断。
+
+## 在 headers 中携带
+
+思路很清晰，把 token 放到 headers 单独成一个字段。但在 umi-request/axios 等网络库中，无论是通过 request.interceptors 或者 extendOptions 都无法请求成功，cookie 会弄丢。
+
+经过对 XMLHttpRequest 相关请求发起过程的研究，[Axios 源码](https://github.com/axios/axios/blob/0d8765562401910c1c509f6739a3bc558721e123/lib/adapters/xhr.js#L125)和[MDN](https://developer.mozilla.org/zh-CN/docs/Web/API/XMLHttpRequest/setRequestHeader)告诉我们，需要服务器指定 Access-Control-Allow-Headers 才可以，否则会在 preflight 阶段被拒绝。
+
+```javascript
+// Add headers to the request
+if ('setRequestHeader' in request) {
+    utils.forEach(requestHeaders, function setRequestHeader(val, key) {
+        if (
+            typeof requestData === 'undefined' &&
+            key.toLowerCase() === 'content-type'
+        ) {
+            // Remove Content-Type if data is undefined
+            delete requestHeaders[key];
+        } else {
+            // Otherwise add header to the request
+            request.setRequestHeader(key, val);
+        }
+    });
+}
+```
+
+后台同学进行了配置之后，请求成功了。
