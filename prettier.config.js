@@ -8,7 +8,7 @@
 module.exports = {
     printWidth: 80,
     singleQuote: true,
-    // trailingComma: 'all',
+    trailingComma: 'none',
     bracketSpacing: false,
     // jsxBracketSameLine: false,
     tabWidth: 4,

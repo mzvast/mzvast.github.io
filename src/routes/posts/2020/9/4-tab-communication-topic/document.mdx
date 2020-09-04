@@ -1,0 +1,138 @@
+import snapshot1 from './snapshot-1.png';
+
+## 你可以从本文了解到
+
+1. 工作中实际需求的举例
+2. 浏览器多标签通信的几种方法及其适用场景
+
+## 工作中实际需求的举例
+
+前置条件：有一个管理系统，tab1、tab2 都登录了账户 user1。
+功能：登出其中 tab1 的账户，tab2 需要自动登出。
+思路：tab 之间建立 eventBus 之类的消息总线，进行广播。
+
+## 浏览器多标签通信的几种方法及其适用场景
+
+[这篇文章](https://juejin.im/post/6844903589924569101)提到，分为三种：
+
+1. websocket
+2. SharedWorker
+3. localstorage
+
+### websocket
+
+[websocket](http://www.ruanyifeng.com/blog/2017/05/websocket.html)是全双工通信，客户端和服务端处于平等地位，任意一方都可以主动发起连接。
+
+用这种方式实现 tab 间通信是用订阅广播机制，但需要一个 websocket 服务器（❌）。
+大致示意如下：
+
+```js
+var ws = new WebSocket('wss://echo.websocket.org');
+
+ws.onopen = function (evt) {
+    console.log('Connection open ...');
+    ws.send('everyone-logout');
+};
+
+ws.onmessage = function (evt) {
+    console.log('Received Message: ' + evt.data);
+    if (evt.data === 'everyone-logout') {
+        // do something
+    }
+    ws.close();
+};
+
+ws.onclose = function (evt) {
+    console.log('Connection closed.');
+};
+```
+
+### [SharedWorker](https://developer.mozilla.org/zh-CN/docs/Web/API/SharedWorker)
+
+它是 webWorker 的一种，特殊之处是具有全局作用域, SharedWorkerGlobalScope。要使 SharedWorker 连接到多个不同的页面，这些页面必须是同源的（相同的协议、host 以及端口）。此方案不需要服务器，但不支持IE。
+
+我对 MDN 这个[例子](https://github.com/mdn/simple-shared-worker)进行了魔改，实现了广播通知的功能。
+
+Tips: 要调试 worker，可以在 chrome 的 inspect 面板中进行，在 source 中可以对代码进行断点调试。
+
+```js
+// worker.js
+let ports = []; // 连接池
+onconnect = function (e) {
+    var port = e.ports[0];
+    ports.push(port); // 入池
+    port.onmessage = function (e) {
+        var workerResult = 'everyone-logout';
+        for (const p of ports) {
+            if (p === port) continue; // 当前tab要不要收到
+            p.postMessage(workerResult); // 通知其他tab
+        }
+    };
+};
+```
+
+```js
+// 前台js
+if (!!window.SharedWorker) {
+  var myWorker = new SharedWorker("worker.js");
+
+  myWorker.port.onmessage = function(e) {
+    console.log('Message received from worker');
+    if (e.data==='everyone-logout';) {
+     // do something
+    }
+  }
+}
+```
+实验效果如下图：
+<img src={snapshot1} />
+
+### storage
+
+window上有一个onstorage事件可以监听storage变化，当前页面可以监听到localStorage和sessionStorage的onstorage事件，但是跨tab间只能传播localStorage的onstorage事件（这一点可以通过实验验证）。
+
+但是问题来了，这个事件如何传播消息呢？
+
+```js
+// 实现一个一次性消息广播工具
+// messageBroadcast.ts
+export default function messageBroadcast(message) {
+    localStorage.setItem('message', JSON.stringify(message));
+    localStorage.removeItem('message');
+}
+```
+
+```js
+import messageBroadcast from '@/utils/messageBroadcast';
+import {logout} from '@/utils/logout';
+class LogoutGuard {
+    constructor() {
+        this.subscribeLogout();
+    }
+    subscribeLogout() {
+        window.onstorage = (e: StorageEvent) => {
+            if (e.key === 'message') { // 指定消息频道
+                let message = JSON.parse(e.newValue);
+                if (!message) return; // 不关注message删除，只关注新增
+                if (message.cmd && message.cmd === 'logout') {
+                    logout();
+                }
+            }
+        };
+    }
+    notifyLogout() {
+        messageBroadcast({
+            cmd: 'logout'
+        });
+        logout();
+    }
+}
+
+export default new LogoutGuard();
+```
+
+可以发现这种方式只能说是比较粗糙，如果考虑并发，健壮性是不如上面两种方法的（在工具部分要考虑实现队列依次发送消息）。但对于实现统一登出这种场景是足够的。毕竟只要发出一个，就不再需要这个订阅了，任务完成！
+
+## 总结
+
+在实际业务中，我选用了第三种方法。简单粗暴，直接有效。

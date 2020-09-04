@@ -57,10 +57,12 @@ function BlogPostLayout({blogRoot}: BlogPostLayoutProps) {
                     showMedia={true}
                     height={160}
                 /> */}
-                <Disqus.DiscussionEmbed
-                    shortname={disqusShortname}
-                    config={disqusConfig}
-                />
+                {process.env.NODE_ENV === 'production' && (
+                    <Disqus.DiscussionEmbed
+                        shortname={disqusShortname}
+                        config={disqusConfig}
+                    />
+                )}
                 <footer className={styles.footer}>
                     <h3 className={styles.title}>
                         <Link href={blogRoot}>{siteMetadata.title}</Link>
