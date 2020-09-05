@@ -6,7 +6,6 @@ export const MyLink = (props) => {
         <Link
             {...props}
             onClick={(e) => {
-                console.log('e::e', e.nativeEvent);
                 e.preventDefault();
                 // @ts-ignore
                 let href = e.nativeEvent.target.href;

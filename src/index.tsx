@@ -8,6 +8,7 @@ import './index.module.css'
 import routes from './routes'
 import * as serviceWorker from './serviceWorker'
 import ThemeService from './service/ThemeService'
+import AnalyticsWrap from './AnalyticsWrap'
 
 // `register()` is responsible for exporting your app's pages and App
 // component to the static renderer, and for starting the app with the
@@ -38,7 +39,9 @@ register({
     // rendering the top-level view.
     renderer(
       <HelmetProvider>
-        <Router hashScrollBehavior='smooth' navigation={navigation} />
+        <AnalyticsWrap>
+          <Router hashScrollBehavior='smooth' navigation={navigation} />
+        </AnalyticsWrap>
       </HelmetProvider>,
       document.getElementById("root")
     )
