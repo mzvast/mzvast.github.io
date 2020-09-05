@@ -1,6 +1,6 @@
 import { Route } from 'navi'
 import React from 'react'
-import { Link } from 'react-navi'
+import Link from '../utils/Link';
 import ArticleMeta from './ArticleMeta'
 import styles from './ArticleSummary.module.css'
 

@@ -1,6 +1,6 @@
 import { join } from 'path'
 import React from 'react'
-import { Link } from 'react-navi'
+import Link from '../utils/Link';
 import { formatDate } from '../utils/formats'
 import styles from './ArticleMeta.module.css'
 
