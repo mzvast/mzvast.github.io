@@ -1,0 +1,226 @@
+import s1 from './s1.png'
+import s2 from './s2.png'
+import s3 from './s3.png'
+import s4 from './s4.png'
+import s5 from './s5.png'
+import s6 from './s6.png'
+
+## 你可以从本文了解到
+
+- 什么是Omni Automation
+- 我的GTD策略
+- 如何编写plugin帮我改进工作流
+
+
+## 什么是Omni Automation
+
+之前OmniFocus更新notes里面就有提到automation，一直没有尝试，对AppleScript编写的脚本不感兴趣。
+
+直到 [sspai的这篇文章](https://sspai.com/post/61126)的出现，我意识到这次不一样！
+
+简单点说，就是现在可以用`JavaScript`编写插件，去操作omnifocus里面的数据啦。
+
+那具体怎么写插件呢？有没有别人写好分享出来的呢？[有！在这](https://omni-automation.com/omnifocus/actions.html)你可以尝试下载别的开发者编写的plugin安装到本地使用。
+
+
+## 我的GTD策略
+
+`收集=>贴标签分类归集=>定期review=>complete`
+
+1. 把task收集记录
+2. 贴上各种维度的标签
+3. 定期review，安排today task
+4. complete
+
+收集、贴标签、做任务这3块没什么好说的，最复杂的是review，我有几个review机制，下面介绍2个常用的Review：
+
+1. Morning Review
+    ```
+    清空 Spark Inbox 
+    清空 OmniFocus Inbox
+    查看ThisWeek标签，标注Today // 重要
+    查看Recently标签，标注Today // 重要
+    查看Today 透视，标注完成时间节点 // 重要
+    ```
+
+2. Weekly Review
+
+    ```
+    写周报
+    查看ThisMonth标签，标注下周任务
+    ```
+
+这是一种`从远到近，逐步明确`的时间管理策略。
+
+在这两个Review的过程中，关于时间的标签会发生流转。
+
+<img src={s1} style={{width:'200px'}}/>
+
+如图所示，我设计了一套跟时间有关的标签。
+
+大致与时间的对应关系如下：
+```
+TagName     def
+Today:      // <today
+ThisWeek:   // 1~7day
+Recently:   // 7day~15day 试运行
+ThisMonth:  // 15～30day
+Someday:    // >30day
+```
+
+在weekly review的时候把它们从ThisMonth调整到ThisWeek。
+
+在morning review的时候把部分ThisWeek调整到Today，并写上一个当日截止时间。
+
+
+### 自动化可行性分析
+
+1. 没有截止日期的task。这种task的tag转变靠的是人的主观判断力，并不能自动化。
+
+2. 有截止日期的task。可以通过自动化脚本从截止日期来同步更新tag。
+
+## 开发过程
+
+<img src={s3} style={{height:'200px'}}/>
+
+首先创建一个插件，选择保存在icloud，这样就可以在Mac和iOS设备间无缝同步了。
+
+开发过程中我们可以打开控制台看log。
+
+<img src={s4} style={{height:'400px'}}/>
+
+还有API文档可以参考（基本上开发就靠consolelog+API文档+参考别人的demo）
+
+<img src={s5}/>
+
+最后我写了这么一个插件。支持选择task，也支持选择tag。
+
+```js
+/*{
+    "author": "Author Name",
+    "targets": ["omnifocus"],
+    "type": "action",
+    "identifier": "com.mycompany.dueDate2Tag",
+    "version": "0.1",
+    "description": "A plug-in that...",
+    "label": "截止日期更新标签",
+    "mediumLabel": "dueDate2Tag",
+    "paletteLabel": "dueDate2Tag",
+}*/
+// 根据截止日期更新标签
+(() => {
+    var action = new PlugIn.Action(function (selection) {
+        console.log('selection', selection.tasks, selection.tags)
+        if (selection.tasks.length == 0 && selection.tags.length === 0) {
+            return;
+        }
+        // Add code to run when the action is invoked
+        // console.log("Invoked with selection", selection);
+        // 获取tag对象
+        function getTagByName(tagName, source) {
+            let result = null;
+            // console.log('source', source, source.name === tagName)
+            if (source.name === tagName) {
+                return source;
+            }
+            let children = source instanceof Array ? source : source.children instanceof Array ? source.children : null
+            if (children) {
+                let len = children.length;
+                let i = 0;
+                while (i < len) {
+                    let cur = getTagByName(tagName, children[i++])
+                    if (cur) {
+                        result = cur;
+                        break;
+                    }
+
+                }
+            }
+            return result
+        }
+
+        function isInDays(date, daysFromNow) {
+            let now = new Date();
+            now.setDate(now.getDate() + daysFromNow);
+            return (now.getTime() > date.getTime())
+        }
+
+        function isInToday(date) {
+            let now = new Date();
+            now.setHours(24, 0, 0, 0);
+            return (now.getTime() > date.getTime())
+        }
+
+        function hasTag(task, tag) {
+            return task.tags.indexOf(tag) !== -1
+        }
+
+        // 更新tag
+        function ToggleOnSchedueTag(task, tag) {
+            task.removeTags(schedueTags.filter(t => t !== tag));
+            task.addTag(tag);
+        }
+
+
+        let Tags = {
+            Today: getTagByName('Today', tags), // <today
+            ThisWeek: getTagByName('ThisWeek', tags),// 1~7day
+            Recently: getTagByName('Recently', tags),//7day~15day 试运行
+            ThisMonth: getTagByName('ThisMonth', tags),//15～30day
+            Someday: getTagByName('Someday', tags)//>30day
+        }
+        let schedueTags = [Tags.Today, Tags.ThisWeek, Tags.Recently, Tags.ThisMonth, Tags.Someday];
+        try {
+            let tasks = []
+            if (selection.tasks.length > 0) { // 选中tasks
+                tasks = selection.tasks
+            } else if (selection.tags.length > 0) { // 选中tags
+                for (const tag of selection.tags) {
+                    
+                    tasks.push(...tag.tasks);
+                }
+            }
+            console.log('tasks', tasks)
+            for (const task of tasks) {
+                let dueDate = task.dueDate;
+                if (dueDate) {
+                    if (isInToday(dueDate)) {
+                        ToggleOnSchedueTag(task, Tags.Today)
+                    } else if (isInDays(dueDate, 7)) {
+                        ToggleOnSchedueTag(task, Tags.ThisWeek)
+                    } else if (isInDays(dueDate, 15)) {
+                        ToggleOnSchedueTag(task, Tags.Recently)
+                    } else if (isInDays(dueDate, 30)) {
+                        ToggleOnSchedueTag(task, Tags.ThisMonth)
+                    } else {
+                        ToggleOnSchedueTag(task, Tags.Someday)
+                    }
+
+                }
+            }
+        } catch (error) {
+
+        }
+    });
+
+    // If needed, uncomment, and add a function that returns true if the current selection is appropriate for the action.
+    /*
+    action.validate = function(selection){
+
+    };
+    */
+
+    return action;
+})();
+
+```
+
+### 功能验证
+
+before
+
+<img src={s2} style={{height:'200px'}}/>
+
+After
+
+<img src={s6} style={{height:'200px'}}/>
