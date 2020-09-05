@@ -52,6 +52,7 @@
   border-radius: 10px;
   overflow: auto;
   padding: 1em;
+  max-height: 60vh;
 }
 
 :global a {
