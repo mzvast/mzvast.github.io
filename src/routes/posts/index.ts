@@ -39,7 +39,6 @@ let postDetails = postPathnames.map(pathname => {
 
 // Sort the pages by slug (which contain the dates)
 postDetails = sortBy(postDetails, ['slug']).reverse();
-
 // Create url-friendly slugs from post pathnames, and a `getPage()` function
 // that can be used to load and return the post's Page object.
 let posts = postDetails.map(({slug, pathname, date}, i) => ({
