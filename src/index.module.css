@@ -73,3 +73,11 @@
 img {
   max-width: 100%;
 }
+:global blockquote {
+  border: dashed 5px var(--primary-color-light);
+  padding: 10px 0 0 10px;
+}
+:global strong {
+  font-weight: 900;
+  font-family: "Lantinghei SC", "Heiti SC", "Microsoft YaHei", "lucida grande", "lucida sans unicode", lucida, "Helvetica Neue", helvetica, "Hiragino Sans GB", "WenQuanYi Micro Hei", sans-serif;;
+}
