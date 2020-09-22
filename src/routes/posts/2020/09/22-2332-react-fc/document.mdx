@@ -1,0 +1,162 @@
+## 你可以从本文了解到
+
+-   React.FC 是什么？和normal functions type 的区别是什么？
+-   如何学习在React中使用TypeScript？
+## React.FC vs normal functions type
+### 1 React.FC 始终隐含可以传入 children
+
+React.FC等价于React.FunctionComponent。
+
+从这一点日常便利性上看，React.FC优于normal functions type。
+
+以下FC代码，一切正常，允许传入children
+```tsx
+import React, { Component, FC } from "react";
+import { render } from "react-dom";
+
+type GreetingProps = {
+  name: string;
+};
+
+export const Greeting:FC<GreetingProps> = ({ name }) => {
+  // name is string!
+  return <h1>Hello {name}</h1>
+};
+
+// use it in the app
+const App = () => <React.Fragment>
+  <Greeting name="Stefan">
+    <span>{"I can set this element but it doesn't do anything"}</span>
+  </Greeting>
+</React.Fragment>
+render(<App />, document.getElementById("root"));
+```
+
+但下面这样写就要出现错误提示了。
+
+`Type '{ children: Element; name: string; }' is not assignable to type 'IntrinsicAttributes & GreetingProps'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & GreetingProps'.(2322)`
+
+```tsx
+import React, { Component, FC } from "react";
+import { render } from "react-dom";
+
+type GreetingProps = {
+  name: string;
+};
+
+function Greeting({ name }: GreetingProps) {
+  return <h1>Hello {name}</h1>
+}
+
+// use it in the app
+const App = () => <React.Fragment>
+  <Greeting name="Stefan">
+  {/* throws errors at me! 💥*/}
+    <span>{"I can set this element but it doesn't do anything"}</span>
+  </Greeting>
+</React.Fragment>
+render(<App />, document.getElementById("root"));
+```
+
+我们得做一些扩展，如下WithChildren部分，通过运算，并上了children属性。
+
+```tsx
+import React, { Component, FC } from "react";
+import { render } from "react-dom";
+
+type WithChildren<T = {}> = 
+  T & { children?: React.ReactNode };
+
+type GreetingProps = WithChildren<{
+  name: string;
+}>;
+
+function Greeting({ name }: GreetingProps) {
+  return <h1>Hello {name}</h1>
+}
+
+// use it in the app
+const App = () => <React.Fragment>
+  <Greeting name="Stefan">
+    <span>{"I can set this element but it doesn't do anything"}</span>
+  </Greeting>
+</React.Fragment>
+render(<App />, document.getElementById("root"));
+```
+
+### 2 React.FC 不支持 defaultProps
+
+但是[这边](https://react-typescript-cheatsheet.netlify.app/docs/basic/getting-started/default_props)提到**defaultProps不建议使用，即将废弃**。
+从这一点长期来看，React.FC还是优于normal functions type。
+
+看下面这段代码，ts 会提示
+
+`Property 'name' is missing in type '{}' but required in type 'GreetingProps'.(2741)`
+
+```tsx
+import React, {Component, FC} from 'react';
+import {render} from 'react-dom';
+
+type GreetingProps = {
+    name: string;
+};
+
+export const Greeting: FC<GreetingProps> = ({name}) => {
+    // name is string!
+    return <h1>Hello {name}</h1>;
+};
+
+Greeting.defaultProps = {
+    name: 'World'
+};
+
+const App = () => (
+    <React.Fragment>
+        {/* boom 💥*/}
+        <Greeting />
+    </React.Fragment>
+);
+
+render(<App />, document.getElementById('root'));
+```
+
+而改成正常的type声明，如下所示，就pass了
+
+```tsx
+import React, { Component, FC } from "react";
+import { render } from "react-dom";
+
+type GreetingProps = {
+  name: string;
+};
+
+export const Greeting = ({ name }:GreetingProps) => {
+  // name is string!
+  return <h1>Hello {name}</h1>;
+};
+
+Greeting.defaultProps = {
+  name: "World"
+};
+
+const App = () => (
+  <React.Fragment>
+  {/*✅*/}
+    <Greeting />
+  </React.Fragment>
+);
+
+render(<App />, document.getElementById("root"));
+```
+## 如何学习在React中使用TypeScript？
+
+[typescript-cheatsheets/react](https://github.com/typescript-cheatsheets/react)是一个很好的起点和手册查询地方。
+
+本文只是抛砖引玉，之后有什么有意思的点，还会case by case的讨论学习。
+
+## References
+
+[TypeScript + React: Why I don't use React.FC](https://fettblog.eu/typescript-react-why-i-dont-use-react-fc/)
+
+[typescript-cheatsheets/react](https://github.com/typescript-cheatsheets/react)
