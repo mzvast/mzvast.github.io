@@ -34,9 +34,11 @@ function addGoogle() {
 }
 
 const AnalyticsWrap = (props) => {
-    console.log('render::AnalyticsWrap');
-    addBaidu();
-    addGoogle();
+    const shouldLoad = process.env.NODE_ENV === 'production';
+    shouldLoad &&
+        addBaidu() &&
+        addGoogle() &&
+        console.log('render::AnalyticsWrap');
     return props.children;
 };
 export default AnalyticsWrap;
