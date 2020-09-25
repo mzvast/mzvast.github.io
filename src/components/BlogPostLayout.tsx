@@ -1,6 +1,5 @@
 import React from 'react';
-import {useCurrentRoute, useView} from 'react-navi';
-import Link from '../utils/Link';
+import {Link, useCurrentRoute, useView} from 'react-navi';
 import {MDXProvider} from '@mdx-js/react';
 import siteMetadata from '../siteMetadata';
 import ArticleMeta from './ArticleMeta';

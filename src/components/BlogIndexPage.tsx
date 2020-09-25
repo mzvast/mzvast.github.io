@@ -1,6 +1,6 @@
 import {Route} from 'navi';
 import React from 'react';
-import Link from '../utils/Link';
+import {Link} from 'react-navi';
 import siteMetadata from '../siteMetadata';
 import ArticleSummary from './ArticleSummary';
 import Bio from './Bio';

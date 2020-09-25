@@ -1,5 +1,5 @@
 import React from 'react'
-import Link from '../utils/Link';
+import { Link } from 'react-navi'
 import styles from './TagIndexPage.module.css'
 
 interface Tag {
