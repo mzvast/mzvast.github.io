@@ -45,7 +45,7 @@
 :global(pre),
 :global(code) {
   font-family: Consolas, Menlo, Monaco, source-code-pro, "Courier New", monospace;
-  font-size: 0.85rem;
+  font-size: 1rem;
   line-height: 1.5;
 }
 :global pre {
@@ -57,8 +57,11 @@
 
 :global a {
   color: var(--primary-color);
+  box-shadow: 0 1px 0 0 currentColor;
+  text-decoration: none;
 }
 :global a:hover {
+  box-shadow: none;
   text-decoration: none;
 }
 
@@ -74,10 +77,29 @@ img {
   max-width: 100%;
 }
 :global blockquote {
-  border: dashed 5px var(--primary-color-light);
-  padding: 10px 0 0 10px;
+    margin-left: -1.75rem;
+    margin-right: 1.75rem;
+    margin-top: 0;
+    padding-bottom: 0;
+    padding-left: 1.42188rem;
+    padding-right: 0;
+    padding-top: 0;
+    margin-bottom: 1.75rem;
+    font-size: 1.20112rem;
+    line-height: 1.75rem;
+    color: inherit;
+    font-style: italic;
+    border-left: 0.32813rem solid hsla(0,0%,0%,0.9);
+    border-left-color: inherit;
+    opacity: 0.8;
+
+    display: block;
+    margin-block-start: 1em;
+    margin-block-end: 1em;
+    margin-inline-start: 40px;
+    margin-inline-end: 40px;
 }
 :global strong {
-  font-weight: 900;
-  font-family: "Lantinghei SC", "Heiti SC", "Microsoft YaHei", "lucida grande", "lucida sans unicode", lucida, "Helvetica Neue", helvetica, "Hiragino Sans GB", "WenQuanYi Micro Hei", sans-serif;;
+  font-weight: 700;
+  font-family:  "Heiti", sans-serif;;
 }

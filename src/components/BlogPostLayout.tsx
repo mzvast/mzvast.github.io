@@ -32,7 +32,9 @@ function BlogPostLayout({blogRoot}: BlogPostLayoutProps) {
             <article className={styles.container}>
                 <header className={styles.header}>
                     <h1 className={styles.title}>
-                        <Link href={url.pathname}>{title}</Link>
+                        <Link style={{boxShadow: 'none'}} href={url.pathname}>
+                            {title}
+                        </Link>
                     </h1>
                     <ArticleMeta
                         blogRoot={blogRoot}
@@ -71,20 +73,24 @@ function BlogPostLayout({blogRoot}: BlogPostLayoutProps) {
                     <Bio className={styles.bio} />
                     <section className={styles.links}>
                         {data.previousDetails && (
-                            <Link
-                                className={styles.previous}
-                                href={data.previousDetails.href}
-                            >
-                                ← {data.previousDetails.title}
-                            </Link>
+                            <div style={{marginBottom: '14px'}}>
+                                <Link
+                                    className={styles.previous}
+                                    href={data.previousDetails.href}
+                                >
+                                    ← {data.previousDetails.title}
+                                </Link>
+                            </div>
                         )}
                         {data.nextDetails && (
-                            <Link
-                                className={styles.next}
-                                href={data.nextDetails.href}
-                            >
-                                {data.nextDetails.title} →
-                            </Link>
+                            <div style={{marginBottom: '14px'}}>
+                                <Link
+                                    className={styles.next}
+                                    href={data.nextDetails.href}
+                                >
+                                    {data.nextDetails.title} →
+                                </Link>
+                            </div>
                         )}
                     </section>
                 </footer>
