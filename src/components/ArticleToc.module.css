@@ -1,0 +1,10 @@
+.blockquote,
+.blockquote li {
+    padding: 0;
+    margin: 0;
+    font-style: normal;
+}
+.blockquote ul {
+    list-style: none;
+    padding-left: 32px;
+}

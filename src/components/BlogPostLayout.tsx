@@ -6,6 +6,7 @@ import ArticleMeta from './ArticleMeta';
 import Bio from './Bio';
 import styles from './BlogPostLayout.module.css';
 import Disqus from 'disqus-react';
+import ArticleToc from './ArticleToc';
 
 interface BlogPostLayoutProps {
     blogRoot: string;
@@ -14,14 +15,14 @@ interface BlogPostLayoutProps {
 function BlogPostLayout({blogRoot}: BlogPostLayoutProps) {
     let {title, data, url} = useCurrentRoute();
     let {connect, content, head} = useView()!;
-    let {MDXComponent, readingTime} = content;
+    let {MDXComponent, readingTime, tableOfContents} = content;
     const disqusShortname = 'miaocode';
     const disqusConfig: any = {
         url: 'https://mzvast.github.io' + url.pathname,
         identifier: data.slug,
         title: title
     };
-    console.log('useCurrentRoute::title, data, url', title, data, url);
+    // console.log('useCurrentRoute::content', content, tableOfContents());
     // The content for posts is an MDX component, so we'll need
     // to use <MDXProvider> to ensure that links are rendered
     // with <Link>, and thus use pushState.
@@ -49,6 +50,7 @@ function BlogPostLayout({blogRoot}: BlogPostLayoutProps) {
                         )
                     }}
                 >
+                    <ArticleToc tableOfContents={tableOfContents} />
                     <MDXComponent />
                 </MDXProvider>
                 {/* <Disqus.CommentCount shortname={disqusShortname} config={disqusConfig}>
