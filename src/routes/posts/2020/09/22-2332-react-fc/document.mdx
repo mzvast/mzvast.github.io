@@ -11,18 +11,18 @@ React.FC等价于React.FunctionComponent。
 
 以下FC代码，一切正常，允许传入children
 ```tsx
-import React, { Component, FC } from "react";
+import React, { Component, FC } from "react";// highlight-line
 import { render } from "react-dom";
 
 type GreetingProps = {
   name: string;
 };
-
+// highlight-start
 export const Greeting:FC<GreetingProps> = ({ name }) => {
   // name is string!
   return <h1>Hello {name}</h1>
 };
-
+// highlight-end
 // use it in the app
 const App = () => <React.Fragment>
   <Greeting name="Stefan">
