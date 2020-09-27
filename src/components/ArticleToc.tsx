@@ -7,7 +7,7 @@ function TocItem(data) {
         return null;
     }
     if (data instanceof Array) {
-        console.log('data::data', data);
+        // console.log('data::data', data);
         return (
             <ul>
                 {data.map((item, index) => {
