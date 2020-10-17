@@ -1,0 +1,404 @@
+## 帧动画闪烁和浏览器兼容性
+
+分为规则闪烁和不规则闪烁两种。
+
+1.规则闪烁
+
+规则闪烁在不同浏览器表现不一样。chrome、ie、edge 各自有各自的问题。
+
+1、图片删除、插入式的动画方式，在 ie11 上会闪烁。
+
+2、替换图片 src 的动画方式，在 edge 上会闪烁。
+
+3、替换背景图也在 chrome 有不同程度的问题。
+
+摸索下来，选择了方案 2，然后在 edge 上做试验，寻找引起闪烁的原因尝试修复。
+目前没有严格准确的结论，但对图片`压缩尺寸`后，闪烁就消失了（`png压缩后损失alpha通道，丢失透明度`）。初步结论 edge 渲染效能有问题。
+
+2.不规则闪烁
+
+与浏览器无关，都会发生。在刷新页面或者切页面时容易出现，主要原因是“重入”。
+
+## webpack 与调试 es5
+
+参考[本文](https://github.com/jaredpalmer/razzle/issues/998#issuecomment-576892323)，通过修改 webpack 的 dev server 配置，使得client使用webpack/hot/dev-server，可以实时编译成 es5 给 IE 调试。 提高了调试效率，尤其是IE11。
+
+问：`webpack/hot/dev-server`怎么知道该编译成 es5？
+
+答：基于package.json的`browserslist配置`。
+
+源码对应的位置：
+
+```js
+// node_modules/razzle/config/createConfig.js
+// line 381
+config.entry = {
+    client: [
+        // highlight-start
+        require.resolve('razzle-dev-utils/webpackHotDevClient'),
+        // 将上面这行替换成require.resolve('webpack/hot/dev-server')
+        // highlight-end
+        paths.appClientIndexJs
+    ]
+};
+```
+
+具体步骤：
+
+1.razzle配置化修改
+
+```js
+// razzle.config.js
+module.exports = {
+    plugins: [
+        {
+            name: 'typescript',
+            options: {
+                useBabel: false,
+                tsLoader: {
+                    transpileOnly: true,
+                    experimentalWatchApi: true
+                },
+                forkTsChecker: {
+                    tsconfig: './tsconfig.json',
+                    tslint: false,
+                    watch: './src',
+                    typeCheck: true
+                }
+            }
+        }
+    ],
+    // highlight-start
+    modify: (config, {target, dev}) => {
+        if (dev && process.env.ECMA === '5') {
+            // 这里ECMA是环境变量控制的功能开关
+            config.entry.client[0] = require.resolve('webpack/hot/dev-server');
+        }
+
+        return config;
+    }
+    // highlight-end
+};
+```
+
+2.增加带功能开关的脚本，配置正确的browserslist。
+
+```json
+// package.json
+{
+    "name": "cra-ts-ssr-zero",
+    "version": "1.0.0",
+    "license": "MIT",
+    "scripts": {
+        "new:component": "hygen component new",
+        "new:page": "hygen page new",
+        "start": "PUBLIC_PATH=./ CLIENT_PUBLIC_PATH=/ razzle start --type=spa",
+        // highlight-start
+        "start:es5": "PUBLIC_PATH=./ CLIENT_PUBLIC_PATH=/ ECMA=5 razzle start --type=spa",
+        // highlight-end
+        "build": "PUBLIC_PATH=./ razzle build --type=spa"
+    },
+    "browserslist": [
+        ">0.2%",
+        "not dead",
+        "not ie <= 11",
+        "not op_mini all",
+        "chrome >=51"
+    ]
+}
+```
+
+## IE11 CSS兼容性相关
+
+在做布局的时候用了Grid，ie11不支持，只能转成Flex布局。
+
+```tsx
+const GridContainer: any = styled.div`
+    // grid-template-columns: 300px 300px 300px;
+    // grid-template-rows: 200px 200px 200px;
+    // grid-column-gap: 20px;
+    // grid-row-gap: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    max-width: 940px;
+    justify-content: space-between;
+`;
+const Card: any = styled(Box)<{bg: string}>`
+    width: 300px; // ++
+    height: 200px; // ++
+    position: relative;
+    background: url(${({bg}) => bg}) no-repeat center;
+    border-radius: 3px;
+    overflow: hidden;
+    :not(:nth-child(-n + 3)) { // ++
+        margin-top: 20px; // ++
+    } // ++
+`;
+```
+
+关于IE样式的大部分问题，通常可以尝试显式指定宽高。
+
+## 百度云缓存
+
+bos 和 cdn 资源默认配置了 3 天的强缓存。导致资源更新不能及时生效，建议配置更短的强缓存时间，避免同名资源替换生效时间过长。
+
+## PNG 压缩
+
+png 在百度云图像处理压缩后会丢失 alpha 通道，导致一些有部分透明的主色为白的图片变成全白。因此尽量避免压缩 png，只有在背景不是透明的情况下才是相对安全的。
+
+## unicode 文本编码
+
+在走查视觉的时候会发现一行字中有两种不同的字体。但看源码中文本并没有什么字体差别。其实文案中存在两种不同范围的 unicode 编码。[参见](https://blog.csdn.net/gstianfu/article/details/84643320)
+
+其中用于`部首`的 unicode，编码范围是从 U+2F00 到 U+2FD5。
+
+另一种用于`常用汉字`的编码范围是 U+4E00 到 U+9FFF。
+
+显示字体不同原因：在某些 win10 机器的“雅黑”字库中常用汉字字体有映射，另部首则没有，故采用回落字体（等线）显示。
+
+问题产生原因猜测：文案编写者采用的输入法有问题，未按照常用汉字的规范化编码。
+
+目前 unicode 有：NFD（默认）、NFC、NFKD、NFKC 四种规范化形式。英文和一些部首采用 NFD、NFC，而常用汉字采用 NFKD、NFKC 形式。
+
+解决思路：将部首转换到常用汉字编码范围。比如都转换成 NFKD。
+
+ES6 中提供了工具函数[String.prototype.normalize()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/normalize)，可以传入参数`"NFKD"`。
+
+## 帧动画实现
+
+可改进的点：减少图片请求数量、采用RAF替代 setTimeout、从可见性方面节能。
+
+代码如下：
+
+```tsx
+/**
+ * @file [FrameAnimate]
+ * @author [mzvast]
+ * @email [mzvast@gmail.com]
+ * @create date 2020-10-10 17:40:42
+ */
+/* eslint-disable max-len,babel/new-cap,operator-linebreak,fecs-export-on-declare,space-before-function-paren */
+import React, {PureComponent} from 'react';
+import {styled, css, keyframes, Box, palette, Flex} from 'galaco';
+import getBosPicUrl from 'common/getBosPicUrl';
+import {flexCenter} from 'components/sharedStyle';
+
+// borrowed from by https://www.zhangxinxu.com/study/201805/image-sequence-frame-play.html
+
+// 24 fps=> 42ms per img
+const Container: any = styled(Box)`
+    cursor: default;
+    img {
+        min-width: 100%;
+        min-height: 100%;
+    }
+`;
+const PuppyContainer: any = styled.img`
+    flex-shrink: 0;
+`;
+const TextWrap: any = styled(flexCenter)`
+    flex-direction: column;
+    position: absolute;
+    top: 240px;
+    width: 100%;
+`;
+const BigText: any = styled(Box)`
+    font-family: PingFangSC-Medium;
+    font-size: 62px;
+    color: #ffffff;
+    line-height: 60px;
+`;
+const SmallText: any = styled(Box)`
+    font-family: PingFangSC-Regular;
+    font-size: 18px;
+    color: #ffffff;
+    letter-spacing: 0;
+    line-height: 24px;
+    margin-top: 30px;
+`;
+const text = {
+    big: 'BIG_TEXT',
+    small: 'SMALL_TEXT'
+};
+type Props = {
+    urlRoot: string;
+    indexRange: number[]; // 动画帧范围eg,[1,143]
+    visible?: boolean; // 当前状态是否用户可见，用于控制起停
+};
+type State = {};
+class FrameAnimate extends PureComponent<Props, State> {
+    state: State;
+
+    static defaultProps = {};
+    store = {length: 0};
+    pendingStore = {length: 0};
+    maxLength;
+    eleContainer;
+    elPuppy;
+    timer;
+    isPlaying = false; // flag
+    lastIndex; // for reset use only
+
+    render() {
+        return (
+            <Container>
+                <Flex use={flexCenter} id="container">
+                    <PuppyContainer id="puppy" />
+                </Flex>
+                <TextWrap>
+                    <BigText>{text.big}</BigText>
+                    <SmallText>{text.small}</SmallText>
+                </TextWrap>
+            </Container>
+        );
+    }
+
+    componentDidMount() {
+        this.eleContainer = document.getElementById('container');
+        this.elPuppy = document.getElementById('puppy');
+        this.insertPlaceholder();
+        this.prefetchImg();
+    }
+
+    componentWillUnmount() {
+        this.timer && clearTimeout(this.timer);
+        this.clearAllPendingImg();
+    }
+
+    setSrc = (idx, force = false) => {
+        // idx===0 占位图
+        if (!force && (this.elPuppy.prevIdx === idx || !this.store[idx])) {
+            return;
+        }
+        let src = this.getOptUrl(
+            this.props.urlRoot + ('000' + idx).slice(-3) + '.png'
+        );
+        // console.log('ddt::setSrc,idx', idx);
+        this.elPuppy.src = src;
+        this.elPuppy.prevIdx = idx;
+    };
+    // highlight-start
+    // 不建议使用cwrp接口
+    componentDidUpdate(prevProps, prevState) {
+        // highlight-end
+        // console.log(
+        //     'ddt::prevProps.visible,this.props.visible',
+        //     prevProps.visible,
+        //     this.props.visible
+        // );
+        if (!prevProps.visible && this.props.visible) {
+            this.play();
+        } else {
+            this.reset();
+        }
+    }
+
+    getOptUrl = (url) => {
+        return getBosPicUrl.frame(url);
+    };
+
+    // 占位图
+    insertPlaceholder = () => {
+        // may have some latency due to network speed
+        const {indexRange, urlRoot} = this.props;
+        this.setSrc(0, true);
+    };
+
+    /**
+     *  图片预加载task manage相关-start
+     * */
+    addPendingImg = (idx, img) => {
+        this.pendingStore[idx] = img;
+    };
+
+    removePendingImg = (idx) => {
+        if (this.pendingStore[idx]) {
+            delete this.pendingStore[idx];
+        }
+    };
+
+    clearAllPendingImg = () => {
+        for (const idx in this.pendingStore) {
+            if (Object.prototype.hasOwnProperty.call(this.pendingStore, idx)) {
+                if (this.pendingStore[idx].src) {
+                    this.pendingStore[idx].onload = null;
+                    this.pendingStore[idx].onerror = null;
+                    this.pendingStore[idx].src = '';
+                }
+                this.removePendingImg(idx);
+            }
+        }
+    };
+    /**
+     *  图片预加载task manage相关-end
+     * */
+
+    // 预加载图片到内存
+    prefetchImg = () => {
+        const {indexRange, urlRoot} = this.props;
+        this.maxLength = indexRange[1] - indexRange[0] + 1;
+        for (let idx = indexRange[0]; idx <= indexRange[1]; idx++) {
+            const img = new Image();
+            let src = this.getOptUrl(
+                urlRoot + ('000' + idx).slice(-3) + '.png'
+            );
+            img.onload = () => {
+                this.store.length++;
+                // 存储预加载的图片对象
+                this.store[idx] = img;
+                img.src && this.play();
+                this.removePendingImg(idx);
+            };
+            img.onerror = () => {
+                this.store.length++;
+                img.src && this.play();
+                this.removePendingImg(idx);
+            };
+            img.src = src;
+            this.addPendingImg(idx, img);
+        }
+    };
+
+    play = () => {
+        const {indexRange, urlRoot} = this.props;
+        const percent = Math.round((100 * this.store.length) / this.maxLength);
+        // 预加载完毕后开始动画，防重入
+        if (percent == 100 && !this.isPlaying) {
+            this.isPlaying = true;
+            let index = indexRange[0];
+
+            // 依次append图片对象
+            const step = () => {
+                if (!this.isPlaying || !this.props.visible) {
+                    return;
+                }
+                this.setSrc(index);
+                this.lastIndex = index; // remember last inserted index
+                // 序列增加
+                index++;
+                // 如果超过最大限制
+                if (index <= indexRange[1]) {
+                    this.timer = setTimeout(step, 42);
+                } else {
+                    // 本段播放结束回调
+                    this.reset();
+                }
+            };
+            // 等100%动画结束后执行播放
+            this.timer = setTimeout(() => {
+                step();
+            }, 100);
+        }
+    };
+
+    // 重置
+    reset = () => {
+        if (!this.isPlaying) return;
+        this.isPlaying = false;
+        const {indexRange, urlRoot} = this.props;
+        this.setSrc(this.lastIndex);
+        this.timer && clearTimeout(this.timer);
+    };
+}
+export default FrameAnimate;
+```
