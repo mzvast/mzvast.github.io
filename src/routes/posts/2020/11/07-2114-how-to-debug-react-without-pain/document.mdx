@@ -1,0 +1,276 @@
+## 如何愉快的调试react
+
+React是一个huge code base。研究它，有许多方法。我希望可以一边开着一个app（SPA？），这个app引入一个本地的react，在里面搞事情，并可以实时看到效果。
+
+思路主要是在于两端（app端和store端）如何链接起来。
+
+### 原有方案：store端push，app端pull
+
+我在之前主要用yalc改包发布到本地store，app引入yalc的store中的react。这样的好处是完全不需要修改app编译的过程，但是build，push package，pull package，pull，restart，restart 的4步走过程并算不上友好。（只适用于简单的调试，频繁的修改会shi的）
+
+### 新方案：整合package到app端，live-reload
+
+如果修改webpack打包过程，让app识别这一个package副本（webpack alias），并借助hmr能力，使得修改源码可以实时生效。岂不是很美？当然，这也并不是什么新技术，只是整合一下已有的技术。
+
+## 实现
+
+### Step1 Base
+
+首先需要一个solid的基础，毫无疑问，选择最新版CRA，并且eject。
+
+```bash
+npx create-react-app debug-react-ts --template typescript
+cd debug-react-ts
+yarn run eject
+```
+
+### Step2 下载源码，魔改config
+
+首先下载React源码（建议17），放入src目录下。
+
+然后准备修改`config/webpack.config.js`文件。
+
+全文搜索alias，该部分内容替换成如下：
+
+```js
+      alias: {
+          // highlight-start
+        react: path.resolve(__dirname, "../src/react/packages/react"),
+        "react-dom": path.resolve(__dirname, "../src/react/packages/react-dom"),
+        "legacy-events": path.resolve(
+          __dirname,
+          "../src/react/packages/legacy-events"
+        ),
+        shared: path.resolve(__dirname, "../src/react/packages/shared"),
+        "react-reconciler": path.resolve(
+          __dirname,
+          "../src/react/packages/react-reconciler"
+        ),
+        "react-events": path.resolve(__dirname, "../src/react/packages/events"),
+        scheduler: path.resolve(__dirname, "../src/react/packages/scheduler")
+        // highlight-end
+      },
+```
+接着，如果start的话会报错，大致意思是react的源码里面有flow的语法，ts不认识。我们只要安装插件忽略掉这个问题即可。
+
+```bash
+yarn add -D @babel/plugin-transform-flow-strip-types
+```
+
+在这个位置加入这个插件
+```tsx
+plugins: [
+            [
+            require.resolve('babel-plugin-named-asset-import'),
+            {
+                loaderMap: {
+                svg: {
+                    ReactComponent:
+                    '@svgr/webpack?-svgo,+titleProp,+ref![path]',
+                },
+                },
+            },
+            ],
+            /* highlight-next-line */
+            [require.resolve("@babel/plugin-transform-flow-strip-types")],
+            isEnvDevelopment &&
+            shouldUseReactRefresh &&
+            require.resolve('react-refresh/babel'),
+        ].filter(Boolean),
+```
+
+### Step3 修复报错
+
+run起来，可以看到报错
+
+```bash
+Failed to compile.
+
+./src/react/packages/react-reconciler/src/ReactFiberCommitWork.js
+Attempted import error: 'appendChild' is not exported from './ReactFiberHostConfig'.
+```
+
+找到`src/react/packages/react-reconciler/src/ReactFiberHostConfig.js`文件，修改如下：
+
+```js
+// highlight-start
+// invariant(false, 'This module must be shimmed by a specific renderer.');
+export * from "./forks/ReactFiberHostConfig.dom";
+// highlight-end
+```
+
+接着会看到报错
+
+```bash
+./src/react/packages/react-reconciler/src/ReactFiberWorkLoop.old.js
+Attempted import error: 'unstable_flushAllWithoutAsserting' is not exported from 'scheduler' (imported as 'Scheduler').
+```
+
+找到
+
+文件`src/react/packages/scheduler/index.js`增加内容
+```js
+
+'use strict';
+
+export * from './src/Scheduler';
+// highlight-start
+export {
+    unstable_flushAllWithoutAsserting,
+    unstable_flushNumberOfYields,
+    unstable_flushExpired,
+    unstable_clearYields,
+    unstable_flushUntilNextPaint,
+    unstable_flushAll,
+    unstable_yieldValue,
+    unstable_advanceTime
+  } from './src/SchedulerHostConfig.js';
+  // highlight-end
+```
+
+再在`src/react/packages/scheduler/src/SchedulerHostConfig.js`修改并增加内容
+
+```js
+// highlight-start
+// throw new Error('This module must be shimmed by a specific build.');
+export {
+  unstable_flushAllWithoutAsserting,
+  unstable_flushNumberOfYields,
+  unstable_flushExpired,
+  unstable_clearYields,
+  unstable_flushUntilNextPaint,
+  unstable_flushAll,
+  unstable_yieldValue,
+  unstable_advanceTime
+} from "./forks/SchedulerHostConfig.mock.js";
+
+export {
+  requestHostCallback,
+  requestHostTimeout,
+  cancelHostTimeout,
+  shouldYieldToHost,
+  getCurrentTime,
+  forceFrameRate,
+  requestPaint
+} from "./forks/SchedulerHostConfig.default.js";
+// highlight-end
+```
+
+然后cli里面不报错了，但是browser里面报错
+
+```bash
+ReferenceError: __DEV__ is not defined
+Module.<anonymous>
+src/react/packages/react/src/ReactBaseClasses.js:13
+```
+
+找到`config/env.js`，在末尾修改
+
+```js
+// Stringify all values so we can feed into webpack DefinePlugin
+  const stringified = {
+    'process.env': Object.keys(raw).reduce((env, key) => {
+      env[key] = JSON.stringify(raw[key]);
+      return env;
+    }, {}),
+    // highlight-start
+    __DEV__: false, //true,
+    __PROFILE__: false, // true,
+    __UMD__: true,
+    __EXPERIMENTAL__: true
+    // highlight-end
+  };
+```
+可以看到又报错了，
+```bash
+
+TypeError: Cannot destructure property 'ReactCurrentDispatcher' of 'shared_ReactSharedInternals__WEBPACK_IMPORTED_MODULE_3__.default' as it is undefined.
+Module.<anonymous>
+src/react/packages/shared/ReactComponentStackFrame.js:28
+```
+修改`src/react/packages/shared/ReactSharedInternals.js`文件，
+
+```js
+import * as React from 'react';
+// highlight-start
+// const ReactSharedInternals =
+//   React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+import ReactSharedInternals from "../react/src/ReactSharedInternals";
+// highlight-end
+export default ReactSharedInternals;
+
+```
+
+然后又报错惹！
+```bash
+×
+Error: Internal React error: invariant() is meant to be replaced at compile time. There is no runtime version.
+```
+
+修改`src/react/packages/shared/invariant.js`文件
+
+```js
+export default function invariant(condition, format, a, b, c, d, e, f) {
+    // highlight-next-line
+  if (condition) return;
+  throw new Error(
+    'Internal React error: invariant() is meant to be replaced at compile ' +
+      'time. There is no runtime version.',
+  );
+}
+```
+
+### linter配置修改
+
+首先eslint会报错，说react的包中fbjs的eslint-config不存在，我们让eslint忽略掉`src/react`就行。
+
+新增`.eslintignore`
+
+```js
+// highlight-start
+src/react
+// highlight-end
+```
+
+修改`tsconfig.json`，排除掉react代码
+
+```json
+{
+  "compilerOptions": {
+    "target": "es5",
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": false,
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
+    "module": "esnext",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react"
+  },
+  "include": [
+    "src"
+  ],
+  // highlight-start
+  "exclude": [
+    "src/react"
+  ]
+  // highlight-end
+}
+
+```
+
+## 总结和最终代码
+
+完成了这些设定之后，我们就可以愉快的在app里玩react的源码啦～
+
+工程的代码在[github](https://github.com/mzvast/debug-react-ts)
