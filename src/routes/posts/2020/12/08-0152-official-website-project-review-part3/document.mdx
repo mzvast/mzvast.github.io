@@ -1,0 +1,225 @@
+## 你可以从本文了解到
+
+## 帧动画方案的变更
+
+由于 part1 部分提到的“换图的方案”产生的网络请求过多，影响了页面整体的加载。
+
+为此改变了方案，采用了 CSS Sprites 动画。说人话就是 N 张帧动画合成一张大图，然后按顺序换背景图的取图位置。
+
+为此我做了一个工具项目[frame-animation-sprite-maker](https://github.com/mzvast/frame-animation-sprite-maker)，里面主要是用到了 gka 这个包，使用的方法是把图片放入 images 目录下，运行`npm run build:gka`会在 build 目录下生成合成的图，之后如果图片尺寸比较大，那么 gka 压缩会出错，我们可以手动采用 imagemin 再压一遍，执行`npm run imagemin`即可在 dist 目录下产生如下配置的压缩图片啦。
+
+```js
+// frame-animation-sprite-maker/imagemin.js
+const imagemin = require('imagemin');
+// const imageminJpegtran = require('imagemin-jpegtran');
+const imageminPngquant = require('imagemin-pngquant');
+
+(async () => {
+    const files = await imagemin(['build/**/**.{jpg,png}'], {
+        destination: 'dist',
+        plugins: [
+            // imageminJpegtran(),
+            imageminPngquant({
+                quality: [0.6, 0.8]
+            })
+        ]
+    });
+
+    console.log(files);
+    //=> [{data: <Buffer 89 50 4e …>, destinationPath: 'build/images/foo.jpg'}, …]
+})();
+```
+
+而在移动端，这套动画的兼容性还是不够好。为此我们用 Gif 图做了 H5 的动画。CSS 动画还是留给了 PC。
+
+## 移动端返回位置问题，hook 相关
+
+这个问题主要出现在移动端，用户在返回上一个页面的时候，有一定几率停在错误的地方。据称在 Android 上较为容易出现。为此，只好手动实现一个简单的位置记录器。但逻辑对的，但就是拿不到正确的高度，在页面销毁的时候，总是会发生高度突变。
+然后，就想到了 useEffect 是异步入列的，可以试试同步执行的 useLayoutEffect，结果还真好了，执行提前了，高度不会突变了。
+
+```typescript
+import Env from 'Env';
+import {useEffect, useLayoutEffect} from 'react';
+import {useLocation, useHistory} from 'react-router-dom';
+let isFirstLoad = true;
+// blocking mode will delay page render, so element will not show immediately
+let scrollMap = {};
+let lastPathname = '';
+export default function ScrollToTopPatch() {
+    const {pathname, state} = useLocation();
+    const {action, length, location} = useHistory();
+    // console.log('ddt::action', action, isFirstLoad);
+    let skip = false;
+    if (action === 'POP' && !isFirstLoad) {
+        // history返回不跳转顶部
+        skip = true;
+        // fix hooks order change , DON'T return null
+    }
+    isFirstLoad = false;
+
+    // highlight-next-line
+    useLayoutEffect(() => {
+        // console.log('ddt::pathname', pathname);
+        // console.log('ddt::action', action, pathname, lastPathname);
+        if (action === 'POP') {
+            // console.log('ddt::doScroll', action);
+            // back?
+            // highlight-next-line
+            if (pathname in scrollMap) {
+                // pop时，如果有存，则回到记忆的位置
+                // console.log('ddt::doScroll', action, scrollMap[pathname]);
+                window.scrollTo(0, scrollMap[pathname]);
+            }
+            return;
+        }
+        if (skip) return;
+        // use search instead of hash when using history router
+        const hasJumpSignal = location.search.includes('anchor=');
+        if (hasJumpSignal) {
+            const anchor: string = location.search
+                .split('anchor=')[1]
+                .split('&')[0];
+            const element: any = document.getElementById(anchor);
+            const backScrollOffset = Env.ua.isH5 ? 100 : 200;
+            element && window.scrollTo(0, element.offsetTop - backScrollOffset);
+        } else {
+            // console.log('ddt::top!');
+            window.scrollTo(0, 0);
+        }
+    }, [pathname]);
+
+    // highlight-next-line
+    useLayoutEffect(() => {
+        // 此处用useEffect则会读到错误的尺寸
+        return () => {
+            // console.log('ddt::unmount!', pathname);
+            scrollMap[pathname] = window.scrollY; //max; //
+            // console.log('ddt::do scrollMap', scrollMap);
+            lastPathname = pathname;
+        };
+    }, []);
+
+    return null;
+}
+```
+
+## 开发效率的相关工具、库
+
+hygen 做代码生成器，统一 components、pages 的模板
+
+storybook 做 UI 组件的独立开发环境（单测环境）
+
+## SSR 模式下的 es5 直连调试方法
+
+part1 提到 SPA 模式下的直连方法。但在 SSR 模式下，由于端口占用等问题，就失效了。
+
+其实要解决两个问题：
+
+### 第一步是如何让双server在代理的情况下run起来。
+
+
+razzle的ssr开发环境的双server架构，大致如下：
+
+3000=> express server 负责renderToString，流量的直接入口
+3001=> webpackDevServer 负责静态文件（默认注入localhost:3001）
+
+而在外部设备如手机端通过proxy连接，将不能解析localhost:3001，因此可以通过如下配置转发。
+
+```
+http://vredu.baidu.com localhost:3000
+http://vvredu.baidu.com localhost:3001
+```
+
+这样就完成了端口转发。
+
+### 第二部是如何编译成es5
+
+第一步完成后，发现外部的js转成了es5，但是一些razzle内部的代码还是es6.
+
+还好我们在 github 上找到这样的实现方法，将这些文件再次进行babel编译。
+
+```js
+// razzle.config.js
+const ieRule = {
+    test: /\.jsx?$/,
+    include: new RegExp(
+        `node_modules/(?=(${[
+            'acorn-jsx',
+            'estree-walker',
+            'regexpu-core',
+            'unicode-match-property-ecmascript',
+            'unicode-match-property-value-ecmascript',
+            'react-dev-utils',
+            'ansi-styles',
+            'ansi-regex',
+            'chalk',
+            'strip-ansi'
+        ].join('|')}))`
+    ),
+    use: {
+        loader: 'babel-loader',
+        options: {
+            presets: [
+                [
+                    '@babel/preset-env',
+                    {
+                        targets: {
+                            ie: 11
+                        }
+                    }
+                ]
+            ]
+        }
+    }
+};
+module.exports = {
+    plugins: [
+        {
+            name: 'typescript',
+            options: {
+                useBabel: false,
+                tsLoader: {
+                    transpileOnly: true,
+                    experimentalWatchApi: true
+                },
+                forkTsChecker: {
+                    tsconfig: './tsconfig.json',
+                    tslint: false,
+                    watch: './src',
+                    typeCheck: true
+                }
+            }
+        }
+    ],
+    modifyWebpackConfig: ({env: {target, dev}, webpackConfig: config}) => {
+        if (dev && target === 'web' && process.env.ECMA === '5') {
+            console.log('es5 running');
+            // config.entry.client[0] = require.resolve('webpack/hot/dev-server');
+            config.module.rules.unshift(ieRule);
+        }
+    }
+};
+```
+```json
+// .babelrc
+{
+    "presets": [
+      [
+        "razzle/babel",
+        {
+          "targets": {
+            "browsers": [
+              "ie 11",
+              "last 2 Chrome versions",
+              "last 2 Firefox versions",
+              "last 2 Safari versions"
+            ]
+          }
+        }
+      ]
+    ]
+  }
+```
+
+
+

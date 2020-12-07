@@ -1,0 +1,53 @@
+## 你可以从本文了解到
+
+本文是某官网项目二期的一些回顾
+
+## razzle+after = ？
+
+在项目一期中，我们选型是razzle就是为了能切换到SSR。而After并未列入初期选型。after是一个用于实现SSR的框架。after跟next可以类比，after用react-router作为路由基础，支持基于路由的代码分割，并且支持了基于路由的各种功能（数据预载等）。
+
+
+
+可以简单看一下after的目录结构
+
+```shell
+packages/after.js/src
+├── After.tsx // 路由（基于react-router）
+├── Document.tsx // 页面模板
+├── NotFoundComponent.tsx // 404页面
+├── asyncComponent.tsx // 异步组件hoc，类似loadableComponent
+├── ensureReady.ts // 浏览器确保路由对应的js片段load完成后，将预渲染数据进行传给路由所对应的组件作为初始值
+├── getAssets.ts // 从webpack打出的包中取出路由对应的js，css
+├── index.tsx
+├── loadInitialProps.tsx // 匹配路由，执行getInitialProps
+├── render.tsx // render成html string
+├── serializeData.tsx // 以script标签作为载体，进行序列化、反序列化
+├── test
+├── types.ts
+└── utils.ts
+```
+
+## 如何让SSR基于ua提供PC和H5双版本？
+
+UA侦测，在路由上对PC/H5代码分割。比如
+```shell
+src
+├── pages // PC路由
+├── pages-h5 // H5 路由
+├── components // PC组件
+└── components-h5 // H5组件
+```
+
+## 如何让SSR结合SSG、CSR提高整体可用性
+
+按不同需求场景，采用不同的渲染方式。
+
+SSG：不需要SEO、不变的页面，用SSG预渲染。然后在SSR的路由判定中适时返回这些文件。
+
+CSR：负载压力大的时候，直接切成CSR，增加QPS能力。
+
+极端SSR：对于爬虫特殊照顾，通过UA判定，只给他SSR。其他都走CSR/SSG。
+
+## SSR注意的点
+
+Node单线程，不要污染全局变量，渲染前后环境要保持一致，否则影响下一次渲染。
