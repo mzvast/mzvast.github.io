@@ -17,25 +17,5 @@ poindexter({
     },
     ignoreSelectors: ['.ignored']
 });
-// (async function () {
-//     await poindexter({
-//         docs: 'build',
-//         output: 'public/poindexter.bundle.json', // 要放在public路径下
-//         // title: x => 'title',
-//         // description: x => 'desc',
-//         // keywords: x => ['foo', 'bar'],
-//         ignoreSelectors: ['.ignored']
-//     });
 
-//    await copyFile(
-//         'output/poindexter.bundle.json',
-//         'public/poindexter.bundle.json',
-//         (err) => {
-
-//             if (err) throw err;
-//             console.log(
-//                 'output/poindexter.bundle.json was copied to public/poindexter.bundle.json'
-//             );
-//         }
-//     );
-// })();
+copyFile('public/poindexter.bundle.json', 'build/poindexter.bundle.json');
