@@ -17,7 +17,7 @@ install:
   - yarn --ignore-engines
 
 script:
-  - npm run build
+  - CI=false && npm run build
   - npm run build-index
 
 after_script:
