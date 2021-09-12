@@ -19,6 +19,7 @@
     "navi": "^0.13.3",
     "navi-scripts": "^0.13.3",
     "netlify-cli": "2.6.0",
+    "poindexter": "^1.0.4",
     "prismjs": "1.15.0",
     "react": "16.8.6",
     "react-dom": "16.8.6",
@@ -39,7 +40,8 @@
     "deploy": "netlify deploy --dir=build",
     "deploy:prod": "netlify deploy --dir=build --prod",
     "create": "hygen post new",
-    "postinstall": "npx patch-package"
+    "postinstall": "npx patch-package",
+    "build-index": "node ./mackSearchIndex.js"
   },
   "eslintConfig": {
     "extends": "react-app"

@@ -7,6 +7,7 @@ import Bio from './Bio';
 import styles from './BlogPostLayout.module.css';
 import Disqus from 'disqus-react';
 import ArticleToc from './ArticleToc';
+import {Helmet} from 'react-navi-helmet-async';
 
 interface BlogPostLayoutProps {
     blogRoot: string;
@@ -14,6 +15,7 @@ interface BlogPostLayoutProps {
 
 function BlogPostLayout({blogRoot}: BlogPostLayoutProps) {
     let {title, data, url} = useCurrentRoute();
+    const {spoiler,tags} = data;
     let {connect, content, head} = useView()!;
     let {MDXComponent, readingTime, tableOfContents} = content;
     const disqusShortname = 'miaocode';
@@ -29,6 +31,11 @@ function BlogPostLayout({blogRoot}: BlogPostLayoutProps) {
     return connect(
         <>
             {head}
+            <Helmet >
+                <meta name="title" content={title}/>
+                <meta name="description" content={spoiler}/>
+                <meta name="keywords" content={tags.join(',')}/>
+            </Helmet>
             <article className={styles.container}>
                 <header className={styles.header}>
                     <h1 className={styles.title}>

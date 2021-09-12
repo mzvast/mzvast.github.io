@@ -7,6 +7,7 @@ import Bio from './Bio';
 import Pagination from './Pagination';
 import styles from './BlogIndexPage.module.css';
 import ThemeService from '../service/ThemeService';
+import SearchBox from './SearchBox';
 
 interface BlogIndexPageProps {
     blogRoot: string;
@@ -28,6 +29,7 @@ function BlogIndexPage({
                     <Link style={{boxShadow: 'none'}} href={blogRoot}>
                         {siteMetadata.title}
                     </Link>
+                    {/* 换主题 */}
                     <button
                         className={styles.themeButton}
                         onClick={() => {
@@ -44,6 +46,8 @@ function BlogIndexPage({
                     </button>
                 </h1>
                 <Bio />
+                {/* search */}
+                <SearchBox/>
             </header>
             <ul className={styles.articlesList}>
                 {postRoutes.map((route) => (
