@@ -12,7 +12,9 @@ import {client} from 'poindexter/runtime';
 import {styled, Box, Ellipsis} from 'galaco';
 import {useClickAway} from 'ahooks';
 import {Link} from 'react-navi';
-client.init('/poindexter.bundle.json');
+
+let isClientLoad = false;
+
 const Wrap: any = styled(Box)`
     position: fixed;
     right: 1em;
@@ -57,7 +59,13 @@ const SearchBox: React.FC<Props> = () => {
     const [result, setResult] = useState<ResultShape[]>([]);
     const [visible, setVisible] = useState(false);
     const ref = useRef<any>();
-   
+    useEffect(() => {
+        // 不能在SSG时候发起init，因为此时json还没有产生
+        if (!isClientLoad) {
+            isClientLoad = true;
+            client.init('/poindexter.bundle.json');
+        }
+    }, []);
     useEffect(() => {
         if (query) {
             const result = client.index.search(query);
