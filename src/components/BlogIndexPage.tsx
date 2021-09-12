@@ -46,7 +46,6 @@ function BlogIndexPage({
                     </button>
                 </h1>
                 <Bio />
-                {/* search */}
                 <SearchBox/>
             </header>
             <ul className={styles.articlesList}>

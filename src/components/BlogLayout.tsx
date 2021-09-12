@@ -4,6 +4,7 @@ import siteMetadata from '../siteMetadata';
 import NotFoundPage from './NotFoundPage';
 import LoadingIndicator from './LoadingIndicator';
 import styles from './BlogLayout.module.css';
+import SearchBox from './SearchBox';
 
 interface BlogLayoutProps {
     blogRoot: string;
@@ -31,6 +32,7 @@ function BlogLayout({blogRoot, isViewingIndex}: BlogLayoutProps) {
             }
 
             <main>
+                <SearchBox />
                 <NotFoundBoundary render={() => <NotFoundPage />}>
                     <View />
                 </NotFoundBoundary>
