@@ -14,7 +14,7 @@ env:
 cache: yarn
 
 install:
-  - yarn
+  - yarn --ignore-engines
 
 script:
   - npm run build
