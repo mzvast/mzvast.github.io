@@ -1,0 +1,2 @@
+(window.webpackJsonp=window.webpackJsonp||[]).push([[36],{917:function(t,n,e){"use strict";e.r(n),n.default={title:"\u804a\u804a\u5b57\u4f53\u52a0\u8f7d",tags:["font","css","javascript"],spoiler:"\u901a\u8fc7\u5bf9 Javascript \u548c CSS \u5b9e\u73b0\u5b57\u4f53\u7684\u5bf9\u6bd4\uff0c\u7b80\u5355\u804a\u804a\u5b57\u4f53\u52a0\u8f7d\u90a3\u4e9b\u7b56\u7565\u3002",getContent:function(){return e.e(93).then(e.bind(null,405))}}}}]);
+//# sourceMappingURL=36.2ed254c1.chunk.js.map
