@@ -12,7 +12,7 @@ import {client} from 'poindexter/runtime';
 import {styled, Box, Ellipsis} from 'galaco';
 import {useClickAway} from 'ahooks';
 import {Link} from 'react-navi';
-
+client.init('/poindexter.bundle.json');
 const Wrap: any = styled(Box)`
     position: fixed;
     right: 1em;
@@ -57,10 +57,7 @@ const SearchBox: React.FC<Props> = () => {
     const [result, setResult] = useState<ResultShape[]>([]);
     const [visible, setVisible] = useState(false);
     const ref = useRef<any>();
-    useEffect(() => {
-        client.init('/public/poindexter.bundle.json');
-        // console.log('ddt::result', client);
-    }, []);
+   
     useEffect(() => {
         if (query) {
             const result = client.index.search(query);
