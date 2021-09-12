@@ -13,6 +13,9 @@
     "hygen": "^5.0.3",
     "import-all.macro": "2.0.3",
     "lodash": "4.17.11",
+    "mdx-loader": "^3.0.2",
+    "mdx-mermaid": "^1.1.0",
+    "mermaid": "^8.12.1",
     "navi": "^0.13.3",
     "navi-scripts": "^0.13.3",
     "netlify-cli": "2.6.0",
@@ -35,7 +38,8 @@
     "serve": "navi-scripts serve",
     "deploy": "netlify deploy --dir=build",
     "deploy:prod": "netlify deploy --dir=build --prod",
-    "create": "hygen post new"
+    "create": "hygen post new",
+    "postinstall": "npx patch-package"
   },
   "eslintConfig": {
     "extends": "react-app"

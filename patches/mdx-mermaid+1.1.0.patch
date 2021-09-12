@@ -1,0 +1,22 @@
+diff --git a/node_modules/mdx-mermaid/lib/mdxast-mermaid.js b/node_modules/mdx-mermaid/lib/mdxast-mermaid.js
+index dbc38e4..e9872d4 100644
+--- a/node_modules/mdx-mermaid/lib/mdxast-mermaid.js
++++ b/node_modules/mdx-mermaid/lib/mdxast-mermaid.js
+@@ -33,7 +33,7 @@ function plugin(config) {
+         // See if there is already an import for the Mermaid component
+         let importFound = false;
+         unist_util_visit_1.default(ast, { type: 'import' }, (node) => {
+-            if (/\s*import\s*{\s*Mermaid\s*}\s*from\s*'mdx-mermaid\/Mermaid'\s*;?\s*/.test(node.value)) {
++            if (/\s*import\s*{\s*Mermaid\s*}\s*from\s*'mdx-mermaid\/lib\/Mermaid'\s*;?\s*/.test(node.value)) {
+                 importFound = true;
+                 return unist_util_visit_1.default.EXIT;
+             }
+@@ -42,7 +42,7 @@ function plugin(config) {
+         if (!importFound) {
+             ast.children.splice(0, 0, {
+                 type: 'import',
+-                value: 'import { Mermaid } from \'mdx-mermaid/Mermaid\';'
++                value: 'import { Mermaid } from \'mdx-mermaid/lib/Mermaid\';'
+             });
+         }
+     }

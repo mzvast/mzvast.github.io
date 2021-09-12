@@ -1,0 +1,20 @@
+diff --git a/node_modules/mdx-loader/index.js b/node_modules/mdx-loader/index.js
+index 60c954a..bc0c9a6 100644
+--- a/node_modules/mdx-loader/index.js
++++ b/node_modules/mdx-loader/index.js
+@@ -10,6 +10,7 @@ const mdxExportJSONByDefault = require('mdx-constant')
+ const grayMatter = require('gray-matter')
+ const typography = require('./typography')
+ const rehypePrism = require('./prism')
++const mdxMermaid = require('mdx-mermaid')
+ 
+ module.exports = async function(source) {
+   let result
+@@ -18,6 +19,7 @@ module.exports = async function(source) {
+   const options = Object.assign(
+     {
+       remarkPlugins: [
++        mdxMermaid,
+         slug,
+         images, 
+         emoji,
