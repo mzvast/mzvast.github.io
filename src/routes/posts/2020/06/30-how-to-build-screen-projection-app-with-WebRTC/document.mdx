@@ -14,6 +14,11 @@
 ## 用WebRTC构建屏幕分享应用 
 
 我们的场景是1个教师(A)，1个学生端(B)。老师可以发起投屏，看到学生屏幕内容。
+
+值得注意的是，webrtc属于点对点双向通信，谁是主叫方本身并不重要。
+
+【基于交互考量】由于学生端在业务场景下有可能存在抢占的情况，即B在跟A1投屏，此时A2要抢占，为了得知B是否被占用，所以A先试探性的问一下B是不是忙，从而避免无意中抢占正在投屏的设备。因此，我们选择三步走：A试探B（或者抢占通知），B主动（或者断开前一个连接），A确认。
+
 完整的offer/answer机制如下：
 
 - A 告知 B 要开始投屏了(`A --> B`)
@@ -28,12 +33,18 @@
 
 AB还需要交换网路信息，“查找候选人（find candidate）”这个表达是指使用ICE框架查找网络接口和端口的过程。
 
-- B 使用onicecandidate handler创建一个RTCPeerConnection对象。
-- handler在网络候选人变得可用时被调用。
-- 在handler中，B通过他们的信令通道将字符串化的候选数据发送给A。
-- 当A从B那里获得候选消息时，她调用addIceCandidate()，将候选项添加到远端描述中。
+- A 创建一个RTCPeerConnection对象，绑定handler监听icecandidate事件。
+- 当A从B那里获得候选消息时，她调用addIceCandidate()，将候选项添加列表中。(`A <-- B`)
+- 在handler中，A通过他们的信令通道将字符串化的候选数据发送给B。(`A --> B`)
+- B做类似的处理，调用addIceCandidate()，将候选项添加列表中
 
 JSEP支持ICE Candidate Trickling，它允许主叫方(caller)在最初的offer之后递增地向被叫方提供候选项（candidates），并使被叫方开始在通话中进行操作并建立连接而不用等所有候选项到达。
+
+
+
+⚠️下图中，左边认为是B，右边是A。（忽略括号中的AB）
+
+![Image for post](https://miro.medium.com/max/1302/1*HmMdrpVBTP2vYMhrVOdNOw.jpeg)
 
 ### 对端发现与信令服务器
 

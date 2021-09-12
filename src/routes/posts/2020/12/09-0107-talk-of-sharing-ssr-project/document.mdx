@@ -1,0 +1,132 @@
+## 你可以从本文了解到
+
+## SSR在官网的应用
+
+### 什么算SSR
+
+​		判断标准并不是ReactDOMServer.renderToXXX函数是否在server调用。而是server是否render具体页面内容。（因此，带有renderToXXX也可做CSR）
+
+​		准确来说，我们的React SSR app是个Isomorphic app。即Server render一遍，Client又render（hydrate）一遍。
+
+​		hydrate（针对SSR场景特殊优化的render方法）：复用原本已经存在的 DOM 节点，减少重新生成节点以及删除原本 DOM 节点的开销，来加速初次渲染。
+
+### SSR工作流程
+
+
+- 特点：单线程，计算密集型。
+
+- 同构：UA、canUseWebp
+
+- 非技术优势：所有环境有关的变量都由server掌控。无需通过domain判定环境，不会出现cp01事件。
+
+注意点⚠️：
+
+1. window/global：window在server的回落保护，保护环境。
+2. 必要的双重实现：UA侦测、canUseWebp在server和client是两套实现。
+
+
+
+render阶段做的事
+
+
+
+1. 路由匹配匹配出页面组件
+
+2. server预加载数据（optional），renderToString并抽取预渲染内容
+3. 组装产物
+
+
+
+
+
+### SSG工作流程
+
+
+render阶段同SSR
+
+### CSR工作流程
+
+工作流程同SSR，render阶段如下图。
+
+
+
+- client端行为与SSR区别：页面加载时需要调用getInitialProps
+
+### 如何扛住更多的流量
+
+按不同需求场景，采用不同的渲染方式。
+
+- SSG：不需要SEO、不变的页面，用SSG预渲染。然后在SSR的路由判定中适时返回这些文件。
+
+- CSR：负载压力大的时候，直接切成CSR，增加QPS能力。
+
+- 极端SSR：对于爬虫特殊照顾，通过UA判定，只给他SSR。其他都走CSR/SSG。
+
+### 多种render模式结合的工作流程
+
+
+
+### 测试性能
+
+工具loadtest or ab
+
+```shell
+# demo
+npm run build:ssr
+npm run export 
+npm run start:prod:test
+# SSR qps 90
+loadtest -n 1000 -c 100 "http://127.0.0.1:3000/news" -H user-agent:chrome
+# SSG page qps 1298
+loadtest -n 1000 -c 100 "http://127.0.0.1:3000/xxxx" -H user-agent:chrome
+# CSR 1012
+loadtest -n 1000 -c 100 "http://127.0.0.1:3000/news" -H user-agent:chrome
+```
+
+可见SSR和CSR有大约10倍的性能差异
+
+SSR本身即app内部渲染逻辑还可以进一步进行性能优化（组件级别的缓存等技术）
+
+## 坑分享
+
+### 移动端1px问题
+
+- 不是新问题。奇数像素宽度导致box模型在部分3x屏幕上下边距`不对称`。
+
+- 在styled中
+  - 编写组件基于transform scale（放大再缩小）
+  - Stylis 插件在运行时根据设备dpr替换组件中的值
+
+### 头图帧动画性能
+
+- 起初实现方案：144张图，js定时切换img的src。缺点：请求数量太多，性能差，兼容性差（某些PC浏览器闪烁）。
+- 改进型：合图144合1，css background动画。缺点：兼容性不算太好（某些情况会闪烁，挑分辨率）
+- 极端型：GIF图，缺点：不能很精确的控制重播。
+
+### 移动端返回位置问题
+
+问题描述：在Android的某些浏览器中，页面跳转再返回，会回不到之前看的位置（不可思议）。
+
+尝试解决：模拟浏览器记录离开位置，却拿不到稳定值。
+
+aha：useLayoutEffect
+
+### unicode编码
+
+在走查视觉的时候会发现一行字中有两种不同的字体。但看源码中文本并没有什么字体差别。其实文案中存在两种不同范围的 unicode 编码。[参见](https://blog.csdn.net/gstianfu/article/details/84643320)
+
+其中用于`部首`的 unicode，编码范围是从 U+2F00 到 U+2FD5。
+
+另一种用于`常用汉字`的编码范围是 U+4E00 到 U+9FFF。
+
+显示字体不同原因：在某些 win10 机器的“雅黑”字库中常用汉字字体有映射，另部首则没有，故采用回落字体（等线）显示。
+
+问题产生原因猜测：文案编写者采用的输入法有问题，未按照常用汉字的规范化编码。
+
+目前 unicode 有：NFD（默认）、NFC、NFKD、NFKC 四种规范化形式。英文和一些部首采用 NFD、NFC，而常用汉字采用 NFKD、NFKC 形式。
+
+解决思路：将部首转换到常用汉字编码范围。比如都转换成 NFKD。
+
+ES6 中提供了工具函数[String.prototype.normalize()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/normalize)，可以传入参数`"NFKD"`。
+
+
