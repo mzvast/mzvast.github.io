@@ -18,4 +18,13 @@ poindexter({
     ignoreSelectors: ['.ignored']
 });
 
-copyFile('public/poindexter.bundle.json', 'build/poindexter.bundle.json');
+copyFile(
+    'public/poindexter.bundle.json',
+    'build/poindexter.bundle.json',
+    (err) => {
+        if (err) throw err;
+        console.log(
+            'output/poindexter.bundle.json was copied to public/poindexter.bundle.json'
+        );
+    }
+);
