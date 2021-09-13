@@ -161,7 +161,16 @@ classDiagram
      ProjectCard *-- SpaceInfo
      ProjectCard *-- NPCInfo
      ProjectCard *-- LuaScript
+     ProjectCard --> AuditState
     
+    class AuditState{
+       <<enumeration>>
+       DEV=0
+       PENDING=1
+       PASS=2
+       FAIL=3
+       ONLINE=4
+    }
 
     class useServerInfo{
 	<<Hook>>
@@ -255,12 +264,22 @@ classDiagram
     }
 
     LuaScriptEditor *-- MonacoEditor
-    LuaScriptEditor *-- Luaparser
+    LuaScriptEditor --> useLuaParser
 
     class MonacoEditor{
 	value
 	onChange()
     }
+
+    
+
+    class useLuaParser{
+        <<Hook>>
+        errors
+        parse()
+    }
+
+    useLuaParser --> Luaparser
 
     class Luaparser{
 	parse()
@@ -284,6 +303,8 @@ sequenceDiagram
     Web->>+Server: POST /api/v1/sandbox/client/manager/project
     Server->>+Web: success
 ```
+
+
 
 
 ### LuaScript
@@ -317,4 +338,19 @@ sequenceDiagram
     Web->>+BE: DEL /api/v1/sandbox/server/lua/file
     BE->>+Web: success
    
+```
+
+验证脚本
+```mermaid
+sequenceDiagram
+    Editor->>+Worker: onChange/send text
+    Worker->>+Worker: parse
+    Worker->>+Editor: errors
+    alt has errors
+    Editor->>+Editor: show error message in editor row:col
+    Editor->>+Editor: save diable
+    else no errors
+    Editor->>+Editor: clear error message
+    Editor->>+Editor: save enable
+    end
 ```
