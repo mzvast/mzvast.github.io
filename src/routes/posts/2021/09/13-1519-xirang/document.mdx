@@ -141,14 +141,18 @@ classDiagram
     }
 
     class ProjectEditor{
-
+	value
+	onChange()
     }
 
     ProjectDashboard --> useProjects
-    ProjectDashboard --> userServerInfo
+    ProjectDashboard --> useServerInfo
 
     class useProjects{
 	<<Hook>>
+	createProject()
+	projectList
+	submitProject()
     }
   
      class ProjectList{
@@ -166,8 +170,11 @@ classDiagram
      ProjectCard *-- LuaScript
     
 
-    class userServerInfo{
+    class useServerInfo{
 	<<Hook>>
+	userData
+	reload()
+	stopAndStart()
     }
     
      
@@ -175,9 +182,23 @@ classDiagram
     class ClientResource{
     }
     ClientResource --> useClientResource
+    ClientResource --> VRBosUploader
+
+    class VRBosUploader{
+	addFile()
+	cancel()
+	stop()
+	retry()
+    }
 
     class useClientResource{
 	<<Hook>>
+	list
+	cancelFile()
+	deleteFile()
+	addTask()
+	updateTask()
+	removeTask()
     }
 
     class SpaceInfo{
@@ -187,11 +208,15 @@ classDiagram
 
     class useSpaceInfo{
 	<<Hook>>
+	spaceInfo
+	setSpaceInfo()
     }
 
     SpaceInfo *-- SpaceEditor
 
     class SpaceEditor{
+	    value
+	    onChange()
     }
 
     class NPCInfo{
@@ -201,12 +226,17 @@ classDiagram
 
     class useNpcInfo{
 	    <<Hook>>	    
+	    npcInfo
+	    npcRefreshInfo
+	    updateNpcInfo()
+	    updateNpcRefreshInfo()
     }
 
     NPCInfo *-- NPCDetailEditor
 
     class NPCDetailEditor{
-
+	    value
+	    onChange()
     }
 
 
@@ -217,27 +247,52 @@ classDiagram
 
     class useLuaScript{
 	<<Hook>>
+	luaScriptList
+	luaScript
+	getLuaScript()
+	addLuaScript()
+	deleteLuaScript()
     }
 
     LuaScript *-- LuaScriptEditor
 
     class LuaScriptEditor{
+	    value
+	    onChange()
     }
 
-    LuaScriptEditor *-- ReactMonacoEditor
-    LuaScriptEditor *-- MonacoLuaPlugin
+    LuaScriptEditor *-- MonacoEditor
+    LuaScriptEditor *-- Luaparser
 
-    class ReactMonacoEditor{
-
+    class MonacoEditor{
+	value
+	onChange()
     }
 
-    class MonacoLuaPlugin{
-
+    class Luaparser{
+	parse()
     }
-
-    
-            
 ```
+
+服务器管理
+
+确保服务器处于开启状态
+```mermaid
+sequenceDiagram
+    Web->>+Server: /api/v1/sandbox/server/manager/stop
+    Server->>+Web: success
+    Web->>+Server: POST /api/v1/sandbox/server/manager/start
+     Server->>+Web: success
+```
+
+创建项目
+```mermaid
+sequenceDiagram
+    Web->>+Server: POST /api/v1/sandbox/client/manager/project
+    Server->>+Web: success
+```
+
+
 ### LuaScript
 查询脚本列表
 ```mermaid
