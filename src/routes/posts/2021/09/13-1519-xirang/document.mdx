@@ -1,0 +1,261 @@
+## 全部模块
+
+```mermaid
+classDiagram
+
+```
+
+
+## 登录
+Login
+```mermaid
+sequenceDiagram
+     loginPage->>+passportAPI: login
+    passportAPI->>+loginPage: set-cookie BDUSS
+    loginPage->>+vr-account-API: /pass/login
+    vr-account-API->>+loginPage: set-cookie X-baiduvr-auth-token
+    loginPage->>+OtherPage: [redirect] to other page
+```
+
+
+Logout
+```mermaid
+sequenceDiagram
+    authPage->>+vr-account-API: /logout
+    vr-account-API->>+authPage: clear cookie X-baiduvr-auth-token
+    authPage->>+passportPage: [redirect] to passportPage
+    passportPage->>+passportPage: clear cookie BDUSS
+    passportPage->>+loginPage: [redirect] to loginPage
+```
+
+相关类图
+```mermaid
+classDiagram
+
+
+    class PageHeader {
+    }
+
+    PageHeader --> PortalCommon_useLogin
+
+    class LoginPage{
+    }
+
+    LoginPage *-- PortalCommon_Login
+
+
+    class PortalCommon_Login{
+     +Boolean showCompany
+     +onLoginSuccess()
+    }
+   
+    class PortalCommon_useLogin{
+	    <<Hook>>
+     +Boolean loading,
+     +User user,
+     +Boolean isLogin: !!user,
+     +getAccountInfo(),
+     +logout(),
+     +showLoginModal()
+    }
+    
+```
+
+## 开发者入驻申请
+
+```mermaid
+classDiagram
+   
+    class JoinDeveloper{
+    }
+
+    JoinDeveloper --> useDeveloperAuth
+     JoinDeveloper *-- ApplyForm
+     JoinDeveloper *-- ApplyPending
+     
+     class useDeveloperAuth{
+	     <<Hook>>
+
+     }
+
+    class ApplyForm{
+
+    }
+
+    class ApplyPending{
+         
+    }
+            
+```
+
+
+```mermaid
+graph TD
+   A[User] -->B{is user valid developer?}
+   B --> |YES|C[redirect to ProjectDashboard]
+   B --> |NO|D{is user submitted apply?}
+   D --> |YES|E[ApplyForm]
+   D --> |NO|F[ApplyPending]
+
+            
+```
+## 测试账号管理
+
+```mermaid
+classDiagram
+ 
+     
+     class TestUsers {
+
+     }
+
+     TestUsers *-- TestUserList
+     TestUsers *-- UserEditor
+     TestUsers -->useTestUser
+
+    class TestUserList{
+     }
+  
+     class UserEditor{
+     }
+
+     class useTestUser{
+	     <<Hook>>
+     }
+
+    
+            
+```
+
+## 项目管理
+
+
+
+```mermaid
+classDiagram
+ 
+     ProjectDashboard *-- ProjectList
+
+    ProjectDashboard *-- ProjectEditor
+    class ProjectDashboard{
+    }
+
+    class ProjectEditor{
+
+    }
+
+    ProjectDashboard --> useProjects
+    ProjectDashboard --> userServerInfo
+
+    class useProjects{
+	<<Hook>>
+    }
+  
+     class ProjectList{
+       
+    }
+    ProjectList *-- ProjectCard
+
+    class ProjectCard{
+       
+    }
+    
+     ProjectCard *-- ClientResource
+     ProjectCard *-- SpaceInfo
+     ProjectCard *-- NPCInfo
+     ProjectCard *-- LuaScript
+    
+
+    class userServerInfo{
+	<<Hook>>
+    }
+    
+     
+
+    class ClientResource{
+    }
+    ClientResource --> useClientResource
+
+    class useClientResource{
+	<<Hook>>
+    }
+
+    class SpaceInfo{
+         
+    }
+    SpaceInfo --> useSpaceInfo
+
+    class useSpaceInfo{
+	<<Hook>>
+    }
+
+    SpaceInfo *-- SpaceEditor
+
+    class SpaceEditor{
+    }
+
+    class NPCInfo{
+    }
+
+    NPCInfo --> useNpcInfo
+
+    class useNpcInfo{
+	    <<Hook>>	    
+    }
+
+    NPCInfo *-- NPCDetailEditor
+
+    class NPCDetailEditor{
+
+    }
+
+
+    class LuaScript{
+    }
+
+    LuaScript --> useLuaScript
+
+    class useLuaScript{
+	<<Hook>>
+    }
+
+    LuaScript *-- LuaScriptEditor
+
+    class LuaScriptEditor{
+    }
+
+    
+            
+```
+### LuaScript
+查询脚本列表
+```mermaid
+sequenceDiagram
+    Web->>+BE: GET /api/v1/sandbox/server/lua/dirs
+    BE->>+Web: 目录下文件
+    alt 不存在目录
+        Web->>BE: POST /api/v1/sandbox/server/lua/dir 创建目录
+    end
+            
+```
+打开脚本详情
+```mermaid
+sequenceDiagram
+    Web->>+BE: GET /api/v1/sandbox/server/lua/file
+    BE->>+Web: file content
+```
+
+保存脚本
+```mermaid
+sequenceDiagram
+    Web->>+BE: POST /api/v1/sandbox/server/lua/file
+    BE->>+Web: filePath
+```
+
+删除脚本、编辑保存
+```mermaid
+sequenceDiagram
+    Web->>+BE: DEL /api/v1/sandbox/server/lua/file
+    BE->>+Web: success
+   
+```
