@@ -1,6 +1,7 @@
 相关类图
 
 权限路由
+
 ```mermaid
 graph TD
     A[用户] --> B{已登陆}
@@ -14,42 +15,42 @@ graph TD
 classDiagram
 
     class Component{
-     
+
     }
 
 
     Component --> useA
-   
+
     class useA{
 	    <<Hook>>
      get()
      set()
     }
 
-   
-    
+
+
 ```
 
 ```mermaid
 classDiagram
 
     class Page{
-     
+
     }
 
     Page *-- Component
 
-    
+
 
     Page --> useA
     Page --> useB
 
     class Component{
-     
+
     }
 
     Component --> useC
-   
+
     class useA{
 	    <<Hook>>
      get()
@@ -67,13 +68,13 @@ classDiagram
      get()
      set()
     }
-    
+
 ```
 
-
-
 ## 登录
+
 Login
+
 ```mermaid
 sequenceDiagram
      loginPage->>+passportAPI: login
@@ -83,8 +84,8 @@ sequenceDiagram
     loginPage->>+OtherPage: [redirect] to other page
 ```
 
-
 Logout
+
 ```mermaid
 sequenceDiagram
     authPage->>+vr-account-API: /logout
@@ -95,6 +96,7 @@ sequenceDiagram
 ```
 
 相关类图
+
 ```mermaid
 classDiagram
 
@@ -114,7 +116,7 @@ classDiagram
      +Boolean showCompany
      +onLoginSuccess()
     }
-   
+
     class PortalCommon_useLogin{
 	    <<Hook>>
      +Boolean loading,
@@ -124,21 +126,21 @@ classDiagram
      +logout(),
      +showLoginModal()
     }
-    
+
 ```
 
 ## 开发者入驻申请
 
 ```mermaid
 classDiagram
-   
+
     class JoinDeveloper{
     }
 
     JoinDeveloper --> useDeveloperAuth
      JoinDeveloper *-- ApplyForm
      JoinDeveloper *-- ApplyPending
-     
+
      class useDeveloperAuth{
 	     <<Hook>>
         isAuthorized
@@ -150,11 +152,10 @@ classDiagram
     }
 
     class ApplyPending{
-         
-    }
-            
-```
 
+    }
+
+```
 
 ```mermaid
 graph TD
@@ -164,14 +165,15 @@ graph TD
    D --> |YES|E[ApplyForm]
    D --> |NO|F[ApplyPending]
 
-            
+
 ```
+
 ## 测试账号管理
 
 ```mermaid
 classDiagram
- 
-     
+
+
      class TestUsers {
 
      }
@@ -182,7 +184,7 @@ classDiagram
 
     class TestUserList{
      }
-  
+
      class UserEditor{
      }
 
@@ -192,17 +194,15 @@ classDiagram
          addUser()
      }
 
-    
-            
+
+
 ```
 
 ## 项目管理
 
-
-
 ```mermaid
 classDiagram
- 
+
      ProjectDashboard *-- ProjectList
 
     ProjectDashboard *-- ProjectEditor
@@ -219,26 +219,34 @@ classDiagram
 
     class useProjects{
 	<<Hook>>
-	createProject()
 	projectList
-	submitProject()
+    projectDetail
+    getProjectDetail()
+	createProject()
     }
-  
+
      class ProjectList{
-       
+
     }
     ProjectList *-- ProjectCard
 
     class ProjectCard{
-       
+
     }
-    
+
      ProjectCard *-- ClientResource
      ProjectCard *-- SpaceInfo
      ProjectCard *-- NPCInfo
      ProjectCard *-- LuaScript
      ProjectCard --> AuditState
-    
+     ProjectCard --> useAudit
+
+     class useAudit {
+         <<Hook>>
+         state
+         submitAudit()
+     }
+
     class AuditState{
        <<enumeration>>
        DEV=0
@@ -254,8 +262,8 @@ classDiagram
 	reload()
 	stopAndStart()
     }
-    
-     
+
+
 
     class ClientResource{
     }
@@ -280,14 +288,16 @@ classDiagram
     }
 
     class SpaceInfo{
-         
+
     }
     SpaceInfo --> useSpaceInfo
 
     class useSpaceInfo{
 	<<Hook>>
-	spaceInfo
-	setSpaceInfo()
+	spaceList
+    addSpace()
+    deleteSpace()
+    updateSpace()
     }
 
     SpaceInfo *-- SpaceEditor
@@ -303,11 +313,13 @@ classDiagram
     NPCInfo --> useNpcInfo
 
     class useNpcInfo{
-	    <<Hook>>	    
-	    npcInfo
-	    npcRefreshInfo
-	    updateNpcInfo()
-	    updateNpcRefreshInfo()
+	    <<Hook>>
+	    npcList
+	    npcDetail
+        getNpcDetail()
+        addNpc()
+        deleteNpc()
+	    updateNpcDetail()
     }
 
     NPCInfo *-- NPCDetailEditor
@@ -347,7 +359,7 @@ classDiagram
 	onChange()
     }
 
-    
+
 
     class useLuaParser{
         <<Hook>>
@@ -365,6 +377,7 @@ classDiagram
 服务器管理
 
 确保服务器处于开启状态
+
 ```mermaid
 sequenceDiagram
     Web->>+Server: /api/v1/sandbox/server/manager/stop
@@ -374,17 +387,17 @@ sequenceDiagram
 ```
 
 创建项目
+
 ```mermaid
 sequenceDiagram
     Web->>+Server: POST /api/v1/sandbox/client/manager/project
     Server->>+Web: success
 ```
 
-
-
-
 ### LuaScript
+
 查询脚本列表
+
 ```mermaid
 sequenceDiagram
     Web->>+BE: GET /api/v1/sandbox/server/lua/dirs
@@ -392,9 +405,11 @@ sequenceDiagram
     alt 不存在目录
         Web->>BE: POST /api/v1/sandbox/server/lua/dir 创建目录
     end
-            
+
 ```
+
 打开脚本详情
+
 ```mermaid
 sequenceDiagram
     Web->>+BE: GET /api/v1/sandbox/server/lua/file
@@ -402,6 +417,7 @@ sequenceDiagram
 ```
 
 保存脚本
+
 ```mermaid
 sequenceDiagram
     Web->>+BE: POST /api/v1/sandbox/server/lua/file
@@ -409,14 +425,16 @@ sequenceDiagram
 ```
 
 删除脚本、编辑保存
+
 ```mermaid
 sequenceDiagram
     Web->>+BE: DEL /api/v1/sandbox/server/lua/file
     BE->>+Web: success
-   
+
 ```
 
 验证脚本
+
 ```mermaid
 sequenceDiagram
     Editor->>+Worker: onChange/send text
