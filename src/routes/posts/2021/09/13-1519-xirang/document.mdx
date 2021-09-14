@@ -1,3 +1,76 @@
+相关类图
+
+权限路由
+```mermaid
+graph TD
+    A[用户] --> B{已登陆}
+    B -->|Y| C{已授权}
+    B -->|N| D[登录页面]
+    C -->|Y|E[项目管理页面]
+    C -->|N|F[入驻申请页面]
+```
+
+```mermaid
+classDiagram
+
+    class Component{
+     
+    }
+
+
+    Component --> useA
+   
+    class useA{
+	    <<Hook>>
+     get()
+     set()
+    }
+
+   
+    
+```
+
+```mermaid
+classDiagram
+
+    class Page{
+     
+    }
+
+    Page *-- Component
+
+    
+
+    Page --> useA
+    Page --> useB
+
+    class Component{
+     
+    }
+
+    Component --> useC
+   
+    class useA{
+	    <<Hook>>
+     get()
+     set()
+    }
+
+    class useB{
+	    <<Hook>>
+     get()
+     set()
+    }
+
+    class useC{
+	    <<Hook>>
+     get()
+     set()
+    }
+    
+```
+
+
 
 ## 登录
 Login
@@ -68,7 +141,8 @@ classDiagram
      
      class useDeveloperAuth{
 	     <<Hook>>
-
+        isAuthorized
+        submitApply()
      }
 
     class ApplyForm{
@@ -114,6 +188,8 @@ classDiagram
 
      class useTestUser{
 	     <<Hook>>
+         userList
+         addUser()
      }
 
     
