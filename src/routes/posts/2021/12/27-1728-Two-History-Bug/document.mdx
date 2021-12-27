@@ -1,0 +1,317 @@
+## 你可以从本文了解到
+
+### 背景
+
+有一个项目，在做 UT 改造的时候。由于组件经常会对 history 的进行操作(push、replace 等)，为了方便测试，决定对其功能收口。
+也参考了一些开源项目，尤其是[mattermost-app](https://github.com/mattermost/mattermost-webapp)。其中`utils/browser_history.jsx`模块就是一个典型的例子。
+他有一个[browser_history 模块](https://github.com/mattermost/mattermost-webapp/blob/master/utils/browser_history.jsx)
+
+可以看到它主要做了两件事
+
+```tsx
+import {createBrowserHistory} from 'history';
+// 实例化一个history
+const b = createBrowserHistory({basename: window.basename});
+
+// 劫持其push方法，返回一个新的history对象（内容是shallow copy了b）
+export const browserHistory = {
+    ...b,
+    push: (path, ...args) => {
+        if (isDesktop) {
+            // ...
+        } else {
+            b.push(path, ...args);
+        }
+    }
+};
+```
+
+我们也模仿着在项目中新建一个`utils/browserHistory.ts`模块，将从此模块导出 app 全局共享的 history（想法很美好哇）。
+然后在 app 主入口注入这个 history 给 ReactRouter
+
+```tsx
+import React, {Suspense} from 'react';
+import {Router, Redirect, Route, Switch} from 'react-router-dom';
+
+import NotFound from 'pages/error/NotFound';
+import {browserHistory} from 'utils/browserHistory';
+
+import {routes} from './routes';
+
+/* Use components to define routes */
+const App = () => (
+    // highlight-next-line
+    <Router history={browserHistory}>
+        <Suspense fallback={null}>
+            <Switch>
+                {routes.map((route) => {
+                    return (
+                        <Route
+                            key={route.path}
+                            path={route.path}
+                            component={route.component}
+                            exact={route.exact}
+                        ></Route>
+                    );
+                })}
+                {/* 找不到，不要跳走去默认页面，否则缓存无法及时更新（用户可以停留在出错页面，刷新来获取新页面） */}
+                <Route path={'*'} component={NotFound}></Route>
+            </Switch>
+        </Suspense>
+    </Router>
+);
+export default App;
+```
+
+### bug 被发现
+
+然后比如我们在另一个组件里面去用这个 location 值。从其他页面跳转到新页面。这个页面如下。
+
+```tsx
+const PrivateComp: React.FC<Props> = ({children}) => {
+    const {pathname} = useHistory().location; // 来自useHistory的location值
+    const location = useLocation(); // 来自useLocation的location值
+    const currentUrl = location.pathname;
+    // highlight-next-line
+    console.log('ddt::pathname,currentUrl', pathname, currentUrl);
+    // highlight-next-line
+    // ddt::pathname,currentUrl /create2021 /create2021/works
+    if (!children) throw new Error('children must exist');
+
+    // onClickCapture 捕获
+    return <div onClickCapture={handleClick}>{children}</div>;
+
+    function handleClick(e: React.MouseEvent) {
+        // ...
+    }
+};
+export default PrivateComp;
+```
+
+可以看到打印结果的两个 location 不一样。这是为什么呢？
+
+### 原因定位和解决
+
+首先我们的 browserHistory 是基本上 copy 的 mattermost 的，人家没遇到bug么。
+
+那么顺着这个思路我们去捋一下这个 bug。
+
+我们放慢一点
+
+```tsx
+import {createBrowserHistory} from 'history';
+
+import pathConfig from 'config/pathConfig';
+
+const b = createBrowserHistory<any>({basename: pathConfig.BASENAME});
+
+// bug case
+export const c = {
+    ...b,
+    push: (path, ...args) => {
+        console.log('browserHistory::push', path);
+        //@ts-ignore
+        return b.push(path, ...args);
+    }
+};
+export default c;
+```
+
+可以看到 c 的 push 方法修改的是 b 对象。而我们传给 Router 的是 c。
+
+我们先看看 history 这个包的 push 方法做了什么。
+
+```ts
+function push(path, state) {
+    process.env.NODE_ENV !== 'production'
+        ? warning(
+              !(
+                  typeof path === 'object' &&
+                  path.state !== undefined &&
+                  state !== undefined
+              ),
+              'You should avoid providing a 2nd state argument to push when the 1st ' +
+                  'argument is a location-like object that already has state; it is ignored'
+          )
+        : void 0;
+    var action = 'PUSH';
+    var location = createLocation(path, state, createKey(), history.location);
+    transitionManager.confirmTransitionTo(
+        location,
+        action,
+        getUserConfirmation,
+        function (ok) {
+            if (!ok) return;
+            var href = createHref(location);
+            var key = location.key,
+                state = location.state;
+
+            if (canUseHistory) {
+                // 更新window.history对象（全局的）
+                // highlight-next-line
+                globalHistory.pushState(
+                    {
+                        key: key,
+                        state: state
+                    },
+                    null,
+                    href
+                );
+
+                if (forceRefresh) {
+                    window.location.href = href;
+                } else {
+                    var prevIndex = allKeys.indexOf(history.location.key);
+                    var nextKeys = allKeys.slice(0, prevIndex + 1);
+                    nextKeys.push(location.key);
+                    allKeys = nextKeys;
+                    // highlight-next-line
+                    setState({
+                        action: action,
+                        location: location
+                    }); // 更新history对象
+                }
+            } else {
+                process.env.NODE_ENV !== 'production'
+                    ? warning(
+                          state === undefined,
+                          'Browser history cannot push state in browsers that do not support HTML5 history'
+                      )
+                    : void 0;
+                window.location.href = href;
+            }
+        }
+    );
+}
+```
+
+可以看到会更新这个 history 对象 
+
+setState 方法如下
+
+```ts
+function setState(nextState) {
+    _extends(history, nextState);
+
+    history.length = globalHistory.length;
+    transitionManager.notifyListeners(history.location, history.action);
+}
+```
+
+所以这解释了为什么 useHistory 的 location 没变。（c 没变，b 变了，传给 router 的是吧 c）。
+
+至此问题解开了一半。
+
+那么为什么 useLocation 的 pathname 变了？
+
+我们去看 ReactRouter 的 Router 的构造函数
+
+```tsx
+// packages/react-router/modules/Router.js
+class Router extends React.Component {
+    constructor(props) {
+        super(props);
+
+        this.state = {
+            // highlight-next-line
+            location: props.history.location // 内部维护了一份location
+        };
+
+        // This is a bit of a hack. We have to start listening for location
+        // changes here in the constructor in case there are any <Redirect>s
+        // on the initial render. If there are, they will replace/push when
+        // they mount and since cDM fires in children before parents, we may
+        // get a new location before the <Router> is mounted.
+        this._isMounted = false;
+        this._pendingLocation = null;
+
+        if (!props.staticContext) {
+            // highlight-next-line
+            this.unlisten = props.history.listen((location) => {
+                if (this._isMounted) {
+                    this.setState({location});
+                } else {
+                    this._pendingLocation = location;
+                }
+            });
+        }
+    }
+
+    render() {
+        return (
+            <RouterContext.Provider
+                value={{
+                    history: this.props.history,
+                    // highlight-next-line
+                    location: this.state.location,
+                    match: Router.computeRootMatch(
+                        this.state.location.pathname
+                    ),
+                    staticContext: this.props.staticContext
+                }}
+            >
+                <HistoryContext.Provider
+                    children={this.props.children || null}
+                    value={this.props.history}
+                />
+            </RouterContext.Provider>
+        );
+    }
+}
+```
+
+可以看到 Router 调用了 history 的 listen 方法，将自己注册为观察者。因此 push 方法调用会通知到 Router，从而引起 setState。
+这个 setState 更新自己内部的 location。所以即使绑定错了 history，location 依然会更新。（另一半问题得到了解释）
+
+接着我们看那两个 hooks
+
+```tsx
+// packages/react-router/modules/hooks.js
+import React from 'react';
+import invariant from 'tiny-invariant';
+
+import Context from './RouterContext.js';
+import HistoryContext from './HistoryContext.js';
+import matchPath from './matchPath.js';
+
+const useContext = React.useContext;
+
+export function useHistory() {
+    // highlight-next-line
+    return useContext(HistoryContext); // 返回注入的history
+}
+
+export function useLocation() {
+    // highlight-next-line
+    return useContext(Context).location; // 返回Router的state.location
+}
+```
+
+可见 ReactRouter 用了两个 Context，一个 HistoryContext，一个 RouterContext。
+useHistory 返回注入的 history，我们注入错了。
+useLocation 返回 Router 自己维护的 location，与 history 无关，因此一直是对的。
+
+这个问题的解决办法有多种，核心就是就是不要复制 b，而是修改 b 或者通过 proxy 拦截和转发。
+不用proxy的改法如下。
+```tsx
+const b = createBrowserHistory<any>({basename: pathConfig.BASENAME});
+const _push = b.push; // 保存一份
+const browserHistory = b;
+browserHistory.push = (path, ...args) => {
+    // 可以打些log啥的
+    console.log('browserHistory::push', path);
+    _push(path, ...args);
+};
+
+export {browserHistory};
+```
+
+### 反思
+
+通过这个bug，我们将history和ReactRouter串联了起来。
+
+mattermost之所以遇到这个bug是因为他们拿pathname永远都是从this.props.location或者useLocation拿。
+
+有机会还是应该把这个bug report给他们的。
+
+教训：copy paste要小心，别把bug copy过来！
