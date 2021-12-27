@@ -2,6 +2,7 @@
 
 Personal blog by mzvast
 
-Build with love with Travis-CI.
+
 
 Created with [create-react-blog](https://github.com/frontarm/create-react-blog)
+Mermaid MDX and many amazing technologies.

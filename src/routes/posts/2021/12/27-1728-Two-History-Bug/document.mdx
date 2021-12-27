@@ -310,7 +310,7 @@ export {browserHistory};
 
 通过这个bug，我们将history和ReactRouter串联了起来。
 
-mattermost之所以遇到这个bug是因为他们拿pathname永远都是从this.props.location或者useLocation拿。
+mattermost之所以没遇到这个bug是因为他们拿pathname永远都是从this.props.location或者useLocation拿，一旦有人从history拿就会出问题。
 
 有机会还是应该把这个bug report给他们的。
 
