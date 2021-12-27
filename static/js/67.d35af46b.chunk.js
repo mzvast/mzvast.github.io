@@ -1,0 +1,2 @@
+(window.webpackJsonp=window.webpackJsonp||[]).push([[67],{950:function(e,n,t){"use strict";t.r(n),n.default={title:"Testing Principles of software development",tags:["principles"],spoiler:"\u8f6f\u4ef6\u5f00\u53d1\u7684\u6d4b\u8bd5\u539f\u5219",getContent:function(){return t.e(121).then(t.bind(null,446))}}}}]);
+//# sourceMappingURL=67.d35af46b.chunk.js.map

@@ -4,7 +4,7 @@
         <title>OverRainbow</title>
         <link>/</link>
         <description>If Nothing Changes, Nothing Is Going to Change</description>
-        <lastBuildDate>Mon, 27 Dec 2021 12:17:28 GMT</lastBuildDate>
+        <lastBuildDate>Mon, 27 Dec 2021 17:33:02 GMT</lastBuildDate>
         <docs>http://blogs.law.harvard.edu/tech/rss</docs>
         <generator>https://github.com/jpmonette/feed</generator>
         <item>
@@ -2941,6 +2941,16 @@ browserHistory.push = (path, ...args) => </span><span class="token punctuation">
 
 export </span><span class="token punctuation">{</span>browserHistory<span class="token punctuation">}</span><span class="token plain-text">;
 </span></code></pre><h3 id="反思">反思</h3><p>通过这个bug，我们将history和ReactRouter串联了起来。</p><p>mattermost之所以遇到这个bug是因为他们拿pathname永远都是从this.props.location或者useLocation拿。</p><p>有机会还是应该把这个bug report给他们的。</p><p>教训：copy paste要小心，别把bug copy过来！</p>]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Fix Git Merge Mis-Deleting files]]></title>
+            <link>/posts/2021-12-27-2027-Fix-Git-Merge-Mis-Deleting-files</link>
+            <guid>/posts/2021-12-27-2027-Fix-Git-Merge-Mis-Deleting-files</guid>
+            <content:encoded><![CDATA[<h2 id="你可以从本文了解到">你可以从本文了解到</h2><h3 id="背景">背景</h3><p>看到了一片其他团队的关于<a href="https://mp.weixin.qq.com/s/UtTVKA5kZ7RXTNAQupczeg">冲代码的文</a>，这篇文章做了一些分析和定位问题，但是没有给出特别好的拯救办法。本文结合实际经验，进行补充。</p><p>咱们有一个项目，有很多人在不同的分支上开发。有一天，A 同学提交了一个 merge 提交，这个 merge 把其他人的代码删除了。在不知道的情况下，大家又默默开发了好几天。</p><p>最后，这个问题被发现了，然后大家很着急，不知道该怎么还原被删的代码。</p><h3 id="问题分析和方案比较">问题分析和方案比较</h3><p>首先，为什么提交前后代码都可以编译通过呢？</p><p>1、A 在开发的时候，肯定代码是可以跑的。
+2、merge 合入主干后，别人的代码被删了，理论上，也有一定概率可以跑的（被删的代码是静态资源或者没有被什么依赖到）。</p><p>然后，回到灾难现场。现在的 git 提交是个什么情况呢？</p><img src="/static/media/1.9413fe76.png" style="width:100%"/><p>简化成如下，a比b少了一堆文件</p><pre><code>a [merge 节点]
+｜\ b
+｜ |c
+</code></pre><p>假如a提交是一个普通提交，那么我们只需要revert a提交即可。</p><p>但是a这个merge提交不携带任何信息，不能revert。该如何修复呢？</p><p>有很多方法，不同的方法复杂度不一样。其中咱们采用的是如下的方法。其思路如下。</p><p>1、求出b从a删除的文件</p><p>2、并把他们加回来，提交，解决冲突。</p><p>其中1这个步骤我们可以以一种反向思维去做。先<code>git checkout</code>到b，然后<code>git reset --soft</code>到a，这样，工作区就出现了被删掉的文件，直接将其提交即可。</p><p>这是什么原理呢？我们这样来理解一下。</p><p>首先，假如先checkout到a，然后reset到b，那么工作区暂存的就是<code>b删掉的文件</code>。</p><p>咱们反过来操作，先checkout到b，然后reset到a，那么工作区暂存的就是<code>revert b删掉的文件</code>即加回来这些文件。</p><p>其实，reset —soft做了什么呢？</p><p><code>reset --soft 会在重置 HEAD 和 branch 时，保留工作目录和暂存区中的内容，并把重置 HEAD 所带来的新的差异放进暂存区。</code>。</p><p>理解了这句话。差异是<code>before - after</code>。那么我们带入a和b<code>before:b, after:a</code>，这个差异就是<code>b-a=被删的文件加回来</code></p><p>步骤2的操作可以用<code>git pull -r</code>将本地提交追加到最新，并解决冲突即可。</p><h3 id="反思">反思</h3><p>1、预防：CR要仔细，发现有大量文件别通过，仔细核对。</p><p>2、错误已经发生，要沉着冷静。有时候正向走不通，可以考虑反向操作，会有意想不到的效果。</p>]]></content:encoded>
         </item>
     </channel>
 </rss>

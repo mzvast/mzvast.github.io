@@ -1,2 +1,0 @@
-(window.webpackJsonp=window.webpackJsonp||[]).push([[37],{919:function(t,e,p){"use strict";p.r(e),e.default={title:"\u5f53create-react-app\u9047\u4e0atypescript",tags:["react","typescript"],spoiler:"\u5c06 create-react-app \u9879\u76ee\u5347\u7ea7\u6210 typescript \u5de5\u7a0b",getContent:function(){return p.e(95).then(p.bind(null,406))}}}}]);
-//# sourceMappingURL=37.2ed248b0.chunk.js.map
