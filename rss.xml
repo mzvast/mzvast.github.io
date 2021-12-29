@@ -4,7 +4,7 @@
         <title>OverRainbow</title>
         <link>/</link>
         <description>If Nothing Changes, Nothing Is Going to Change</description>
-        <lastBuildDate>Wed, 29 Dec 2021 03:42:56 GMT</lastBuildDate>
+        <lastBuildDate>Wed, 29 Dec 2021 03:57:41 GMT</lastBuildDate>
         <docs>http://blogs.law.harvard.edu/tech/rss</docs>
         <generator>https://github.com/jpmonette/feed</generator>
         <item>
@@ -2953,7 +2953,7 @@ browserHistory.push = (path, ...args) => </span><span class="token punctuation">
 <span class="token punctuation">}</span><span class="token plain-text">;
 
 export </span><span class="token punctuation">{</span>browserHistory<span class="token punctuation">}</span><span class="token plain-text">;
-</span></code></pre><h3 id="反思">反思</h3><p>通过这个 bug，我们将 history 和 ReactRouter 串联了起来。</p><p>mattermost 之所以遇到这个 bug 是因为他们拿 pathname 永远都是从 this.props.location 或者 useLocation 拿。</p><p>有机会还是应该把这个 bug report 给他们的。</p><p>教训：copy paste 要小心，别把 bug copy 过来！</p>]]></content:encoded>
+</span></code></pre><h3 id="反思">反思</h3><p>通过这个 bug，我们将 history 和 ReactRouter 串联了起来。</p><p>mattermost之所以没遇到这个bug是因为他们拿pathname永远都是从this.props.location或者useLocation拿，一旦有人从history拿就会出问题。</p><p>有机会还是应该把这个 bug report 给他们的。</p><p>教训：copy paste 要小心，别把 bug copy 过来！</p>]]></content:encoded>
         </item>
         <item>
             <title><![CDATA[Fix Git Merge Mis-Deleting files]]></title>
