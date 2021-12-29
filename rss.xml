@@ -4,7 +4,7 @@
         <title>OverRainbow</title>
         <link>/</link>
         <description>If Nothing Changes, Nothing Is Going to Change</description>
-        <lastBuildDate>Mon, 27 Dec 2021 17:49:36 GMT</lastBuildDate>
+        <lastBuildDate>Wed, 29 Dec 2021 03:42:56 GMT</lastBuildDate>
         <docs>http://blogs.law.harvard.edu/tech/rss</docs>
         <generator>https://github.com/jpmonette/feed</generator>
         <item>
@@ -2787,7 +2787,8 @@ index dbc38e4<span class="token punctuation">.</span><span class="token punctuat
     <span class="token punctuation">}</span>
 <span class="token punctuation">}</span><span class="token plain-text">;</span>
 <span class="token plain-text">export default PrivateComp;</span>
-<span class="token plain-text"></span></code></pre><p>可以看到打印结果的两个 location 不一样。这是为什么呢？</p><h3 id="原因定位和解决">原因定位和解决</h3><p>首先我们的 browserHistory 是基本上 copy 的 mattermost 的，人家没遇到bug么。</p><p>那么顺着这个思路我们去捋一下这个 bug。</p><p>我们放慢一点</p><pre><code class="language-tsx" data-language="tsx" data-highlighted-line-numbers=""><span class="token keyword">import</span> <span class="token punctuation">{</span>createBrowserHistory<span class="token punctuation">}</span> <span class="token keyword">from</span> <span class="token string">'history'</span><span class="token punctuation">;</span>
+<span class="token plain-text"></span></code></pre><p>可以看到打印结果的两个 location 不一样。这是为什么呢？</p><h3 id="原因定位和解决">原因定位和解决</h3><p>首先我们的 browserHistory 是基本上 copy 的 mattermost 的，人家没遇到 bug 么。</p><p>那么顺着这个思路我们去捋一下这个 bug。</p><p>我们放慢一点</p><pre><code class="language-tsx" data-language="tsx" data-highlighted-line-numbers=""><span class="token comment">// 我们的app中utils/browserHistory.tsx</span>
+<span class="token keyword">import</span> <span class="token punctuation">{</span>createBrowserHistory<span class="token punctuation">}</span> <span class="token keyword">from</span> <span class="token string">'history'</span><span class="token punctuation">;</span>
 
 <span class="token keyword">import</span> pathConfig <span class="token keyword">from</span> <span class="token string">'config/pathConfig'</span><span class="token punctuation">;</span>
 
@@ -2803,7 +2804,7 @@ export const c = </span><span class="token punctuation">{</span>
     <span class="token punctuation">}</span>
 <span class="token punctuation">}</span><span class="token plain-text">;
 export default c;
-</span></code></pre><p>可以看到 c 的 push 方法修改的是 b 对象。而我们传给 Router 的是 c。</p><p>我们先看看 history 这个包的 push 方法做了什么。</p><pre><code class="language-ts" data-language="ts" data-highlighted-line-numbers=""><span class="token keyword">function</span> <span class="token function">push</span><span class="token punctuation">(</span><span class="token parameter">path<span class="token punctuation">,</span> state</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+</span></code></pre><p>可以看到 c 浅拷贝了 b，并且重写了 push 方法，在 c 的 push 方法中调用 b 的 push 方法。</p><p>最后我们把 c 传给 Router。</p><p>我们先看看 history 这个包的 push 方法做了什么。</p><pre><code class="language-ts" data-language="ts" data-highlighted-line-numbers=""><span class="token keyword">function</span> <span class="token function">push</span><span class="token punctuation">(</span><span class="token parameter">path<span class="token punctuation">,</span> state</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
     process<span class="token punctuation">.</span>env<span class="token punctuation">.</span><span class="token constant">NODE_ENV</span> <span class="token operator">!==</span> <span class="token string">'production'</span>
         <span class="token operator">?</span> <span class="token function">warning</span><span class="token punctuation">(</span>
               <span class="token operator">!</span><span class="token punctuation">(</span>
@@ -2860,13 +2861,11 @@ export default c;
         <span class="token punctuation">}</span>
     <span class="token punctuation">)</span><span class="token punctuation">;</span>
 <span class="token punctuation">}</span>
-</code></pre><p>可以看到会更新这个 history 对象 </p><p>setState 方法如下</p><pre><code class="language-ts" data-language="ts" data-highlighted-line-numbers=""><span class="token keyword">function</span> <span class="token function">setState</span><span class="token punctuation">(</span><span class="token parameter">nextState</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
-    <span class="token function">_extends</span><span class="token punctuation">(</span>history<span class="token punctuation">,</span> nextState<span class="token punctuation">)</span><span class="token punctuation">;</span>
-
+</code></pre><p>可以看到会调用 setState 方法实现一个 Pub/Sub 模式。从而实现内部和外部数据的同步。</p><p>setState 主要有 2 个操作：</p><p>1、在原 history 对象上修改，赋予新值。</p><p>2、 通知以 listen 方法注册的观察者【callback(location,action)】。</p><pre><code class="language-ts" data-language="ts" data-highlighted-line-numbers=""><span class="token keyword">function</span> <span class="token function">setState</span><span class="token punctuation">(</span><span class="token parameter">nextState</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+<span class="highlighted-line">    <span class="token function">_extends</span><span class="token punctuation">(</span>history<span class="token punctuation">,</span> nextState<span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// 1</span></span>
     history<span class="token punctuation">.</span>length <span class="token operator">=</span> globalHistory<span class="token punctuation">.</span>length<span class="token punctuation">;</span>
-    transitionManager<span class="token punctuation">.</span><span class="token function">notifyListeners</span><span class="token punctuation">(</span>history<span class="token punctuation">.</span>location<span class="token punctuation">,</span> history<span class="token punctuation">.</span>action<span class="token punctuation">)</span><span class="token punctuation">;</span>
-<span class="token punctuation">}</span>
-</code></pre><p>所以这解释了为什么 useHistory 的 location 没变。（c 没变，b 变了，传给 router 的是吧 c）。</p><p>至此问题解开了一半。</p><p>那么为什么 useLocation 的 pathname 变了？</p><p>我们去看 ReactRouter 的 Router 的构造函数</p><pre><code class="language-tsx" data-language="tsx" data-highlighted-line-numbers=""><span class="token comment">// packages/react-router/modules/Router.js</span>
+<span class="highlighted-line">    transitionManager<span class="token punctuation">.</span><span class="token function">notifyListeners</span><span class="token punctuation">(</span>history<span class="token punctuation">.</span>location<span class="token punctuation">,</span> history<span class="token punctuation">.</span>action<span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// 2</span></span><span class="token punctuation">}</span>
+</code></pre><p>回到我们的问题，我们传给 Router 的是 c，c 中又调用了 b 的 push，因此实际上 b 的 location 发生了更新，c 的 location 并未更新。</p><p>所以这解释了为什么 useHistory 的 location 没变。（useHistory 返回的是 history 对象，我们传给 Router 的是 c，c 没变，b 变了）。</p><p>至此问题解开了一半。</p><p>那么为什么 useLocation 的 pathname 变了？（明明传给 Router 的是 c，理应也没变才对嘛）</p><p>我们去看 ReactRouter 的 Router 的构造函数</p><pre><code class="language-tsx" data-language="tsx" data-highlighted-line-numbers=""><span class="token comment">// packages/react-router/modules/Router.js</span>
 <span class="token keyword">class</span> <span class="token class-name">Router</span> <span class="token keyword">extends</span> <span class="token class-name">React<span class="token punctuation">.</span>Component</span> <span class="token punctuation">{</span>
     <span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="token parameter">props</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
         <span class="token keyword">super</span><span class="token punctuation">(</span>props<span class="token punctuation">)</span><span class="token punctuation">;</span>
@@ -2911,8 +2910,22 @@ export default c;
         <span class="token punctuation">)</span><span class="token punctuation">;</span>
     <span class="token punctuation">}</span>
 <span class="token punctuation">}</span>
-</code></pre><p>可以看到 Router 调用了 history 的 listen 方法，将自己注册为观察者。因此 push 方法调用会通知到 Router，从而引起 setState。
-这个 setState 更新自己内部的 location。所以即使绑定错了 history，location 依然会更新。（另一半问题得到了解释）</p><p>接着我们看那两个 hooks</p><pre><code class="language-tsx" data-language="tsx" data-highlighted-line-numbers=""><span class="token comment">// packages/react-router/modules/hooks.js</span>
+</code></pre><p>listen方法如下，主要是往transitionManager里面添加了一个listener。</p><pre><code class="language-tsx" data-language="tsx" data-highlighted-line-numbers=""><span class="token keyword">function</span> <span class="token function">listen</span><span class="token punctuation">(</span><span class="token parameter">listener</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">var</span> unlisten <span class="token operator">=</span> transitionManager<span class="token punctuation">.</span><span class="token function">appendListener</span><span class="token punctuation">(</span>listener<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token function">checkDOMListeners</span><span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">return</span> <span class="token keyword">function</span> <span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+      <span class="token function">checkDOMListeners</span><span class="token punctuation">(</span><span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+      <span class="token function">unlisten</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span><span class="token punctuation">;</span>
+  <span class="token punctuation">}</span>
+</code></pre><p>可以看到 Router 调用了 history 的 listen 方法，将自己注册为观察者。因此 push 方法的 setState 的 callback 会通知到 Router，从而引起 Router 的 setState，
+更新自己内部维护的 location。所以即使绑定错了 history，location 依然会更新。（另一半问题得到了解释）</p><p>这里的细节是，我们的 c 的 listen 是 b 的 listen 是浅拷贝。所以实质上这个 listen 是 listen 了 b 的 setState。我们可以看下面这个 demo验证一下这个问题。</p><pre><code class="language-tsx" data-language="tsx" data-highlighted-line-numbers=""><span class="token keyword">var</span> b <span class="token operator">=</span> <span class="token punctuation">{</span><span class="token function-variable function">a</span><span class="token punctuation">:</span> <span class="token keyword">function</span> <span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span><span class="token punctuation">}</span><span class="token punctuation">}</span><span class="token punctuation">;</span>
+<span class="token comment">// undefined;</span>
+<span class="token keyword">var</span> c <span class="token operator">=</span> <span class="token punctuation">{</span><span class="token operator">...</span>b<span class="token punctuation">}</span><span class="token punctuation">;</span>
+<span class="token comment">// undefined;</span>
+c<span class="token punctuation">.</span>a <span class="token operator">===</span> b<span class="token punctuation">.</span>a<span class="token punctuation">;</span>
+<span class="token comment">// true;</span>
+</code></pre><p>所以Router用了c的history，listen了b的setState，push了b的push。一切完美解释。</p><p>接着我们看那两个 hooks</p><pre><code class="language-tsx" data-language="tsx" data-highlighted-line-numbers=""><span class="token comment">// packages/react-router/modules/hooks.js</span>
 <span class="token keyword">import</span> React <span class="token keyword">from</span> <span class="token string">'react'</span><span class="token punctuation">;</span>
 <span class="token keyword">import</span> invariant <span class="token keyword">from</span> <span class="token string">'tiny-invariant'</span><span class="token punctuation">;</span>
 
@@ -2930,7 +2943,7 @@ export default c;
 </code></pre><p>可见 ReactRouter 用了两个 Context，一个 HistoryContext，一个 RouterContext。
 useHistory 返回注入的 history，我们注入错了。
 useLocation 返回 Router 自己维护的 location，与 history 无关，因此一直是对的。</p><p>这个问题的解决办法有多种，核心就是就是不要复制 b，而是修改 b 或者通过 proxy 拦截和转发。
-不用proxy的改法如下。</p><pre><code class="language-tsx" data-language="tsx" data-highlighted-line-numbers=""><span class="token keyword">const</span> b <span class="token operator">=</span> createBrowserHistory<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>any</span><span class="token punctuation">></span></span><span class="token plain-text">(</span><span class="token punctuation">{</span>basename<span class="token punctuation">:</span> pathConfig<span class="token punctuation">.</span><span class="token constant">BASENAME</span><span class="token punctuation">}</span><span class="token plain-text">);
+不用 proxy 的改法如下。</p><pre><code class="language-tsx" data-language="tsx" data-highlighted-line-numbers=""><span class="token keyword">const</span> b <span class="token operator">=</span> createBrowserHistory<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>any</span><span class="token punctuation">></span></span><span class="token plain-text">(</span><span class="token punctuation">{</span>basename<span class="token punctuation">:</span> pathConfig<span class="token punctuation">.</span><span class="token constant">BASENAME</span><span class="token punctuation">}</span><span class="token plain-text">);
 const _push = b.push; // 保存一份
 const browserHistory = b;
 browserHistory.push = (path, ...args) => </span><span class="token punctuation">{</span>
@@ -2940,7 +2953,7 @@ browserHistory.push = (path, ...args) => </span><span class="token punctuation">
 <span class="token punctuation">}</span><span class="token plain-text">;
 
 export </span><span class="token punctuation">{</span>browserHistory<span class="token punctuation">}</span><span class="token plain-text">;
-</span></code></pre><h3 id="反思">反思</h3><p>通过这个bug，我们将history和ReactRouter串联了起来。</p><p>mattermost之所以没遇到这个bug是因为他们拿pathname永远都是从this.props.location或者useLocation拿，一旦有人从history拿就会出问题。</p><p>有机会还是应该把这个bug report给他们的。</p><p>教训：copy paste要小心，别把bug copy过来！</p>]]></content:encoded>
+</span></code></pre><h3 id="反思">反思</h3><p>通过这个 bug，我们将 history 和 ReactRouter 串联了起来。</p><p>mattermost 之所以遇到这个 bug 是因为他们拿 pathname 永远都是从 this.props.location 或者 useLocation 拿。</p><p>有机会还是应该把这个 bug report 给他们的。</p><p>教训：copy paste 要小心，别把 bug copy 过来！</p>]]></content:encoded>
         </item>
         <item>
             <title><![CDATA[Fix Git Merge Mis-Deleting files]]></title>
