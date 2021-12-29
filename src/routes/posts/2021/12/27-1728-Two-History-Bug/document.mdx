@@ -92,13 +92,14 @@ export default PrivateComp;
 
 ### 原因定位和解决
 
-首先我们的 browserHistory 是基本上 copy 的 mattermost 的，人家没遇到bug么。
+首先我们的 browserHistory 是基本上 copy 的 mattermost 的，人家没遇到 bug 么。
 
 那么顺着这个思路我们去捋一下这个 bug。
 
 我们放慢一点
 
 ```tsx
+// 我们的app中utils/browserHistory.tsx
 import {createBrowserHistory} from 'history';
 
 import pathConfig from 'config/pathConfig';
@@ -117,7 +118,9 @@ export const c = {
 export default c;
 ```
 
-可以看到 c 的 push 方法修改的是 b 对象。而我们传给 Router 的是 c。
+可以看到 c 浅拷贝了 b，并且重写了 push 方法，在 c 的 push 方法中调用 b 的 push 方法。
+
+最后我们把 c 传给 Router。
 
 我们先看看 history 这个包的 push 方法做了什么。
 
@@ -185,24 +188,32 @@ function push(path, state) {
 }
 ```
 
-可以看到会更新这个 history 对象 
+可以看到会调用 setState 方法实现一个 Pub/Sub 模式。从而实现内部和外部数据的同步。
 
-setState 方法如下
+setState 主要有 2 个操作：
+
+1、在原 history 对象上修改，赋予新值。
+
+2、 通知以 listen 方法注册的观察者【callback(location,action)】。
 
 ```ts
 function setState(nextState) {
-    _extends(history, nextState);
+    // highlight-next-line
+    _extends(history, nextState); // 1
 
     history.length = globalHistory.length;
-    transitionManager.notifyListeners(history.location, history.action);
+    // highlight-next-line
+    transitionManager.notifyListeners(history.location, history.action); // 2
 }
 ```
 
-所以这解释了为什么 useHistory 的 location 没变。（c 没变，b 变了，传给 router 的是吧 c）。
+回到我们的问题，我们传给 Router 的是 c，c 中又调用了 b 的 push，因此实际上 b 的 location 发生了更新，c 的 location 并未更新。
+
+所以这解释了为什么 useHistory 的 location 没变。（useHistory 返回的是 history 对象，我们传给 Router 的是 c，c 没变，b 变了）。
 
 至此问题解开了一半。
 
-那么为什么 useLocation 的 pathname 变了？
+那么为什么 useLocation 的 pathname 变了？（明明传给 Router 的是 c，理应也没变才对嘛）
 
 我们去看 ReactRouter 的 Router 的构造函数
 
@@ -260,8 +271,34 @@ class Router extends React.Component {
 }
 ```
 
-可以看到 Router 调用了 history 的 listen 方法，将自己注册为观察者。因此 push 方法调用会通知到 Router，从而引起 setState。
-这个 setState 更新自己内部的 location。所以即使绑定错了 history，location 依然会更新。（另一半问题得到了解释）
+listen方法如下，主要是往transitionManager里面添加了一个listener。
+
+```tsx
+function listen(listener) {
+    var unlisten = transitionManager.appendListener(listener);
+    checkDOMListeners(1);
+    return function () {
+      checkDOMListeners(-1);
+      unlisten();
+    };
+  }
+```
+
+可以看到 Router 调用了 history 的 listen 方法，将自己注册为观察者。因此 push 方法的 setState 的 callback 会通知到 Router，从而引起 Router 的 setState，
+更新自己内部维护的 location。所以即使绑定错了 history，location 依然会更新。（另一半问题得到了解释）
+
+这里的细节是，我们的 c 的 listen 是 b 的 listen 是浅拷贝。所以实质上这个 listen 是 listen 了 b 的 setState。我们可以看下面这个 demo验证一下这个问题。
+
+```tsx
+var b = {a: function () {}};
+// undefined;
+var c = {...b};
+// undefined;
+c.a === b.a;
+// true;
+```
+
+所以Router用了c的history，listen了b的setState，push了b的push。一切完美解释。
 
 接着我们看那两个 hooks
 
@@ -292,7 +329,8 @@ useHistory 返回注入的 history，我们注入错了。
 useLocation 返回 Router 自己维护的 location，与 history 无关，因此一直是对的。
 
 这个问题的解决办法有多种，核心就是就是不要复制 b，而是修改 b 或者通过 proxy 拦截和转发。
-不用proxy的改法如下。
+不用 proxy 的改法如下。
+
 ```tsx
 const b = createBrowserHistory<any>({basename: pathConfig.BASENAME});
 const _push = b.push; // 保存一份
@@ -308,10 +346,10 @@ export {browserHistory};
 
 ### 反思
 
-通过这个bug，我们将history和ReactRouter串联了起来。
+通过这个 bug，我们将 history 和 ReactRouter 串联了起来。
 
-mattermost之所以没遇到这个bug是因为他们拿pathname永远都是从this.props.location或者useLocation拿，一旦有人从history拿就会出问题。
+mattermost 之所以遇到这个 bug 是因为他们拿 pathname 永远都是从 this.props.location 或者 useLocation 拿。
 
-有机会还是应该把这个bug report给他们的。
+有机会还是应该把这个 bug report 给他们的。
 
-教训：copy paste要小心，别把bug copy过来！
+教训：copy paste 要小心，别把 bug copy 过来！
