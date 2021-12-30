@@ -1,2 +1,0 @@
-(window.webpackJsonp=window.webpackJsonp||[]).push([[49],{932:function(t,e,n){"use strict";n.r(e),e.default={title:"theme switch",tags:["react","css"],spoiler:"\u591c\u95f4\u6a21\u5f0f\u5982\u4f55\u5b9e\u73b0",getContent:function(){return n.e(106).then(n.bind(null,419))}}}}]);
-//# sourceMappingURL=49.fd4ee515.chunk.js.map

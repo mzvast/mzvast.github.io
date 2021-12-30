@@ -1,2 +1,0 @@
-(window.webpackJsonp=window.webpackJsonp||[]).push([[44],{927:function(e,t,n){"use strict";n.r(t),t.default={title:"CRA polyfill\uff08\u672a\u5b8c\u5de5\uff09",tags:["react","babel"],spoiler:"create-react-app\u4e2dpolyfill\u7684\u59ff\u52bf",getContent:function(){return n.e(103).then(n.bind(null,412))}}}}]);
-//# sourceMappingURL=44.98a56bc5.chunk.js.map

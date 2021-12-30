@@ -1,2 +1,0 @@
-(window.webpackJsonp=window.webpackJsonp||[]).push([[73],{956:function(t,n,e){"use strict";e.r(n),n.default={title:"Two History Bug",tags:["bug","react"],spoiler:"bug study on history",getContent:function(){return e.e(126).then(e.bind(null,894))}}}}]);
-//# sourceMappingURL=73.b2702a25.chunk.js.map

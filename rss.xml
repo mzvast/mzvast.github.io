@@ -4,7 +4,7 @@
         <title>OverRainbow</title>
         <link>/</link>
         <description>If Nothing Changes, Nothing Is Going to Change</description>
-        <lastBuildDate>Thu, 30 Dec 2021 05:16:52 GMT</lastBuildDate>
+        <lastBuildDate>Thu, 30 Dec 2021 06:20:18 GMT</lastBuildDate>
         <docs>http://blogs.law.harvard.edu/tech/rss</docs>
         <generator>https://github.com/jpmonette/feed</generator>
         <item>
@@ -2964,6 +2964,93 @@ export </span><span class="token punctuation">{</span>browserHistory<span class=
 ｜\ b
 ｜ |c
 </code></pre><p>假如a提交是一个普通提交，那么我们只需要revert a提交即可。</p><p>但是a这个merge提交不携带任何信息，不能revert。该如何修复呢？</p><p>有很多方法，不同的方法复杂度不一样。其中咱们采用的是如下的方法。其思路如下。</p><p>1、求出b从a删除的文件</p><p>2、并把他们加回来，提交，解决冲突。</p><p>其中1这个步骤我们可以以一种反向思维去做。先<code>git checkout</code>到b，然后<code>git reset --soft</code>到a，这样，工作区就出现了被删掉的文件，直接将其提交即可。</p><p>这是什么原理呢？我们这样来理解一下。</p><p>首先，假如先checkout到a，然后reset到b，那么工作区暂存的就是<code>b删掉的文件</code>。</p><p>咱们反过来操作，先checkout到b，然后reset到a，那么工作区暂存的就是<code>revert b删掉的文件</code>即加回来这些文件。</p><p>其实，reset —soft做了什么呢？</p><p><code>reset --soft 会在重置 HEAD 和 branch 时，保留工作目录和暂存区中的内容，并把重置 HEAD 所带来的新的差异放进暂存区。</code>。</p><p>理解了这句话。差异是<code>before - after</code>。那么我们带入a和b<code>before:b, after:a</code>，这个差异就是<code>b-a=被删的文件加回来</code></p><p>步骤2的操作可以用<code>git pull -r</code>将本地提交追加到最新，并解决冲突即可。</p><h3 id="反思">反思</h3><p>1、预防：CR要仔细，发现有大量文件别通过，仔细核对。</p><p>2、错误已经发生，要沉着冷静。有时候正向走不通，可以考虑反向操作，会有意想不到的效果。</p>]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Migrate Razzle from 3 to 4]]></title>
+            <link>/posts/2021-12-30-1332-Migrate-Razzle-from-3-to-4</link>
+            <guid>/posts/2021-12-30-1332-Migrate-Razzle-from-3-to-4</guid>
+            <content:encoded><![CDATA[<h2 id="你可以从本文了解到">你可以从本文了解到</h2><h2 id="背景">背景</h2><p>由于我们的业务需要为 razzle 编写 plugin，而 4 版本的架构理念让一切都 plugin，显然对此提供了更好的支持。</p><p>那么我们一起来看看升级的时候会遇到什么坑吧。</p><h2 id="过程和遇到问题">过程和遇到问题</h2><p>我们演示的项目是我之前建的<a href="https://github.com/mzvast/cra-ts-ssr-zero">脚手架 demo</a>。</p><p>首先打开<a href="https://razzlejs.org/docs/upgrade-guide">upgrade-guide</a>，开始升级！</p><h3 id="更新依赖">更新依赖</h3><p>执行以下</p><pre><code class="language-bash" data-language="bash" data-highlighted-line-numbers=""><span class="token function">yarn</span> <span class="token function">add</span> --dev <span class="token punctuation">\</span>
+  razzle <span class="token punctuation">\</span>
+  razzle-dev-utils <span class="token punctuation">\</span>
+  babel-preset-razzle
+</code></pre><p>会将相关依赖更新到最新</p><pre><code class="language-json" data-language="json" data-highlighted-line-numbers=""><span class="token comment">// package.json</span>
+<span class="token punctuation">{</span>
+    <span class="token property">"devDependencies"</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+        <span class="token property">"babel-preset-razzle"</span><span class="token operator">:</span> <span class="token string">"^4.2.13"</span><span class="token punctuation">,</span>
+        <span class="token property">"razzle"</span><span class="token operator">:</span> <span class="token string">"^4.2.13"</span><span class="token punctuation">,</span>
+        <span class="token property">"razzle-dev-utils"</span><span class="token operator">:</span> <span class="token string">"^4.2.13"</span>
+    <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+</code></pre><p>接着安装 peerDependencies</p><pre><code class="language-bash" data-language="bash" data-highlighted-line-numbers=""><span class="token function">yarn</span> <span class="token function">add</span> --dev <span class="token punctuation">\</span>
+  webpack-dev-server@3.11.0 <span class="token punctuation">\</span>
+  mini-css-extract-plugin@0.9.0 <span class="token punctuation">\</span>
+  postcss@8.2.4
+</code></pre><p>以及选择一个 webpack 版本及其插件，这里选择 4 吧。</p><pre><code class="language-bash" data-language="bash" data-highlighted-line-numbers=""><span class="token function">yarn</span> <span class="token function">add</span> --dev webpack@4.46.0 html-webpack-plugin@4.5.2
+</code></pre><p>然后准备 start 我们的 server 看能不能跑，嗯跑起来了，没有任何问题。</p><p>如果你的 app 不用读取打包产物 chunks，那么升级到这里就结束了。</p><p>但是，如果你的 app 用了<a href="https://github.com/jaredpalmer/after.js/">After.js</a>，那么可能编译会报错，提示大概是 webpack 找不到 module &#x27;undefined’。</p><pre><code class="language-bash" data-language="bash" data-highlighted-line-numbers="">Cannot <span class="token function">find</span> module <span class="token string">'undefined'</span>
+    at webpackEmptyContext <span class="token punctuation">(</span>/Users/apple/@Projects/oss/cra-ts-ssr-zero/src sync:2:1<span class="token punctuation">)</span>
+    at Module<span class="token punctuation">..</span>/src/server.tsx <span class="token punctuation">(</span>/Users/apple/@Projects/oss/cra-ts-ssr-zero/build/webpack:/src/server.tsx:19:1<span class="token punctuation">)</span>
+    at __webpack_require__ <span class="token punctuation">(</span>/Users/apple/@Projects/oss/cra-ts-ssr-zero/build/webpack:/webpack/bootstrap:748:1<span class="token punctuation">)</span>
+    at fn <span class="token punctuation">(</span>/Users/apple/@Projects/oss/cra-ts-ssr-zero/build/webpack:/webpack/bootstrap:59:1<span class="token punctuation">)</span>
+    at Module<span class="token punctuation">..</span>/src/index.ts <span class="token punctuation">(</span>/Users/apple/@Projects/oss/cra-ts-ssr-zero/build/webpack:/src/index.ts:5:1<span class="token punctuation">)</span>
+    at __webpack_require__ <span class="token punctuation">(</span>/Users/apple/@Projects/oss/cra-ts-ssr-zero/build/webpack:/webpack/bootstrap:748:1<span class="token punctuation">)</span>
+    at fn <span class="token punctuation">(</span>/Users/apple/@Projects/oss/cra-ts-ssr-zero/build/webpack:/webpack/bootstrap:59:1<span class="token punctuation">)</span>
+    at Object.0 <span class="token punctuation">(</span>/Users/apple/@Projects/oss/cra-ts-ssr-zero/build/server.js:1622:1<span class="token punctuation">)</span>
+    at __webpack_require__ <span class="token punctuation">(</span>/Users/apple/@Projects/oss/cra-ts-ssr-zero/build/webpack:/webpack/bootstrap:748:1<span class="token punctuation">)</span>
+    at /Users/apple/@Projects/oss/cra-ts-ssr-zero/build/webpack:/webpack/bootstrap:815:1
+sswp<span class="token operator">></span> <span class="token operator">!</span><span class="token operator">!</span><span class="token operator">!</span> Script exited with code <span class="token number">1</span>
+</code></pre><p>这个问题跟RAZZLE_CHUNKS_MANIFEST这个环境变量相关。我们来看After的一个demo。</p><pre><code class="language-ts" data-language="ts" data-highlighted-line-numbers=""><span class="token comment">// ./src/server.js</span>
+<span class="token keyword">import</span> React <span class="token keyword">from</span> <span class="token string">'react'</span><span class="token punctuation">;</span>
+<span class="token keyword">import</span> express <span class="token keyword">from</span> <span class="token string">'express'</span><span class="token punctuation">;</span>
+<span class="token keyword">import</span> <span class="token punctuation">{</span>render<span class="token punctuation">}</span> <span class="token keyword">from</span> <span class="token string">'@jaredpalmer/after'</span><span class="token punctuation">;</span>
+<span class="token keyword">import</span> <span class="token punctuation">{</span>renderToString<span class="token punctuation">}</span> <span class="token keyword">from</span> <span class="token string">'react-dom/server'</span><span class="token punctuation">;</span>
+<span class="token keyword">import</span> <span class="token punctuation">{</span>ApolloProvider<span class="token punctuation">,</span> getDataFromTree<span class="token punctuation">}</span> <span class="token keyword">from</span> <span class="token string">'react-apollo'</span><span class="token punctuation">;</span>
+<span class="token keyword">import</span> routes <span class="token keyword">from</span> <span class="token string">'./routes'</span><span class="token punctuation">;</span>
+<span class="token keyword">import</span> createApolloClient <span class="token keyword">from</span> <span class="token string">'./createApolloClient'</span><span class="token punctuation">;</span>
+<span class="token keyword">import</span> Document <span class="token keyword">from</span> <span class="token string">'./Document'</span><span class="token punctuation">;</span>
+<span class="highlighted-line"><span class="token keyword">const</span> chunks <span class="token operator">=</span> <span class="token keyword">require</span><span class="token punctuation">(</span>process<span class="token punctuation">.</span>env<span class="token punctuation">.</span><span class="token constant">RAZZLE_CHUNKS_MANIFEST</span><span class="token punctuation">)</span><span class="token punctuation">;</span> </span>
+<span class="token keyword">const</span> server <span class="token operator">=</span> <span class="token function">express</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+server
+    <span class="token punctuation">.</span><span class="token function">disable</span><span class="token punctuation">(</span><span class="token string">'x-powered-by'</span><span class="token punctuation">)</span>
+    <span class="token punctuation">.</span><span class="token function">use</span><span class="token punctuation">(</span>express<span class="token punctuation">.</span><span class="token keyword">static</span><span class="token punctuation">(</span>process<span class="token punctuation">.</span>env<span class="token punctuation">.</span><span class="token constant">RAZZLE_PUBLIC_DIR</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+    <span class="token punctuation">.</span><span class="token keyword">get</span><span class="token punctuation">(</span><span class="token string">'/*'</span><span class="token punctuation">,</span> <span class="token keyword">async</span> <span class="token punctuation">(</span><span class="token parameter">req<span class="token punctuation">,</span> res</span><span class="token punctuation">)</span> <span class="token operator">=></span> <span class="token punctuation">{</span>
+        <span class="token keyword">const</span> client <span class="token operator">=</span> <span class="token function">createApolloClient</span><span class="token punctuation">(</span><span class="token punctuation">{</span>ssrMode<span class="token punctuation">:</span> <span class="token boolean">true</span><span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        <span class="token keyword">const</span> <span class="token function-variable function">customRenderer</span> <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token parameter">node</span><span class="token punctuation">)</span> <span class="token operator">=></span> <span class="token punctuation">{</span>
+            <span class="token keyword">const</span> App <span class="token operator">=</span> <span class="token operator">&lt;</span>ApolloProvider client<span class="token operator">=</span><span class="token punctuation">{</span>client<span class="token punctuation">}</span><span class="token operator">></span><span class="token punctuation">{</span>node<span class="token punctuation">}</span><span class="token operator">&lt;</span><span class="token operator">/</span>ApolloProvider<span class="token operator">></span><span class="token punctuation">;</span>
+            <span class="token keyword">return</span> <span class="token function">getDataFromTree</span><span class="token punctuation">(</span>App<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">then</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">=></span> <span class="token punctuation">{</span>
+                <span class="token keyword">const</span> initialApolloState <span class="token operator">=</span> client<span class="token punctuation">.</span><span class="token function">extract</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                <span class="token keyword">const</span> html <span class="token operator">=</span> <span class="token function">renderToString</span><span class="token punctuation">(</span>App<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                <span class="token keyword">return</span> <span class="token punctuation">{</span>html<span class="token punctuation">,</span> initialApolloState<span class="token punctuation">}</span><span class="token punctuation">;</span>
+            <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">}</span><span class="token punctuation">;</span>
+
+        <span class="token keyword">try</span> <span class="token punctuation">{</span>
+            <span class="token keyword">const</span> html <span class="token operator">=</span> <span class="token keyword">await</span> <span class="token function">render</span><span class="token punctuation">(</span><span class="token punctuation">{</span>
+                req<span class="token punctuation">,</span>
+                res<span class="token punctuation">,</span>
+                routes<span class="token punctuation">,</span>
+<span class="highlighted-line">                chunks<span class="token punctuation">,</span></span>                customRenderer<span class="token punctuation">,</span>
+                document<span class="token punctuation">:</span> Document
+            <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            res<span class="token punctuation">.</span><span class="token function">send</span><span class="token punctuation">(</span>html<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">}</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span>error<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            <span class="token builtin">console</span><span class="token punctuation">.</span><span class="token function">error</span><span class="token punctuation">(</span>error<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            res<span class="token punctuation">.</span><span class="token function">json</span><span class="token punctuation">(</span><span class="token punctuation">{</span>message<span class="token punctuation">:</span> error<span class="token punctuation">.</span>message<span class="token punctuation">,</span> stack<span class="token punctuation">:</span> error<span class="token punctuation">.</span>stack<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+<span class="token keyword">export</span> <span class="token keyword">default</span> server<span class="token punctuation">;</span>
+</code></pre><p>原因是process.env.RAZZLE_CHUNKS_MANIFEST这个环境变量没有被注入，require了个undefined，于是出现了上面的报错。</p><p>这算是Razzle从3到4的一个breaking change吧。</p><p>我们可以去看<a href="https://sourcegraph.com/github.com/jaredpalmer/razzle@refs/tags/v3.4.5/-/blob/packages/razzle/config/env.js?L56:9">V3</a></p><p>是从<a href="https://sourcegraph.com/github.com/jaredpalmer/razzle@refs/tags/v3.4.5/-/blob/packages/razzle/config/createConfig.js?L15:7">crateConfig</a>调用了来自<a href="https://sourcegraph.com/github.com/jaredpalmer/razzle@refs/tags/v3.4.5/-/blob/packages/razzle/config/paths.js">paths</a>的<code>build/chunks.json</code>文件</p><p>那怎么办呢？这个点在razzle官网的plugin的doc上并没有说明。导致用After的我当时一脸懵逼。并不知道这个东西独立成插件了。</p><p>但是我们去<a href="https://sourcegraph.com/github.com/jaredpalmer/razzle/-/blob/packages/razzle-plugin-manifest/index.js?L79:22">V4</a>看代码，发现仓库里确实有这么一个razzle-plugin-manifest这个插件，它就是做这个事情的。</p><pre><code class="language-ts" data-language="ts" data-highlighted-line-numbers=""> webpackConfig<span class="token punctuation">.</span>plugins<span class="token punctuation">.</span><span class="token function">push</span><span class="token punctuation">(</span>
+      <span class="token keyword">new</span> <span class="token class-name">webpackObject<span class="token punctuation">.</span>DefinePlugin</span><span class="token punctuation">(</span><span class="token punctuation">{</span>
+        <span class="token string">'process.env.RAZZLE_CHUNKS_MANIFEST'</span><span class="token punctuation">:</span> <span class="token constant">JSON</span><span class="token punctuation">.</span><span class="token function">stringify</span><span class="token punctuation">(</span>pluginOptions<span class="token punctuation">.</span>fileName<span class="token punctuation">)</span><span class="token punctuation">,</span>
+      <span class="token punctuation">}</span><span class="token punctuation">)</span>
+    <span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre><h3 id="解决问题">解决问题</h3><p>可以在After的官网examples里面看到这个例子<a href="https://github.com/jaredpalmer/after.js/tree/master/examples/basic">basic</a></p><p>它使用的唯一的razzle插件就是manifest。</p><p>那么解决这个问题的办法就是装上这个插件。</p><p>安装</p><pre><code class="language-bash" data-language="bash" data-highlighted-line-numbers=""><span class="token function">yarn</span> <span class="token function">add</span> --dev razzle-plugin-manifest
+</code></pre><p>应用插件</p><pre><code class="language-jsx" data-language="jsx" data-highlighted-line-numbers=""><span class="token comment">// razzle.config.js</span>
+module<span class="token punctuation">.</span>exports <span class="token operator">=</span> <span class="token punctuation">{</span>
+  plugins<span class="token punctuation">:</span> <span class="token punctuation">[</span><span class="token string">'manifest'</span><span class="token punctuation">]</span><span class="token punctuation">,</span>
+<span class="token punctuation">}</span><span class="token punctuation">;</span>
+</code></pre><p>然后就可以跑了</p><h2 id="总结">总结</h2><p>升级的时候出现一些问题，需要细心定位，步步为营。</p>]]></content:encoded>
         </item>
     </channel>
 </rss>
