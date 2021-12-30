@@ -1,0 +1,173 @@
+## 你可以从本文了解到
+
+## 背景
+
+由于我们的业务需要为 razzle 编写 plugin，而 4 版本的架构理念让一切都 plugin，显然对此提供了更好的支持。
+
+那么我们一起来看看升级的时候会遇到什么坑吧。
+
+## 过程和遇到问题
+
+我们演示的项目是我之前建的[脚手架 demo](https://github.com/mzvast/cra-ts-ssr-zero)。
+
+首先打开[upgrade-guide](https://razzlejs.org/docs/upgrade-guide)，开始升级！
+
+### 更新依赖
+
+执行以下
+
+```bash
+yarn add --dev \
+  razzle \
+  razzle-dev-utils \
+  babel-preset-razzle
+```
+
+会将相关依赖更新到最新
+
+```json
+// package.json
+{
+    "devDependencies": {
+        "babel-preset-razzle": "^4.2.13",
+        "razzle": "^4.2.13",
+        "razzle-dev-utils": "^4.2.13"
+    }
+}
+```
+
+接着安装 peerDependencies
+
+```bash
+yarn add --dev \
+  webpack-dev-server@3.11.0 \
+  mini-css-extract-plugin@0.9.0 \
+  postcss@8.2.4
+```
+
+以及选择一个 webpack 版本及其插件，这里选择 4 吧。
+
+```bash
+yarn add --dev webpack@4.46.0 html-webpack-plugin@4.5.2
+```
+
+然后准备 start 我们的 server 看能不能跑，嗯跑起来了，没有任何问题。
+
+如果你的 app 不用读取打包产物 chunks，那么升级到这里就结束了。
+
+但是，如果你的 app 用了[After.js](https://github.com/jaredpalmer/after.js/)，那么可能编译会报错，提示大概是 webpack 找不到 module 'undefined'。
+
+```bash
+Cannot find module 'undefined'
+    at webpackEmptyContext (/Users/apple/@Projects/oss/cra-ts-ssr-zero/src sync:2:1)
+    at Module../src/server.tsx (/Users/apple/@Projects/oss/cra-ts-ssr-zero/build/webpack:/src/server.tsx:19:1)
+    at __webpack_require__ (/Users/apple/@Projects/oss/cra-ts-ssr-zero/build/webpack:/webpack/bootstrap:748:1)
+    at fn (/Users/apple/@Projects/oss/cra-ts-ssr-zero/build/webpack:/webpack/bootstrap:59:1)
+    at Module../src/index.ts (/Users/apple/@Projects/oss/cra-ts-ssr-zero/build/webpack:/src/index.ts:5:1)
+    at __webpack_require__ (/Users/apple/@Projects/oss/cra-ts-ssr-zero/build/webpack:/webpack/bootstrap:748:1)
+    at fn (/Users/apple/@Projects/oss/cra-ts-ssr-zero/build/webpack:/webpack/bootstrap:59:1)
+    at Object.0 (/Users/apple/@Projects/oss/cra-ts-ssr-zero/build/server.js:1622:1)
+    at __webpack_require__ (/Users/apple/@Projects/oss/cra-ts-ssr-zero/build/webpack:/webpack/bootstrap:748:1)
+    at /Users/apple/@Projects/oss/cra-ts-ssr-zero/build/webpack:/webpack/bootstrap:815:1
+sswp> !!! Script exited with code 1
+```
+
+这个问题跟RAZZLE_CHUNKS_MANIFEST这个环境变量相关。我们来看After的一个demo。
+
+```ts
+// ./src/server.js
+import React from 'react';
+import express from 'express';
+import {render} from '@jaredpalmer/after';
+import {renderToString} from 'react-dom/server';
+import {ApolloProvider, getDataFromTree} from 'react-apollo';
+import routes from './routes';
+import createApolloClient from './createApolloClient';
+import Document from './Document';
+// highlight-next-line
+const chunks = require(process.env.RAZZLE_CHUNKS_MANIFEST); 
+
+const server = express();
+server
+    .disable('x-powered-by')
+    .use(express.static(process.env.RAZZLE_PUBLIC_DIR))
+    .get('/*', async (req, res) => {
+        const client = createApolloClient({ssrMode: true});
+
+        const customRenderer = (node) => {
+            const App = <ApolloProvider client={client}>{node}</ApolloProvider>;
+            return getDataFromTree(App).then(() => {
+                const initialApolloState = client.extract();
+                const html = renderToString(App);
+                return {html, initialApolloState};
+            });
+        };
+
+        try {
+            const html = await render({
+                req,
+                res,
+                routes,
+                // highlight-next-line
+                chunks,
+                customRenderer,
+                document: Document
+            });
+            res.send(html);
+        } catch (error) {
+            console.error(error);
+            res.json({message: error.message, stack: error.stack});
+        }
+    });
+
+export default server;
+```
+
+原因是process.env.RAZZLE_CHUNKS_MANIFEST这个环境变量没有被注入，require了个undefined，于是出现了上面的报错。
+
+这算是Razzle从3到4的一个breaking change吧。
+
+我们可以去看[V3](https://sourcegraph.com/github.com/jaredpalmer/razzle@refs/tags/v3.4.5/-/blob/packages/razzle/config/env.js?L56:9)
+
+是从[crateConfig](https://sourcegraph.com/github.com/jaredpalmer/razzle@refs/tags/v3.4.5/-/blob/packages/razzle/config/createConfig.js?L15:7)调用了来自[paths](https://sourcegraph.com/github.com/jaredpalmer/razzle@refs/tags/v3.4.5/-/blob/packages/razzle/config/paths.js)的`build/chunks.json`文件
+
+那怎么办呢？这个点在razzle官网的plugin的doc上并没有说明。导致用After的我当时一脸懵逼。并不知道这个东西独立成插件了。
+
+但是我们去[V4](https://sourcegraph.com/github.com/jaredpalmer/razzle/-/blob/packages/razzle-plugin-manifest/index.js?L79:22)看代码，发现仓库里确实有这么一个razzle-plugin-manifest这个插件，它就是做这个事情的。
+
+```ts
+ webpackConfig.plugins.push(
+      new webpackObject.DefinePlugin({
+        'process.env.RAZZLE_CHUNKS_MANIFEST': JSON.stringify(pluginOptions.fileName),
+      })
+    );
+```
+
+### 解决问题
+
+可以在After的官网examples里面看到这个例子[basic](https://github.com/jaredpalmer/after.js/tree/master/examples/basic)
+
+它使用的唯一的razzle插件就是manifest。
+
+那么解决这个问题的办法就是装上这个插件。
+
+安装
+
+```bash
+yarn add --dev razzle-plugin-manifest
+```
+
+应用插件
+
+```js
+// razzle.config.js
+module.exports = {
+  plugins: ['manifest'],
+};
+```
+
+然后就可以跑了
+
+## 总结
+
+升级的时候出现一些问题，需要细心定位，步步为营。
