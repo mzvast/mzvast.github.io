@@ -18,7 +18,7 @@
     "lodash": "4.17.11",
     "mdx-loader": "^3.0.2",
     "mdx-mermaid": "^1.1.0",
-    "mermaid": "^8.12.1",
+    "mermaid": "^8.13.8",
     "navi": "^0.14.0",
     "navi-scripts": "^0.14.0",
     "netlify-cli": "2.6.0",
