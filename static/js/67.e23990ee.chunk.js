@@ -1,0 +1,2 @@
+(window.webpackJsonp=window.webpackJsonp||[]).push([[67],{951:function(n,e,t){"use strict";t.r(e),e.default={title:"Evolution principles of software development",tags:["principles"],spoiler:"\u8f6f\u4ef6\u5f00\u53d1\u7684\u6f14\u53d8\u539f\u5219",getContent:function(){return t.e(123).then(t.bind(null,447))}}}}]);
+//# sourceMappingURL=67.e23990ee.chunk.js.map

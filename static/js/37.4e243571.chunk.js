@@ -1,0 +1,2 @@
+(window.webpackJsonp=window.webpackJsonp||[]).push([[37],{921:function(n,t,e){"use strict";e.r(t),t.default={title:"\u5173\u4e8e\u6587\u672c\u7f29\u7565",tags:["css","js"],spoiler:"\u6709\u65f6\u5019\u9700\u8981\u5bf9\u8d85\u8fc7\u5c3a\u5bf8\u7684\u6587\u672c\u8fdb\u884c\u7f29\u7565\uff0cJS \u548c CSS \u5404\u81ea\u7684\u7f29\u7565\u65b9\u6cd5\u6709\u54ea\u4e9b\uff1f",getContent:function(){return e.e(98).then(e.bind(null,406))}}}}]);
+//# sourceMappingURL=37.4e243571.chunk.js.map

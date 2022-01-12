@@ -1,0 +1,2 @@
+(window.webpackJsonp=window.webpackJsonp||[]).push([[77],{961:function(e,n,o){"use strict";o.r(n),n.default={title:"iCopy release new version",tags:["iCopy"],spoiler:"iCopy support new Clipboard API now, how we intercept API call",getContent:function(){return Promise.all([o.e(0),o.e(11)]).then(o.bind(null,898))}}}}]);
+//# sourceMappingURL=77.4f6bdacc.chunk.js.map
