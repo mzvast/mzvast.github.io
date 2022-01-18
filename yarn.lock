@@ -11464,12 +11464,10 @@ prettyjson@^1.2.1:
     colors "^1.1.2"
     minimist "^1.2.0"
 
-prismjs@1.15.0:
-  version "1.15.0"
-  resolved "https://registry.npm.taobao.org/prismjs/download/prismjs-1.15.0.tgz#8801d332e472091ba8def94976c8877ad60398d9"
-  integrity sha1-iAHTMuRyCRuo3vlJdsiHetYDmNk=
-  optionalDependencies:
-    clipboard "^2.0.0"
+prismjs@1.25.0:
+  version "1.25.0"
+  resolved "https://registry.npmmirror.com/prismjs/download/prismjs-1.25.0.tgz#6f822df1bdad965734b310b315a23315cf999756"
+  integrity sha512-WCjJHl1KEWbnkQom1+SzftbtXMKQoezOCYs5rECqMN+jP+apI7ftoflyqigqzopSO3hMhTEb0mFClA8lkolgEg==
 
 prismjs@^1.15.0:
   version "1.17.1"
