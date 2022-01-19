@@ -1,2 +1,0 @@
-(window.webpackJsonp=window.webpackJsonp||[]).push([[55],{939:function(n,t,e){"use strict";e.r(t),t.default={title:"\u591a\u5df4\u80favs\u5185\u5561\u80bd",tags:["life"],spoiler:"\u5982\u4f55\u6210\u4e3a\u60c5\u7eea\u7684\u4e3b\u4eba",getContent:function(){return e.e(111).then(e.bind(null,435))}}}}]);
-//# sourceMappingURL=55.aba34694.chunk.js.map

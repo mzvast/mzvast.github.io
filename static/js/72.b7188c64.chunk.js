@@ -1,2 +1,0 @@
-(window.webpackJsonp=window.webpackJsonp||[]).push([[72],{956:function(n,e,t){"use strict";t.r(e),e.default={title:"what we can learn from Dao Sheng He Fu",tags:["life"],spoiler:"\u8bfb\u7a3b\u76db\u548c\u592b",getContent:function(){return t.e(128).then(t.bind(null,452))}}}}]);
-//# sourceMappingURL=72.b7188c64.chunk.js.map

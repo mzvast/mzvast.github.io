@@ -4,7 +4,7 @@
         <title>OverRainbow</title>
         <link>/</link>
         <description>If Nothing Changes, Nothing Is Going to Change</description>
-        <lastBuildDate>Thu, 13 Jan 2022 02:46:23 GMT</lastBuildDate>
+        <lastBuildDate>Wed, 19 Jan 2022 06:35:28 GMT</lastBuildDate>
         <docs>http://blogs.law.harvard.edu/tech/rss</docs>
         <generator>https://github.com/jpmonette/feed</generator>
         <item>
@@ -3142,6 +3142,70 @@ ScriptPromise ClipboardPromise<span class="token operator">::</span><span class=
 主要是默认的this指向了window，而execCommand内部</p><pre><code class="language-jsx" data-language="jsx" data-highlighted-line-numbers="">contentWindow<span class="token punctuation">.</span>document<span class="token punctuation">.</span>execCommand
 </code></pre><h3 id="gist-的实用小技巧">gist 的实用小技巧</h3><p>我们的脚本用git的gist发布和管理，那么获取一个固定的raw文件url呢。</p><p>我们可以用下面这个地址访问哈。
 <code>https://gist.githubusercontent.com/[username]/[gist_id]/raw/[filename]</code></p>]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[for await ... of]]></title>
+            <link>/posts/2022-01-19-1400-for-await-...-of</link>
+            <guid>/posts/2022-01-19-1400-for-await-...-of</guid>
+            <content:encoded><![CDATA[<h2 id="你可以从本文了解到">你可以从本文了解到</h2><h2 id="背景">背景</h2><p>在看<a href="https://github.com/vercel/vercel/blob/3ff777b8ede7ab9a76c5b9ccfcb0e2799ca21957/packages/cli/src/util/deploy/process-deployment.ts">vercel/cli</a>代码的时候什么看到了比较少见的用法。</p><p>是<code>for await of</code>与<code>generator</code>的结合。稍后会 demo 来说明。</p><h2 id="首先谁在用这个写法">首先谁在用这个写法</h2><p>在代码搜索平台<a href="https://sourcegraph.com/search?q=context:global+for+await+%28const+&amp;patternType=literal">sourcegraph</a>上搜索关键字<code>for await (const</code>，可以看到有 n 多大型项目在用。</p><p>我们来看 stars 排名第一的 puppeteer 的代码，可以看出这部分是以流的方式分片读取chunk存入buffer。</p><pre><code class="language-ts" data-language="ts" data-highlighted-line-numbers=""><span class="token keyword">async</span> <span class="token keyword">function</span> <span class="token function">getReadableAsBuffer</span><span class="token punctuation">(</span>
+    <span class="token parameter">readable<span class="token punctuation">:</span> Readable<span class="token punctuation">,</span>
+    path<span class="token operator">?</span><span class="token punctuation">:</span> <span class="token builtin">string</span></span>
+<span class="token punctuation">)</span><span class="token punctuation">:</span> <span class="token builtin">Promise</span><span class="token operator">&lt;</span>Buffer<span class="token operator">></span> <span class="token punctuation">{</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token operator">!</span>isNode <span class="token operator">&amp;&amp;</span> path<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token class-name">Error</span><span class="token punctuation">(</span>
+            <span class="token string">'Cannot write to a path outside of Node.js environment.'</span>
+        <span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+
+    <span class="token keyword">const</span> fs <span class="token operator">=</span> isNode <span class="token operator">?</span> <span class="token keyword">await</span> <span class="token function">importFSModule</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">:</span> <span class="token keyword">null</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">let</span> fileHandle<span class="token punctuation">:</span> <span class="token keyword">import</span><span class="token punctuation">(</span><span class="token string">'fs'</span><span class="token punctuation">)</span><span class="token punctuation">.</span>promises<span class="token punctuation">.</span>FileHandle<span class="token punctuation">;</span>
+
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>path <span class="token operator">&amp;&amp;</span> fs<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        fileHandle <span class="token operator">=</span> <span class="token keyword">await</span> fs<span class="token punctuation">.</span>promises<span class="token punctuation">.</span><span class="token function">open</span><span class="token punctuation">(</span>path<span class="token punctuation">,</span> <span class="token string">'w'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+    <span class="token keyword">const</span> buffers <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">;</span>
+<span class="highlighted-line">    <span class="token keyword">for</span> <span class="token keyword">await</span> <span class="token punctuation">(</span><span class="token keyword">const</span> chunk <span class="token keyword">of</span> readable<span class="token punctuation">)</span> <span class="token punctuation">{</span></span>        buffers<span class="token punctuation">.</span><span class="token function">push</span><span class="token punctuation">(</span>chunk<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>fileHandle<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            <span class="token keyword">await</span> fs<span class="token punctuation">.</span>promises<span class="token punctuation">.</span><span class="token function">writeFile</span><span class="token punctuation">(</span>fileHandle<span class="token punctuation">,</span> chunk<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span>
+
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>path<span class="token punctuation">)</span> <span class="token keyword">await</span> fileHandle<span class="token punctuation">.</span><span class="token function">close</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">let</span> resultBuffer <span class="token operator">=</span> <span class="token keyword">null</span><span class="token punctuation">;</span>
+    <span class="token keyword">try</span> <span class="token punctuation">{</span>
+        resultBuffer <span class="token operator">=</span> Buffer<span class="token punctuation">.</span><span class="token function">concat</span><span class="token punctuation">(</span>buffers<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span> <span class="token keyword">finally</span> <span class="token punctuation">{</span>
+        <span class="token keyword">return</span> resultBuffer<span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+</code></pre><p>其他的例子也都差不多，基本模式也就是语法所定义的。of后面接iterable对象（通常是数组、迭代器等等），puppeteer里面用的是数组。vercel用的是iterator。</p><pre><code class="language-jsx" data-language="jsx" data-highlighted-line-numbers=""><span class="token keyword">for</span> <span class="token keyword">await</span> <span class="token punctuation">(</span>variable <span class="token keyword">of</span> iterable<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  statement
+<span class="token punctuation">}</span>
+</code></pre><p>那么来看看vercel的iterator用法。值得注意的是这是一个cli应用，所有的操作都需要通过屏幕输出给用户进行到哪一步了。</p><p>为了清晰期间去掉了业务代码，抽象成以下最简demo。</p><p>其main函数是在执行一段代码createSomething的时候中途去执行另一段代码createOtherStuff，再回来继续执行createSomething。</p><p>可以看到这个模式有一个特点，yield出来的消息最终都抛到了main函数，有一种事件集线器的效果。</p><pre><code class="language-ts" data-language="ts" data-highlighted-line-numbers=""><span class="token keyword">async</span> <span class="token keyword">function</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">for</span> <span class="token keyword">await</span> <span class="token punctuation">(</span><span class="token keyword">const</span> event <span class="token keyword">of</span> <span class="token function">createSomething</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token builtin">console</span><span class="token punctuation">.</span><span class="token function">log</span><span class="token punctuation">(</span>event<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token comment">// update spinner/indicator</span>
+    <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+
+<span class="token keyword">async</span> <span class="token keyword">function</span><span class="token operator">*</span> <span class="token function">createSomething</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">yield</span> <span class="token string">'createSomething-1'</span><span class="token punctuation">;</span>
+    <span class="token keyword">yield</span> <span class="token string">'createSomething-2'</span><span class="token punctuation">;</span>
+    <span class="token keyword">for</span> <span class="token keyword">await</span> <span class="token punctuation">(</span><span class="token keyword">const</span> event <span class="token keyword">of</span> <span class="token function">createOtherStuff</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token keyword">yield</span> event<span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+    <span class="token keyword">yield</span> <span class="token string">'event-done'</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+
+<span class="token keyword">async</span> <span class="token keyword">function</span><span class="token operator">*</span> <span class="token function">createOtherStuff</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">yield</span> <span class="token string">'createOtherStuff-1'</span><span class="token punctuation">;</span>
+    <span class="token keyword">yield</span> <span class="token string">'createOtherStuff-2'</span><span class="token punctuation">;</span>
+    <span class="token keyword">yield</span> <span class="token string">'createOtherStuff-done'</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+
+<span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre><h2 id="小节">小节</h2><p>这是一个很有趣但是很强大的写法，希望之后有机会能再项目中用上。</p>]]></content:encoded>
         </item>
     </channel>
 </rss>

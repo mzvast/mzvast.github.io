@@ -1,0 +1,2 @@
+(window.webpackJsonp=window.webpackJsonp||[]).push([[52],{273:function(n,t,o){"use strict";o.r(t),t.default={title:"\u4eceOmni Automation Plugin\u5f00\u53d1\u8c08\u65f6\u95f4\u7ba1\u7406",tags:["omnifocus","automation"],spoiler:"\u63d0\u9ad8OmniFocus\u7684\u6548\u7387",getContent:function(){return o.e(4).then(o.bind(null,201))}}}}]);
+//# sourceMappingURL=52.9690c6b1.chunk.js.map
