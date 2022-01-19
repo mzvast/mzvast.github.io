@@ -1,0 +1,99 @@
+## 你可以从本文了解到
+
+## 背景
+
+在看[vercel/cli](https://github.com/vercel/vercel/blob/3ff777b8ede7ab9a76c5b9ccfcb0e2799ca21957/packages/cli/src/util/deploy/process-deployment.ts)代码的时候什么看到了比较少见的用法。
+
+是`for await of`与`generator`的结合。稍后会 demo 来说明。
+
+## 首先谁在用这个写法
+
+在代码搜索平台[sourcegraph](https://sourcegraph.com/search?q=context:global+for+await+%28const+&patternType=literal)上搜索关键字`for await (const `，可以看到有 n 多大型项目在用。
+
+我们来看 stars 排名第一的 puppeteer 的代码，可以看出这部分是以流的方式分片读取chunk存入buffer。
+
+```ts
+async function getReadableAsBuffer(
+    readable: Readable,
+    path?: string
+): Promise<Buffer> {
+    if (!isNode && path) {
+        throw new Error(
+            'Cannot write to a path outside of Node.js environment.'
+        );
+    }
+
+    const fs = isNode ? await importFSModule() : null;
+
+    let fileHandle: import('fs').promises.FileHandle;
+
+    if (path && fs) {
+        fileHandle = await fs.promises.open(path, 'w');
+    }
+    const buffers = [];
+    // highlight-next-line
+    for await (const chunk of readable) {
+        buffers.push(chunk);
+        if (fileHandle) {
+            await fs.promises.writeFile(fileHandle, chunk);
+        }
+    }
+
+    if (path) await fileHandle.close();
+    let resultBuffer = null;
+    try {
+        resultBuffer = Buffer.concat(buffers);
+    } finally {
+        return resultBuffer;
+    }
+}
+```
+
+其他的例子也都差不多，基本模式也就是语法所定义的。of后面接iterable对象（通常是数组、迭代器等等），puppeteer里面用的是数组。vercel用的是iterator。
+
+```js
+for await (variable of iterable) {
+  statement
+}
+```
+
+那么来看看vercel的iterator用法。值得注意的是这是一个cli应用，所有的操作都需要通过屏幕输出给用户进行到哪一步了。
+
+为了清晰期间去掉了业务代码，抽象成以下最简demo。
+
+其main函数是在执行一段代码createSomething的时候中途去执行另一段代码createOtherStuff，再回来继续执行createSomething。
+
+可以看到这个模式有一个特点，yield出来的消息最终都抛到了main函数，有一种事件集线器的效果。
+
+
+
+```ts
+async function main() {
+    for await (const event of createSomething()) {
+        console.log(event);
+	// update spinner/indicator
+    }
+}
+
+async function* createSomething() {
+    yield 'createSomething-1';
+    yield 'createSomething-2';
+    for await (const event of createOtherStuff()) {
+        yield event;
+    }
+    yield 'event-done';
+}
+
+async function* createOtherStuff() {
+    yield 'createOtherStuff-1';
+    yield 'createOtherStuff-2';
+    yield 'createOtherStuff-done';
+}
+
+main();
+```
+
+## 小节
+
+这是一个很有趣但是很强大的写法，希望之后有机会能再项目中用上。
+
