@@ -8,7 +8,7 @@
     "@types/react": "16.8.23",
     "@types/react-dom": "16.8.4",
     "@types/styled-components": "5.1.14",
-    "ahooks": "2.10.9",
+    "ahooks": "2.10.14",
     "blueimp-md5": "2.3.0",
     "disqus-react": "1.0.7",
     "feed": "2.0.2",
