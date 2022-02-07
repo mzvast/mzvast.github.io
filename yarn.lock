@@ -6165,10 +6165,10 @@ fb-watchman@^2.0.0:
   dependencies:
     bser "^2.0.0"
 
-feed@2.0.2:
-  version "2.0.2"
-  resolved "https://registry.npm.taobao.org/feed/download/feed-2.0.2.tgz#8b6cc2f4d9187eac6f6fada8322de43c414c17aa"
-  integrity sha1-i2zC9NkYfqxvb62oMi3kPEFMF6o=
+feed@2.0.4:
+  version "2.0.4"
+  resolved "https://registry.npmmirror.com/feed/-/feed-2.0.4.tgz#14cd71b3bae1e965b81f7e0c5927e8941de996f8"
+  integrity sha512-sWatfulDP6d18qVaWcu34qmq9ml6UeN6nHSBJpNZ2muBqxjPAdT375whPYAHP+gqLfyabtYU5qf2Dv4nqtlp0w==
   dependencies:
     luxon "^1.3.3"
     xml "^1.0.1"
