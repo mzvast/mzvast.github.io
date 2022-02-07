@@ -6,7 +6,7 @@
     "@types/jest": "24.0.13",
     "@types/node": "12.6.8",
     "@types/react": "16.8.23",
-    "@types/react-dom": "16.8.4",
+    "@types/react-dom": "16.9.14",
     "@types/styled-components": "5.1.14",
     "ahooks": "2.10.9",
     "blueimp-md5": "2.3.0",
