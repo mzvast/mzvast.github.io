@@ -1,0 +1,2 @@
+(window.webpackJsonp=window.webpackJsonp||[]).push([[77],{299:function(t,e,n){"use strict";n.r(e),e.default={title:"vite webassembly rust",tags:["rust","wasm","vite"],spoiler:"",getContent:function(){return n.e(134).then(n.bind(null,233))}}}}]);
+//# sourceMappingURL=77.0ed9f4f6.chunk.js.map

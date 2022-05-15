@@ -1,2 +1,0 @@
-(window.webpackJsonp=window.webpackJsonp||[]).push([[19],{240:function(n,t,e){"use strict";e.r(t),t.default={title:"\u65f6\u95f4\u9047\u4e0a\u7a7a\u95f4",tags:["time"],spoiler:"time-and-space",getContent:function(){return e.e(81).then(e.bind(null,163))}}}}]);
-//# sourceMappingURL=19.dc58ccec.chunk.js.map

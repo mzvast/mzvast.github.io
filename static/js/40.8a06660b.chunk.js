@@ -1,2 +1,0 @@
-(window.webpackJsonp=window.webpackJsonp||[]).push([[40],{261:function(n,t,e){"use strict";e.r(t),t.default={title:"Fira Code \u8fde\u5199\u5b57\u4f53\u4f18\u5316\u4ee3\u7801\u663e\u793a\u6548\u679c",tags:["fira","font"],spoiler:"\u5b89\u88c5\u548c\u4f7f\u7528Fira Code \u8fde\u5199\u5b57\u4f53\u4f18\u5316\u4ee3\u7801\u663e\u793a\u6548\u679c",getContent:function(){return e.e(102).then(e.bind(null,184))}}}}]);
-//# sourceMappingURL=40.8a06660b.chunk.js.map

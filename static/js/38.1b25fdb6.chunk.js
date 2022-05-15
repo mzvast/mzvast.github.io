@@ -1,0 +1,2 @@
+(window.webpackJsonp=window.webpackJsonp||[]).push([[38],{260:function(t,n,e){"use strict";e.r(n),n.default={title:"\u5982\u4f55\u66f4\u597d\u7684\u5b9a\u4e49React\u7ec4\u4ef6API",tags:["react","component"],spoiler:"\u5982\u4f55\u66f4\u597d\u7684\u5b9a\u4e49 React \u7ec4\u4ef6 API",getContent:function(){return e.e(101).then(e.bind(null,182))}}}}]);
+//# sourceMappingURL=38.1b25fdb6.chunk.js.map

@@ -4,7 +4,7 @@
         <title>OverRainbow</title>
         <link>/</link>
         <description>If Nothing Changes, Nothing Is Going to Change</description>
-        <lastBuildDate>Wed, 19 Jan 2022 06:35:28 GMT</lastBuildDate>
+        <lastBuildDate>Sun, 15 May 2022 09:53:03 GMT</lastBuildDate>
         <docs>http://blogs.law.harvard.edu/tech/rss</docs>
         <generator>https://github.com/jpmonette/feed</generator>
         <item>
@@ -3206,6 +3206,13 @@ ScriptPromise ClipboardPromise<span class="token operator">::</span><span class=
 
 <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
 </code></pre><h2 id="小节">小节</h2><p>这是一个很有趣但是很强大的写法，希望之后有机会能再项目中用上。</p>]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[vite webassembly rust]]></title>
+            <link>/posts/2022-05-15-1355-vite-webassembly-rust</link>
+            <guid>/posts/2022-05-15-1355-vite-webassembly-rust</guid>
+            <content:encoded><![CDATA[<h2 id="你可以从本文了解到">你可以从本文了解到</h2><p>1、rust有什么特点。</p><p>2、rust与JS这类高级语言之间的区别。</p><p>3、rust通过wasm与web开发相结合。</p><h2 id="背景">背景</h2><p>最近在阅读一些前端技术资讯的时候，越来越多的看到rust被运用到web开发中。已经有较多的实际应用被开发出来。目前看起来是一个不错的时机去了解rust。本文作为一个索引，将一些不错的文章整理了一下。</p><h2 id="0、why-rust">0、why rust</h2><p><a href="https://www.classcentral.com/course/youtube-rust-and-the-future-of-systems-programming-mozilla-rust-64325/classroom">《rust-and-the-future-of-systems-programming》</a>介绍了rust的优点和设计理念。</p><p><a href="https://thenewstack.io/rust-vs-go-why-theyre-better-together/">《Rust vs. Go: Why They’re Better Together》</a>介绍了Go和Rust的区别。使用Rust编写的著名应用主要有<code>Firefox, ripgrep, alacritty, deno, Habitat</code>。开发者满意度连续多年排名第一。</p><h2 id="1、重点阅读（快速了解和js的区别）">1、重点阅读（快速了解和JS的区别）</h2><p><a href="https://michaelsalim.co.uk/blog/rust-from-0-to-80-for-js-dev/">《Rust from 0 to 80% for JavaScript Developers》</a>介绍了rust的基本概念，通过比较JS，可以快速对rust有个大概的了解。</p><p><a href="https://danbulant.eu/posts/rust-basics">《Rust basics, from the perspective of a high level programmer》</a>也是一篇从JS开发者的角度对rust的理解。</p><h2 id="2、rustwasm（实操）">2、rust+wasm（实操）</h2><p><a href="https://mp.weixin.qq.com/s/AXXJnFdwYDiy5vfZ-fvVDQ">《前端视角解读 Why Rust》</a>。
+<a href="https://github.com/mzvast/vite-webassembly-demo">配套的代码和注释</a></p><h2 id="3、延伸阅读">3、延伸阅读</h2><p><a href="https://doc.rust-lang.org/rust-by-example/index.html">《rust-by-example》</a></p><p><a href="https://rust-book.junmajinlong.com/ch1/00.html">rust入门秘籍</a></p>]]></content:encoded>
         </item>
     </channel>
 </rss>
