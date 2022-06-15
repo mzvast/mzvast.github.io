@@ -4,7 +4,7 @@
         <title>OverRainbow</title>
         <link>/</link>
         <description>If Nothing Changes, Nothing Is Going to Change</description>
-        <lastBuildDate>Sun, 15 May 2022 09:53:03 GMT</lastBuildDate>
+        <lastBuildDate>Wed, 15 Jun 2022 03:30:44 GMT</lastBuildDate>
         <docs>http://blogs.law.harvard.edu/tech/rss</docs>
         <generator>https://github.com/jpmonette/feed</generator>
         <item>
@@ -3213,6 +3213,133 @@ ScriptPromise ClipboardPromise<span class="token operator">::</span><span class=
             <guid>/posts/2022-05-15-1355-vite-webassembly-rust</guid>
             <content:encoded><![CDATA[<h2 id="你可以从本文了解到">你可以从本文了解到</h2><p>1、rust有什么特点。</p><p>2、rust与JS这类高级语言之间的区别。</p><p>3、rust通过wasm与web开发相结合。</p><h2 id="背景">背景</h2><p>最近在阅读一些前端技术资讯的时候，越来越多的看到rust被运用到web开发中。已经有较多的实际应用被开发出来。目前看起来是一个不错的时机去了解rust。本文作为一个索引，将一些不错的文章整理了一下。</p><h2 id="0、why-rust">0、why rust</h2><p><a href="https://www.classcentral.com/course/youtube-rust-and-the-future-of-systems-programming-mozilla-rust-64325/classroom">《rust-and-the-future-of-systems-programming》</a>介绍了rust的优点和设计理念。</p><p><a href="https://thenewstack.io/rust-vs-go-why-theyre-better-together/">《Rust vs. Go: Why They’re Better Together》</a>介绍了Go和Rust的区别。使用Rust编写的著名应用主要有<code>Firefox, ripgrep, alacritty, deno, Habitat</code>。开发者满意度连续多年排名第一。</p><h2 id="1、重点阅读（快速了解和js的区别）">1、重点阅读（快速了解和JS的区别）</h2><p><a href="https://michaelsalim.co.uk/blog/rust-from-0-to-80-for-js-dev/">《Rust from 0 to 80% for JavaScript Developers》</a>介绍了rust的基本概念，通过比较JS，可以快速对rust有个大概的了解。</p><p><a href="https://danbulant.eu/posts/rust-basics">《Rust basics, from the perspective of a high level programmer》</a>也是一篇从JS开发者的角度对rust的理解。</p><h2 id="2、rustwasm（实操）">2、rust+wasm（实操）</h2><p><a href="https://mp.weixin.qq.com/s/AXXJnFdwYDiy5vfZ-fvVDQ">《前端视角解读 Why Rust》</a>。
 <a href="https://github.com/mzvast/vite-webassembly-demo">配套的代码和注释</a></p><h2 id="3、延伸阅读">3、延伸阅读</h2><p><a href="https://doc.rust-lang.org/rust-by-example/index.html">《rust-by-example》</a></p><p><a href="https://rust-book.junmajinlong.com/ch1/00.html">rust入门秘籍</a></p>]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[how to build a level logger]]></title>
+            <link>/posts/2022-06-14-1331-how-to-build-a-level-logger</link>
+            <guid>/posts/2022-06-14-1331-how-to-build-a-level-logger</guid>
+            <content:encoded><![CDATA[<h2 id="你可以从本文了解到">你可以从本文了解到</h2><h3 id="背景">背景</h3><p>由于最近在熟悉一个新项目，其中自定义了一个level logger，但是其输出的行号却不是真实调用logger的地方，而是在封装的类内部。
+那么，这一定是一个bug，我们应该如何去修复呢？</p><p>那么我们自己来实现一个level logger该怎么做呢？
+首先，我们看正常情况如何去封装一个logger，然后如何给这个logger加上level管理的功能。</p><h4 id="1、封装一个最简单的logger">1、封装一个最简单的logger</h4><p>我们可以看到<a href="https://stackoverflow.com/questions/13815640/a-proper-wrapper-for-console-log-with-correct-line-number">这篇问答</a>,提供了一个清晰的demo，其主要代码如下</p><pre><code class="language-jsx" data-language="jsx" data-highlighted-line-numbers=""><span class="token keyword">var</span> <span class="token function-variable function">Debugger</span> <span class="token operator">=</span> <span class="token keyword">function</span><span class="token punctuation">(</span><span class="token parameter">gState<span class="token punctuation">,</span> klass</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token comment">// 存储新log函数的局部变量</span>
+  <span class="token keyword">this</span><span class="token punctuation">.</span>debug <span class="token operator">=</span> <span class="token punctuation">{</span><span class="token punctuation">}</span>
+
+  <span class="token keyword">if</span> <span class="token punctuation">(</span>gState <span class="token operator">&amp;&amp;</span> klass<span class="token punctuation">.</span>isDebug<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">var</span> m <span class="token keyword">in</span> console<span class="token punctuation">)</span>
+      <span class="token comment">// 遍历console的方法</span>
+      <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token keyword">typeof</span> console<span class="token punctuation">[</span>m<span class="token punctuation">]</span> <span class="token operator">==</span> <span class="token string">'function'</span><span class="token punctuation">)</span>
+        <span class="token comment">// bind了this之后，存进debug中</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>debug<span class="token punctuation">[</span>m<span class="token punctuation">]</span> <span class="token operator">=</span> console<span class="token punctuation">[</span>m<span class="token punctuation">]</span><span class="token punctuation">.</span><span class="token function">bind</span><span class="token punctuation">(</span>window<span class="token punctuation">.</span>console<span class="token punctuation">,</span> klass<span class="token punctuation">.</span><span class="token function">toString</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">+</span><span class="token string">": "</span><span class="token punctuation">)</span>
+  <span class="token punctuation">}</span><span class="token keyword">else</span><span class="token punctuation">{</span>
+    <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">var</span> m <span class="token keyword">in</span> console<span class="token punctuation">)</span>
+      <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token keyword">typeof</span> console<span class="token punctuation">[</span>m<span class="token punctuation">]</span> <span class="token operator">==</span> <span class="token string">'function'</span><span class="token punctuation">)</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>debug<span class="token punctuation">[</span>m<span class="token punctuation">]</span> <span class="token operator">=</span> <span class="token keyword">function</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">{</span><span class="token punctuation">}</span>
+  <span class="token punctuation">}</span>
+  <span class="token keyword">return</span> <span class="token keyword">this</span><span class="token punctuation">.</span>debug
+<span class="token punctuation">}</span>
+
+isDebug <span class="token operator">=</span> <span class="token boolean">true</span> <span class="token comment">//global debug state</span>
+
+debug <span class="token operator">=</span> <span class="token function">Debugger</span><span class="token punctuation">(</span>isDebug<span class="token punctuation">,</span> <span class="token keyword">this</span><span class="token punctuation">)</span>
+
+debug<span class="token punctuation">.</span><span class="token function">log</span><span class="token punctuation">(</span><span class="token string">'Hello log!'</span><span class="token punctuation">)</span>
+debug<span class="token punctuation">.</span><span class="token function">trace</span><span class="token punctuation">(</span><span class="token string">'Hello trace!'</span><span class="token punctuation">)</span>
+</code></pre><p>“行号”实际上就是window.console.xxx方法被调用的所在位置。</p><p>所以这个Debugger在做的事情就是让<code>你在调用它的方法的时候，实际上是间接在操作window.console.xxx</code>。</p><p>为了实现这样的效果，就可以通过bind方法，产生一个新的函数并且存下来。</p><p>这样在外部调用Debugger存下来的方法，就相当于在window.console上面直接调用方法。自然就可以打印正确的行号了。</p><h4 id="2、增加level管理功能">2、增加level管理功能</h4><p>关于level管理功能，我们先找一个比较通用的库<a href="https://github.com/pimterry/loglevel">loglevel</a>，先来看一下它的API签名怎么设计的。</p><pre><code class="language-jsx" data-language="jsx" data-highlighted-line-numbers="">log<span class="token punctuation">.</span><span class="token function">trace</span><span class="token punctuation">(</span>msg<span class="token punctuation">)</span>
+log<span class="token punctuation">.</span><span class="token function">debug</span><span class="token punctuation">(</span>msg<span class="token punctuation">)</span>
+log<span class="token punctuation">.</span><span class="token function">info</span><span class="token punctuation">(</span>msg<span class="token punctuation">)</span>
+log<span class="token punctuation">.</span><span class="token function">warn</span><span class="token punctuation">(</span>msg<span class="token punctuation">)</span>
+log<span class="token punctuation">.</span><span class="token function">error</span><span class="token punctuation">(</span>msg<span class="token punctuation">)</span>
+log<span class="token punctuation">.</span><span class="token function">setLevel</span><span class="token punctuation">(</span>level<span class="token punctuation">,</span> <span class="token punctuation">[</span>persist<span class="token punctuation">]</span><span class="token punctuation">)</span>
+log<span class="token punctuation">.</span><span class="token function">setDefaultLevel</span><span class="token punctuation">(</span>level<span class="token punctuation">)</span>
+log<span class="token punctuation">.</span><span class="token function">resetLevel</span><span class="token punctuation">(</span><span class="token punctuation">)</span> 
+log<span class="token punctuation">.</span><span class="token function">enableAll</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+log<span class="token punctuation">.</span><span class="token function">disableAll</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+log<span class="token punctuation">.</span><span class="token function">getLevel</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+log<span class="token punctuation">.</span><span class="token function">getLogger</span><span class="token punctuation">(</span>loggerName<span class="token punctuation">)</span>
+log<span class="token punctuation">.</span><span class="token function">getLoggers</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+</code></pre><p>其中最核心的方法就是setLevel，</p><p>我们在看代码之前可以想象大致有2种实现思路。</p><p>1、所有log都经由一个函数处理，这个函数内部判断当前level是否要打印。</p><p>2、根据不同的level，动态绑定函数（如果某个level不要打印，就绑定空函数）</p><p>方案分析：</p><p>方案1：这会存在一个问题，假如这个函数不是直接返回了bind后的函数，即使这个统一函数内部封装了window.console的调用，但由于真实调用位置始终在logger函数内，所以调用logger函数所在的行号是无法体现的的。（这个logger函数要能保留行号，也必须满足前面的bind原理，即内部不做封装，只做bind。但如果只做bind，是不能实现区分level而选择性调用的。也就是说这个方案实现起来存在难以跨域的障碍。）</p><p>方案2：这是loglevel实现的方案。每次setLevel的时候绑定一次。实现原理跟前面最简单logger是一样的。至于打印参数什么的，可以在bind的时候传入。</p><h4 id="3、总结。回到bug本身">3、总结。回到bug本身</h4><p>那本文定位到的我们的一个logger中行号始终不变，其根本原因是采用了level实现方案1。为了修这个bug，核心就是要实现“调用自定义logger的方法就相当于在调用window.console的方法“。只要遵循这条原则，一切都迎刃而解了。其他都是实现细节问题。</p>]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[How to treat lock file]]></title>
+            <link>/posts/2022-06-15-1100-How-to-treat-lock-file</link>
+            <guid>/posts/2022-06-15-1100-How-to-treat-lock-file</guid>
+            <content:encoded><![CDATA[<h2 id="你可以从本文了解到">你可以从本文了解到</h2><h3 id="问题背景">问题背景</h3><p>最近taobao npm registry下线，导致之前lock文件里显式依赖taobao源的通通爆炸了，这是本文的写作背景。
+我们的目标就是让lock文件能切换到其他正常工作的源，比如npmjs。</p><h3 id="原因与解决方案">原因与解决方案</h3><h4 id="lock文件如何记录源及如何修复">lock文件如何记录源及如何修复</h4><p>我们知道lock文件主要的作用是记录依赖及其解析结果（版本、散列值等），从而加速依赖安装速度。那么对于每一条解析结果，我们可以看到下面这个例子，其中很显著的一个标志就是【resolved &quot;解析的源地址/包信息&quot;】。</p><pre><code class="language-jsx" data-language="jsx" data-highlighted-line-numbers=""><span class="token string">"@babel/core@7.4.3"</span><span class="token punctuation">:</span>
+  version <span class="token string">"7.4.3"</span>
+<span class="highlighted-line">  resolved <span class="token string">"https://registry.npm.taobao.org/@babel/core/download/@babel/core-7.4.3.tgz#198d6d3af4567be3989550d97e068de94503074f"</span></span>  integrity sha1<span class="token operator">-</span>GY1tOvRWe<span class="token operator">+</span>OYlVDZfgaN6UUDB08<span class="token operator">=</span>
+  dependencies<span class="token punctuation">:</span>
+    <span class="token string">"@babel/code-frame"</span> <span class="token string">"^7.0.0"</span>
+    <span class="token string">"@babel/generator"</span> <span class="token string">"^7.4.0"</span>
+    <span class="token string">"@babel/helpers"</span> <span class="token string">"^7.4.3"</span>
+    <span class="token string">"@babel/parser"</span> <span class="token string">"^7.4.3"</span>
+    <span class="token string">"@babel/template"</span> <span class="token string">"^7.4.0"</span>
+</code></pre><p>由于不同的源它的包信息都是一样的，因此，我们只需要把这些resolved的实效的内容通过字符串匹配的方式替换掉就行了。</p><p>直接手动披露替换也可以，但是呢，有人已经写了一个<a href="https://github.com/kiegroup/lock-treatment-tool">locktt工具</a>专门做这事。</p><p>使用方法也很简单：</p><pre><code class="language-bash" data-language="bash" data-highlighted-line-numbers=""><span class="token function">npm</span> i -g @kie/lock-treatment-tool // 安装这个包
+locktt --registry<span class="token operator">=</span>https://registry.npmjs.org/ // 替换lock中的源为指定源
+</code></pre><p>接下来，我们再看一下这个locktt的代码结构</p><pre><code>scripts/treat-lock-files.js // 处理命令行参数
+lib/treat-locks/common.lock.js // 用于替换的方法（正则）
+lib/treat-locks/yarn.lock.js // 针对yarn的修复方法
+lib/treat-locks/npm.lock.js // 针对npm的修复方法
+</code></pre><p>其中run函数就是功能主入口</p><pre><code class="language-jsx" data-language="jsx" data-highlighted-line-numbers=""><span class="token comment">// scripts/treat-lock-files.js </span>
+<span class="token keyword">function</span> <span class="token function">run</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  console<span class="token punctuation">.</span><span class="token function">log</span><span class="token punctuation">(</span><span class="token string">'Treating fields...'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token keyword">const</span> folderPath <span class="token operator">=</span> argv<span class="token punctuation">.</span>folder <span class="token operator">===</span> <span class="token keyword">undefined</span> <span class="token operator">?</span> <span class="token string">'.'</span> <span class="token punctuation">:</span> argv<span class="token punctuation">.</span>folder<span class="token punctuation">;</span>
+  <span class="token keyword">const</span> outputFolderPath <span class="token operator">=</span> argv<span class="token punctuation">.</span>outputFolder <span class="token operator">===</span> <span class="token keyword">undefined</span> <span class="token operator">?</span> folderPath <span class="token punctuation">:</span> argv<span class="token punctuation">.</span>outputFolder<span class="token punctuation">;</span>
+  <span class="token keyword">const</span> npmOptions <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">NpmOptions</span><span class="token punctuation">(</span>
+    argv<span class="token punctuation">.</span>registry <span class="token operator">||</span> <span class="token function">getRegistryFromNpmCommand</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+    argv<span class="token punctuation">.</span>replacePackageLockRegistry<span class="token punctuation">,</span>
+    argv<span class="token punctuation">.</span>skipIntegrity<span class="token punctuation">,</span>
+  <span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token function">npmLock</span><span class="token punctuation">(</span>folderPath<span class="token punctuation">,</span> outputFolderPath<span class="token punctuation">,</span> npmOptions<span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// 修复npm.lock</span>
+  <span class="token function">yarnLock</span><span class="token punctuation">(</span>folderPath<span class="token punctuation">,</span> outputFolderPath<span class="token punctuation">,</span> npmOptions<span class="token punctuation">)</span><span class="token punctuation">;</span><span class="token comment">// 修复yarn.lock</span>
+<span class="token punctuation">}</span>
+</code></pre><pre><code class="language-jsx" data-language="jsx" data-highlighted-line-numbers=""><span class="token comment">// lib/treat-locks/yarn.lock.js</span>
+<span class="token keyword">const</span> <span class="token constant">FILE_NAME</span> <span class="token operator">=</span> <span class="token string">'yarn.lock'</span><span class="token punctuation">;</span>
+<span class="token keyword">const</span> fs <span class="token operator">=</span> <span class="token function">require</span><span class="token punctuation">(</span><span class="token string">'fs'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token keyword">const</span> fileUtil <span class="token operator">=</span> <span class="token function">require</span><span class="token punctuation">(</span><span class="token string">'../utils/file.util'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token keyword">const</span> commonLock <span class="token operator">=</span> <span class="token function">require</span><span class="token punctuation">(</span><span class="token string">'./common.lock'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token keyword">const</span> NpmOptions <span class="token operator">=</span> <span class="token function">require</span><span class="token punctuation">(</span><span class="token string">'./npm.options'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+<span class="token keyword">function</span> <span class="token function">treatLine</span><span class="token punctuation">(</span><span class="token parameter">line<span class="token punctuation">,</span> npmOptions</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token keyword">if</span> <span class="token punctuation">(</span>line<span class="token punctuation">.</span><span class="token function">startsWith</span><span class="token punctuation">(</span><span class="token string">'  resolved "http'</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token comment">// 调用通用替换方法</span>
+    <span class="token keyword">return</span> commonLock<span class="token punctuation">.</span><span class="token function">replaceHost</span><span class="token punctuation">(</span>line<span class="token punctuation">,</span> npmOptions<span class="token punctuation">.</span>registry<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">concat</span><span class="token punctuation">(</span><span class="token string">'\n'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token punctuation">}</span>
+  <span class="token keyword">if</span> <span class="token punctuation">(</span>line<span class="token punctuation">.</span><span class="token function">startsWith</span><span class="token punctuation">(</span><span class="token string">'  integrity '</span><span class="token punctuation">)</span> <span class="token operator">&amp;&amp;</span> npmOptions<span class="token punctuation">.</span>skipIntegrity <span class="token operator">===</span> <span class="token boolean">false</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">return</span> <span class="token string">''</span><span class="token punctuation">;</span>
+  <span class="token punctuation">}</span>
+  <span class="token keyword">return</span> line<span class="token punctuation">.</span><span class="token function">concat</span><span class="token punctuation">(</span><span class="token string">'\n'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+
+<span class="token comment">/**
+ * In the yarn case the host from 'resolved' should be replaced by &lt;INTERNAL_REGISTRY> https://github.com/yarnpkg/yarn/issues/5892#issuecomment-414796103
+ * @param {string} folderPath the path where the lock file is
+ * @param {string} outputFolder the path where the lock should be saved
+ */</span>
+<span class="token keyword">async</span> <span class="token keyword">function</span> <span class="token function">run</span><span class="token punctuation">(</span>folderPath<span class="token punctuation">,</span> outputFolder<span class="token punctuation">,</span> npmOptions <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">NpmOptions</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  fileUtil<span class="token punctuation">.</span><span class="token function">checkOutputFolderExistance</span><span class="token punctuation">(</span>outputFolder<span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token keyword">const</span> filePath <span class="token operator">=</span> <span class="token template-string"><span class="token template-punctuation string">`</span><span class="token interpolation"><span class="token interpolation-punctuation punctuation">${</span>folderPath<span class="token interpolation-punctuation punctuation">}</span></span><span class="token string">/</span><span class="token interpolation"><span class="token interpolation-punctuation punctuation">${</span><span class="token constant">FILE_NAME</span><span class="token interpolation-punctuation punctuation">}</span></span><span class="token template-punctuation string">`</span></span><span class="token punctuation">;</span>
+  <span class="token keyword">const</span> output <span class="token operator">=</span> <span class="token template-string"><span class="token template-punctuation string">`</span><span class="token interpolation"><span class="token interpolation-punctuation punctuation">${</span>outputFolder<span class="token interpolation-punctuation punctuation">}</span></span><span class="token string">/</span><span class="token interpolation"><span class="token interpolation-punctuation punctuation">${</span><span class="token constant">FILE_NAME</span><span class="token interpolation-punctuation punctuation">}</span></span><span class="token template-punctuation string">`</span></span><span class="token punctuation">;</span>
+
+  <span class="token keyword">if</span> <span class="token punctuation">(</span>fs<span class="token punctuation">.</span><span class="token function">existsSync</span><span class="token punctuation">(</span>filePath<span class="token punctuation">,</span> <span class="token string">'utf8'</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>npmOptions<span class="token punctuation">.</span>registry <span class="token operator">===</span> <span class="token keyword">undefined</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+      console<span class="token punctuation">.</span><span class="token function">warn</span><span class="token punctuation">(</span><span class="token template-string"><span class="token template-punctuation string">`</span><span class="token interpolation"><span class="token interpolation-punctuation punctuation">${</span>filePath<span class="token interpolation-punctuation punctuation">}</span></span><span class="token string"> file exist but the registry has not been set. Please use --registry=&lt;NPM_REGISTRY></span><span class="token template-punctuation string">`</span></span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+      <span class="token keyword">return</span> <span class="token boolean">false</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+    <span class="token keyword">let</span> content <span class="token operator">=</span> <span class="token string">''</span><span class="token punctuation">;</span> <span class="token comment">// 新文件buffer</span>
+    <span class="token keyword">await</span> fileUtil<span class="token punctuation">.</span><span class="token function">readLineSync</span><span class="token punctuation">(</span>filePath<span class="token punctuation">,</span> <span class="token keyword">async</span> <span class="token punctuation">(</span><span class="token parameter">line</span><span class="token punctuation">)</span> <span class="token operator">=></span> <span class="token punctuation">{</span>
+      <span class="token comment">// 逐行扫描旧文件，按规则替换</span>
+      content <span class="token operator">=</span> content<span class="token punctuation">.</span><span class="token function">concat</span><span class="token punctuation">(</span><span class="token function">treatLine</span><span class="token punctuation">(</span>line<span class="token punctuation">,</span> npmOptions<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    fs<span class="token punctuation">.</span><span class="token function">writeFileSync</span><span class="token punctuation">(</span><span class="token template-string"><span class="token template-punctuation string">`</span><span class="token interpolation"><span class="token interpolation-punctuation punctuation">${</span>output<span class="token interpolation-punctuation punctuation">}</span></span><span class="token template-punctuation string">`</span></span><span class="token punctuation">,</span> content<span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// buffer写入磁盘</span>
+    console<span class="token punctuation">.</span><span class="token function">info</span><span class="token punctuation">(</span><span class="token template-string"><span class="token template-punctuation string">`</span><span class="token interpolation"><span class="token interpolation-punctuation punctuation">${</span>filePath<span class="token interpolation-punctuation punctuation">}</span></span><span class="token string"> treated</span><span class="token template-punctuation string">`</span></span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">return</span> <span class="token boolean">true</span><span class="token punctuation">;</span>
+  <span class="token punctuation">}</span>
+  console<span class="token punctuation">.</span><span class="token function">warn</span><span class="token punctuation">(</span><span class="token template-string"><span class="token template-punctuation string">`</span><span class="token interpolation"><span class="token interpolation-punctuation punctuation">${</span>filePath<span class="token interpolation-punctuation punctuation">}</span></span><span class="token string"> does not exist</span><span class="token template-punctuation string">`</span></span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token keyword">return</span> <span class="token boolean">false</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+
+module<span class="token punctuation">.</span>exports <span class="token operator">=</span> run<span class="token punctuation">;</span>
+</code></pre><h3 id="总结">总结</h3><p>本文从源失效出发，分析了lock文件记录源的方式，以及我们如何进行修复，并且顺带分析了一下这个工具的运行原理。</p>]]></content:encoded>
         </item>
     </channel>
 </rss>
