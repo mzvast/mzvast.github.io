@@ -1,0 +1,134 @@
+## 你可以从本文了解到
+
+### 问题背景
+
+最近taobao npm registry下线，导致之前lock文件里显式依赖taobao源的通通爆炸了，这是本文的写作背景。
+我们的目标就是让lock文件能切换到其他正常工作的源，比如npmjs。
+
+### 原因与解决方案
+
+
+
+#### lock文件如何记录源及如何修复
+
+我们知道lock文件主要的作用是记录依赖及其解析结果（版本、散列值等），从而加速依赖安装速度。那么对于每一条解析结果，我们可以看到下面这个例子，其中很显著的一个标志就是【resolved "解析的源地址/包信息"】。
+
+
+
+```js
+"@babel/core@7.4.3":
+  version "7.4.3"
+  /* highlight-next-line */
+  resolved "https://registry.npm.taobao.org/@babel/core/download/@babel/core-7.4.3.tgz#198d6d3af4567be3989550d97e068de94503074f"
+  integrity sha1-GY1tOvRWe+OYlVDZfgaN6UUDB08=
+  dependencies:
+    "@babel/code-frame" "^7.0.0"
+    "@babel/generator" "^7.4.0"
+    "@babel/helpers" "^7.4.3"
+    "@babel/parser" "^7.4.3"
+    "@babel/template" "^7.4.0"
+```
+
+由于不同的源它的包信息都是一样的，因此，我们只需要把这些resolved的实效的内容通过字符串匹配的方式替换掉就行了。
+
+
+
+直接手动披露替换也可以，但是呢，有人已经写了一个[locktt工具](https://github.com/kiegroup/lock-treatment-tool)专门做这事。
+
+使用方法也很简单：
+
+```bash
+npm i -g @kie/lock-treatment-tool // 安装这个包
+locktt --registry=https://registry.npmjs.org/ // 替换lock中的源为指定源
+```
+
+
+
+接下来，我们再看一下这个locktt的代码结构
+
+```
+scripts/treat-lock-files.js // 处理命令行参数
+lib/treat-locks/common.lock.js // 用于替换的方法（正则）
+lib/treat-locks/yarn.lock.js // 针对yarn的修复方法
+lib/treat-locks/npm.lock.js // 针对npm的修复方法
+```
+
+
+
+其中run函数就是功能主入口
+
+```js
+// scripts/treat-lock-files.js 
+function run() {
+  console.log('Treating fields...');
+  const folderPath = argv.folder === undefined ? '.' : argv.folder;
+  const outputFolderPath = argv.outputFolder === undefined ? folderPath : argv.outputFolder;
+  const npmOptions = new NpmOptions(
+    argv.registry || getRegistryFromNpmCommand(),
+    argv.replacePackageLockRegistry,
+    argv.skipIntegrity,
+  );
+  npmLock(folderPath, outputFolderPath, npmOptions); // 修复npm.lock
+  yarnLock(folderPath, outputFolderPath, npmOptions);// 修复yarn.lock
+}
+```
+
+
+
+
+
+```js
+// lib/treat-locks/yarn.lock.js
+const FILE_NAME = 'yarn.lock';
+const fs = require('fs');
+const fileUtil = require('../utils/file.util');
+const commonLock = require('./common.lock');
+const NpmOptions = require('./npm.options');
+
+function treatLine(line, npmOptions) {
+  if (line.startsWith('  resolved "http')) {
+    // 调用通用替换方法
+    return commonLock.replaceHost(line, npmOptions.registry).concat('\n');
+  }
+  if (line.startsWith('  integrity ') && npmOptions.skipIntegrity === false) {
+    return '';
+  }
+  return line.concat('\n');
+}
+
+/**
+ * In the yarn case the host from 'resolved' should be replaced by <INTERNAL_REGISTRY> https://github.com/yarnpkg/yarn/issues/5892#issuecomment-414796103
+ * @param {string} folderPath the path where the lock file is
+ * @param {string} outputFolder the path where the lock should be saved
+ */
+async function run(folderPath, outputFolder, npmOptions = new NpmOptions()) {
+  fileUtil.checkOutputFolderExistance(outputFolder);
+  const filePath = `${folderPath}/${FILE_NAME}`;
+  const output = `${outputFolder}/${FILE_NAME}`;
+
+  if (fs.existsSync(filePath, 'utf8')) {
+    if (npmOptions.registry === undefined) {
+      console.warn(`${filePath} file exist but the registry has not been set. Please use --registry=<NPM_REGISTRY>`);
+      return false;
+    }
+    let content = ''; // 新文件buffer
+    await fileUtil.readLineSync(filePath, async (line) => {
+      // 逐行扫描旧文件，按规则替换
+      content = content.concat(treatLine(line, npmOptions));
+    });
+    fs.writeFileSync(`${output}`, content); // buffer写入磁盘
+    console.info(`${filePath} treated`);
+    return true;
+  }
+  console.warn(`${filePath} does not exist`);
+  return false;
+}
+
+module.exports = run;
+```
+
+
+
+### 总结
+
+本文从源失效出发，分析了lock文件记录源的方式，以及我们如何进行修复，并且顺带分析了一下这个工具的运行原理。
