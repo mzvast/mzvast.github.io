@@ -1,0 +1,2 @@
+(window.webpackJsonp=window.webpackJsonp||[]).push([[74],{299:function(e,n,t){"use strict";t.r(n),n.default={title:"Migrate Razzle from 3 to 4",tags:["razzle"],spoiler:"my experience of doing migration razzle to version 4 ",getContent:function(){return t.e(134).then(t.bind(null,230))}}}}]);
+//# sourceMappingURL=74.cff24ad6.chunk.js.map

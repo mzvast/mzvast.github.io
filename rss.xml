@@ -4,7 +4,7 @@
         <title>OverRainbow</title>
         <link>/</link>
         <description>If Nothing Changes, Nothing Is Going to Change</description>
-        <lastBuildDate>Wed, 15 Jun 2022 03:30:44 GMT</lastBuildDate>
+        <lastBuildDate>Tue, 21 Jun 2022 10:30:05 GMT</lastBuildDate>
         <docs>http://blogs.law.harvard.edu/tech/rss</docs>
         <generator>https://github.com/jpmonette/feed</generator>
         <item>
@@ -3340,6 +3340,154 @@ lib/treat-locks/npm.lock.js // 针对npm的修复方法
 
 module<span class="token punctuation">.</span>exports <span class="token operator">=</span> run<span class="token punctuation">;</span>
 </code></pre><h3 id="总结">总结</h3><p>本文从源失效出发，分析了lock文件记录源的方式，以及我们如何进行修复，并且顺带分析了一下这个工具的运行原理。</p>]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[omni outliner plugin try try]]></title>
+            <link>/posts/2022-06-21-1725-omni-outliner-plugin-try-try</link>
+            <guid>/posts/2022-06-21-1725-omni-outliner-plugin-try-try</guid>
+            <content:encoded><![CDATA[<h2 id="你可以从本文了解到">你可以从本文了解到</h2><h3 id="背景">背景</h3><p>习惯是一个人的迭代系统，好的习惯可以帮助我们在生活和工作中更好的成长。</p><p>我平时有记工作日志的习惯，Omin Outliner是一款大纲软件，能够实现任意层级深度的结构，用于记录工作事项和复盘都非常方便。</p><p>我平时的日志主要下面这样的结构。</p><p>可以简化成</p><pre><code>2022-10 【月】
+    10.3-10.7 【周】
+        10.3【日】
+        10.4【日】
+        10.5【日】
+        10.6【日】
+        10.7【日】
+            TOP3【三件最重要的事】
+            🧙‍♀️🐟【学到的新知识】
+</code></pre><p>整体看上去是非常结构化，并且可以自动化的。</p><p>之前我都是低效率的手动录入每周，之前一直就在想等有空了一定要自动化。</p><p>那么我们来实现一下这个功能。</p><h3 id="基本概念">基本概念</h3><h4 id="1、文档">1、文档</h4><p>首先OO的文档整体的基本概念可以参考<a href="https://omni-automation.com/omnioutliner/item.html">官网</a>，咱们主要是用到2个概念。</p><p>1、Document，即整个文件</p><p>2、Item，用户选中的节点或节点组</p><h4 id="2、插件">2、插件</h4><p>OO的插件是写在一个IIFE中，返回的就是这个action，OO会将顶部注释的内容和这段插件代码进行关联，比如增加菜单和快捷入口等。</p><pre><code class="language-jsx" data-language="jsx" data-highlighted-line-numbers=""><span class="token comment">/*{
+    "author": "mzvast",
+    "targets": ["omnioutliner"],
+    "type": "action",
+    "identifier": "com.mycompany.createPlanFromMonth",
+    "version": "0.1",
+    "description": "A plug-in that...",
+    "label": "createPlanFromMonth",
+    "mediumLabel": "createPlanFromMonth",
+    "longLabel": "createPlanFromMonth",
+    "paletteLabel": "createPlanFromMonth",
+}*/</span>
+<span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">=></span> <span class="token punctuation">{</span>
+    <span class="token keyword">var</span> action <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">PlugIn<span class="token punctuation">.</span>Action</span><span class="token punctuation">(</span><span class="token keyword">function</span> <span class="token punctuation">(</span><span class="token parameter">selection</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    
+      <span class="token comment">// 你的代码</span>
+
+    <span class="token keyword">return</span> action<span class="token punctuation">;</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre><h3 id="插件设计和实现">插件设计和实现</h3><p>首先这是<a href="https://github.com/mzvast/omnijs/blob/master/outliner/createPlanFromMonth.omnijs">最终代码</a>。</p><p>整体就是要做下面这些事。</p><p>1、输入一个或多个月份，生成工作日数据结构。相当于产生VDOM。（纯JS）</p><p>2、将上一部生成的工作日数组插入到文档中去。相当于VDOM转换成OO的对象。（使用OO API）</p><p>首先来看第一部分纯JS代码，生成工作日数据结构，这部分比较简单，主要是要注意几个边界条件，问题不大。</p><pre><code class="language-jsx" data-language="jsx" data-highlighted-line-numbers=""> <span class="token comment">// 输入</span>
+<span class="token comment">// 2022-06 </span>
+<span class="token comment">// 输出</span>
+<span class="token comment">// ans = [</span>
+<span class="token comment">//     ['6.1', '6.2', '6.3'],</span>
+<span class="token comment">//     ['6.5', '6.6', '6.7', '6.8', '6.9'],</span>
+<span class="token comment">// ];</span>
+<span class="token keyword">function</span> <span class="token function">generateCalender</span><span class="token punctuation">(</span><span class="token parameter">itemValue</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token keyword">const</span> startPoint <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Date</span><span class="token punctuation">(</span>itemValue<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">const</span> y <span class="token operator">=</span> startPoint<span class="token punctuation">.</span><span class="token function">getFullYear</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">const</span> m <span class="token operator">=</span> startPoint<span class="token punctuation">.</span><span class="token function">getMonth</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">+</span> <span class="token number">1</span><span class="token punctuation">;</span> <span class="token comment">// 月</span>
+        <span class="token keyword">const</span> d <span class="token operator">=</span> startPoint<span class="token punctuation">.</span><span class="token function">getDate</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// 日</span>
+
+        <span class="token keyword">const</span> ans <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">;</span>
+        <span class="token keyword">let</span> tmp <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">;</span>
+        <span class="token keyword">while</span> <span class="token punctuation">(</span>
+            startPoint<span class="token punctuation">.</span><span class="token function">getMonth</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">+</span> <span class="token number">1</span> <span class="token operator">&lt;=</span> m <span class="token operator">&amp;&amp;</span>
+            startPoint<span class="token punctuation">.</span><span class="token function">getFullYear</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">===</span> y
+          <span class="token comment">// 当前日期还在本月，继续循环</span>
+        <span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            <span class="token keyword">const</span> day <span class="token operator">=</span> startPoint<span class="token punctuation">.</span><span class="token function">getDay</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token keyword">if</span> <span class="token punctuation">(</span>day <span class="token operator">&lt;</span> <span class="token number">6</span> <span class="token operator">&amp;&amp;</span> day <span class="token operator">></span> <span class="token number">0</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+                tmp<span class="token punctuation">.</span><span class="token function">push</span><span class="token punctuation">(</span><span class="token template-string"><span class="token template-punctuation string">`</span><span class="token interpolation"><span class="token interpolation-punctuation punctuation">${</span>m<span class="token interpolation-punctuation punctuation">}</span></span><span class="token string">.</span><span class="token interpolation"><span class="token interpolation-punctuation punctuation">${</span>startPoint<span class="token punctuation">.</span><span class="token function">getDate</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token interpolation-punctuation punctuation">}</span></span><span class="token template-punctuation string">`</span></span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// 插入工作日到tmp</span>
+            <span class="token punctuation">}</span> <span class="token keyword">else</span> <span class="token keyword">if</span> <span class="token punctuation">(</span>tmp<span class="token punctuation">.</span>length<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+                ans<span class="token punctuation">.</span><span class="token function">push</span><span class="token punctuation">(</span>tmp<span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// 将tmp插入ans</span>
+                tmp <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">;</span>
+            <span class="token punctuation">}</span>
+            startPoint<span class="token punctuation">.</span><span class="token function">setDate</span><span class="token punctuation">(</span>startPoint<span class="token punctuation">.</span><span class="token function">getDate</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">+</span> <span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// 增加一天</span>
+        <span class="token punctuation">}</span>
+
+        <span class="token keyword">return</span> ans<span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+</code></pre><p>然后就要处理第二部分了。也没什么复杂的逻辑，看注释就可以了解。</p><p>关键是用到几个API</p><p>1、<code>document.editors[0].selectedNodes</code>获取当前选中的节点list</p><p>2、<code>document.outline.outlineColumn</code>当前focus的列，一行一列就确定了单元格</p><p>3、<code>selectedItem.valueForColumn(targetColumn).string</code>获取某个单元格的内容</p><p>4、<code>selectedItem.addChild</code>向一个item插入子节点，其中第一个参数表示插入位置，end表示插入到末尾。</p><pre><code class="language-jsx" data-language="jsx" data-highlighted-line-numbers=""><span class="token comment">/*{
+    "author": "mzvast",
+    "targets": ["omnioutliner"],
+    "type": "action",
+    "identifier": "com.mycompany.createPlanFromMonth",
+    "version": "0.1",
+    "description": "A plug-in that...",
+    "label": "createPlanFromMonth",
+    "mediumLabel": "createPlanFromMonth",
+    "longLabel": "createPlanFromMonth",
+    "paletteLabel": "createPlanFromMonth",
+}*/</span>
+<span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">=></span> <span class="token punctuation">{</span>
+    <span class="token keyword">var</span> action <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">PlugIn<span class="token punctuation">.</span>Action</span><span class="token punctuation">(</span><span class="token keyword">function</span> <span class="token punctuation">(</span><span class="token parameter">selection</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token keyword">var</span> selectedItems <span class="token operator">=</span> document<span class="token punctuation">.</span>editors<span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span><span class="token punctuation">.</span>selectedNodes<span class="token punctuation">.</span><span class="token function">map</span><span class="token punctuation">(</span><span class="token keyword">function</span> <span class="token punctuation">(</span>
+            <span class="token parameter">node</span>
+        <span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            <span class="token keyword">return</span> node<span class="token punctuation">.</span>object<span class="token punctuation">;</span>
+        <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                
+      <span class="token comment">// 同时支持单选和多选</span>
+        selectedItems<span class="token punctuation">.</span><span class="token function">forEach</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token parameter">item</span><span class="token punctuation">)</span> <span class="token operator">=></span> <span class="token punctuation">{</span>
+            <span class="token function">processItem</span><span class="token punctuation">(</span>item<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+
+    <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token comment">// 处理一条记录</span>
+    <span class="token keyword">function</span> <span class="token function">processItem</span><span class="token punctuation">(</span><span class="token parameter">selectedItem</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+     
+        <span class="token keyword">var</span> targetColumn <span class="token operator">=</span> document<span class="token punctuation">.</span>outline<span class="token punctuation">.</span>outlineColumn<span class="token punctuation">;</span> <span class="token comment">// 获取当前的列</span>
+        <span class="token keyword">var</span> itemValue <span class="token operator">=</span> selectedItem<span class="token punctuation">.</span><span class="token function">valueForColumn</span><span class="token punctuation">(</span>targetColumn<span class="token punctuation">)</span><span class="token punctuation">.</span>string<span class="token punctuation">;</span> <span class="token comment">// 当前单元格的内容</span>
+        console<span class="token punctuation">.</span><span class="token function">log</span><span class="token punctuation">(</span><span class="token string">'Invoked with selection'</span><span class="token punctuation">,</span> itemValue<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment">// 2022-1,2022-01</span>
+        <span class="token comment">// 数据校验</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token operator">!</span><span class="token regex">/\d{4}-\d{2}/i</span><span class="token punctuation">.</span><span class="token function">test</span><span class="token punctuation">(</span>itemValue<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            <span class="token keyword">new</span> <span class="token class-name">Alert</span><span class="token punctuation">(</span><span class="token string">'bad date, expect YYYY-MM'</span><span class="token punctuation">,</span> itemValue<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">show</span><span class="token punctuation">(</span><span class="token keyword">function</span> <span class="token punctuation">(</span><span class="token parameter">result</span><span class="token punctuation">)</span> <span class="token punctuation">{</span><span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token keyword">return</span><span class="token punctuation">;</span>
+        <span class="token punctuation">}</span>
+
+        <span class="token comment">// 输入</span>
+        <span class="token comment">// 2022-06</span>
+        <span class="token comment">// getDay 0周日 1周一..6周六</span>
+
+        <span class="token keyword">const</span> ans <span class="token operator">=</span> <span class="token function">generateCalender</span><span class="token punctuation">(</span>itemValue<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        <span class="token comment">// 最终的数据结构</span>
+        <span class="token comment">// ans = [</span>
+        <span class="token comment">//     ['6.1', '6.2', '6.3'],</span>
+        <span class="token comment">//     ['6.5', '6.6', '6.7', '6.8', '6.9'],</span>
+        <span class="token comment">// ];</span>
+
+        <span class="token comment">// renderer</span>
+        <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">let</span> i <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span> i <span class="token operator">&lt;</span> ans<span class="token punctuation">.</span>length<span class="token punctuation">;</span> i<span class="token operator">++</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            <span class="token comment">// i=> week</span>
+            <span class="token keyword">const</span> week <span class="token operator">=</span> selectedItem<span class="token punctuation">.</span><span class="token function">addChild</span><span class="token punctuation">(</span>
+                selectedItem<span class="token punctuation">.</span>end<span class="token punctuation">,</span>
+                <span class="token keyword">function</span> <span class="token punctuation">(</span><span class="token parameter">item</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+                    item<span class="token punctuation">.</span>topic <span class="token operator">=</span><span class="token template-string"><span class="token template-punctuation string">`</span><span class="token interpolation"><span class="token interpolation-punctuation punctuation">${</span>ans<span class="token punctuation">[</span>i<span class="token punctuation">]</span><span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span><span class="token interpolation-punctuation punctuation">}</span></span><span class="token string">-</span><span class="token interpolation"><span class="token interpolation-punctuation punctuation">${</span>ans<span class="token punctuation">[</span>i<span class="token punctuation">]</span><span class="token punctuation">[</span>ans<span class="token punctuation">[</span>i<span class="token punctuation">]</span><span class="token punctuation">.</span>length <span class="token operator">-</span> <span class="token number">1</span><span class="token punctuation">]</span><span class="token interpolation-punctuation punctuation">}</span></span><span class="token template-punctuation string">`</span></span><span class="token punctuation">;</span>
+                <span class="token punctuation">}</span>
+            <span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">let</span> j <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span> j <span class="token operator">&lt;</span> ans<span class="token punctuation">[</span>i<span class="token punctuation">]</span><span class="token punctuation">.</span>length<span class="token punctuation">;</span> j<span class="token operator">++</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+                <span class="token keyword">const</span> day <span class="token operator">=</span> week<span class="token punctuation">.</span><span class="token function">addChild</span><span class="token punctuation">(</span>week<span class="token punctuation">.</span>end<span class="token punctuation">,</span> <span class="token keyword">function</span> <span class="token punctuation">(</span><span class="token parameter">item</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+                    item<span class="token punctuation">.</span>topic <span class="token operator">=</span> ans<span class="token punctuation">[</span>i<span class="token punctuation">]</span><span class="token punctuation">[</span>j<span class="token punctuation">]</span><span class="token punctuation">;</span>
+                <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+                day<span class="token punctuation">.</span><span class="token function">addChild</span><span class="token punctuation">(</span>day<span class="token punctuation">.</span>end<span class="token punctuation">,</span> <span class="token keyword">function</span> <span class="token punctuation">(</span><span class="token parameter">item</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+                    item<span class="token punctuation">.</span>topic <span class="token operator">=</span> <span class="token string">'TOP3'</span><span class="token punctuation">;</span>
+                <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                day<span class="token punctuation">.</span><span class="token function">addChild</span><span class="token punctuation">(</span>day<span class="token punctuation">.</span>end<span class="token punctuation">,</span> <span class="token keyword">function</span> <span class="token punctuation">(</span><span class="token parameter">item</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+                    item<span class="token punctuation">.</span>topic <span class="token operator">=</span> <span class="token string">'🧙‍♀️🐟'</span><span class="token punctuation">;</span>
+                <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token punctuation">}</span>
+        <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span>
+
+    <span class="token keyword">function</span> <span class="token function">generateCalender</span><span class="token punctuation">(</span><span class="token parameter">itemValue</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token comment">// ...</span>
+    <span class="token punctuation">}</span>
+
+    <span class="token keyword">return</span> action<span class="token punctuation">;</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre><h3 id="总结">总结</h3><p>这款插件在使得之后个人工作日志的迭代效率更max了。</p><p>借此机会还深入了解了OO的文档结构和API，以后开发类似的插件就会更得心应手。</p><p>也希望本文可以帮到对OO 插件感兴趣的同学。</p>]]></content:encoded>
         </item>
     </channel>
 </rss>

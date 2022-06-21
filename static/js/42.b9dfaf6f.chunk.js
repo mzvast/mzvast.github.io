@@ -1,2 +1,0 @@
-(window.webpackJsonp=window.webpackJsonp||[]).push([[42],{266:function(n,t,e){"use strict";e.r(t),t.default={title:"Start Loving Change",tags:["life","strategy"],spoiler:"If Nothing Changes, Nothing Is Going to Change",getContent:function(){return e.e(107).then(e.bind(null,186))}}}}]);
-//# sourceMappingURL=42.b9dfaf6f.chunk.js.map

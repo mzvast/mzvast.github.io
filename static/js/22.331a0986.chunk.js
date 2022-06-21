@@ -1,0 +1,2 @@
+(window.webpackJsonp=window.webpackJsonp||[]).push([[22],{247:function(n,e,r){"use strict";r.r(e),e.default={title:"raspberrypi realvnc",tags:["raspberrypi","vnc"],spoiler:"\u5728\u6811\u8393\u6d3e9\u6708\u66f4\u65b0raspbian\u4ee3\u53f7\u4e3aPIXEL\u7cfb\u7edf\u4e4b\u540e\uff0c\u96c6\u6210\u4e86\u5bf9realvnc\u7684\u652f\u6301\uff0c\u5176\u4e2d\u6709\u4e00\u4e9b\u5751\uff0c\u503c\u5f97\u6ce8\u610f\uff01",getContent:function(){return r.e(88).then(r.bind(null,166))}}}}]);
+//# sourceMappingURL=22.331a0986.chunk.js.map
