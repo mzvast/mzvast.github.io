@@ -1,0 +1,230 @@
+## 你可以从本文了解到
+
+### 背景
+
+习惯是一个人的迭代系统，好的习惯可以帮助我们在生活和工作中更好的成长。
+
+我平时有记工作日志的习惯，Omin Outliner是一款大纲软件，能够实现任意层级深度的结构，用于记录工作事项和复盘都非常方便。
+
+我平时的日志主要下面这样的结构。
+
+
+可以简化成
+
+```
+2022-10 【月】
+	10.3-10.7 【周】
+		10.3【日】
+		10.4【日】
+		10.5【日】
+		10.6【日】
+		10.7【日】
+			TOP3【三件最重要的事】
+			🧙‍♀️🐟【学到的新知识】
+```
+
+整体看上去是非常结构化，并且可以自动化的。
+
+之前我都是低效率的手动录入每周，之前一直就在想等有空了一定要自动化。
+
+那么我们来实现一下这个功能。
+
+### 基本概念
+
+#### 1、文档
+
+首先OO的文档整体的基本概念可以参考[官网](https://omni-automation.com/omnioutliner/item.html)，咱们主要是用到2个概念。
+
+1、Document，即整个文件
+
+2、Item，用户选中的节点或节点组
+
+
+
+#### 2、插件
+
+OO的插件是写在一个IIFE中，返回的就是这个action，OO会将顶部注释的内容和这段插件代码进行关联，比如增加菜单和快捷入口等。
+
+```js
+/*{
+    "author": "mzvast",
+    "targets": ["omnioutliner"],
+    "type": "action",
+    "identifier": "com.mycompany.createPlanFromMonth",
+    "version": "0.1",
+    "description": "A plug-in that...",
+    "label": "createPlanFromMonth",
+    "mediumLabel": "createPlanFromMonth",
+    "longLabel": "createPlanFromMonth",
+    "paletteLabel": "createPlanFromMonth",
+}*/
+(() => {
+    var action = new PlugIn.Action(function (selection) {
+    
+      // 你的代码
+
+    return action;
+})();
+```
+
+
+
+### 插件设计和实现
+
+首先这是[最终代码](https://github.com/mzvast/omnijs/blob/master/outliner/createPlanFromMonth.omnijs)。
+
+整体就是要做下面这些事。
+
+1、输入一个或多个月份，生成工作日数据结构。相当于产生VDOM。（纯JS）
+
+2、将上一部生成的工作日数组插入到文档中去。相当于VDOM转换成OO的对象。（使用OO API）
+
+
+
+首先来看第一部分纯JS代码，生成工作日数据结构，这部分比较简单，主要是要注意几个边界条件，问题不大。
+
+```js
+ // 输入
+// 2022-06 
+// 输出
+// ans = [
+//     ['6.1', '6.2', '6.3'],
+//     ['6.5', '6.6', '6.7', '6.8', '6.9'],
+// ];
+function generateCalender(itemValue) {
+        const startPoint = new Date(itemValue);
+        const y = startPoint.getFullYear();
+        const m = startPoint.getMonth() + 1; // 月
+        const d = startPoint.getDate(); // 日
+
+        const ans = [];
+        let tmp = [];
+        while (
+            startPoint.getMonth() + 1 <= m &&
+            startPoint.getFullYear() === y
+          // 当前日期还在本月，继续循环
+        ) {
+            const day = startPoint.getDay();
+            if (day < 6 && day > 0) {
+                tmp.push(`${m}.${startPoint.getDate()}`); // 插入工作日到tmp
+            } else if (tmp.length) {
+                ans.push(tmp); // 将tmp插入ans
+                tmp = [];
+            }
+            startPoint.setDate(startPoint.getDate() + 1); // 增加一天
+        }
+
+        return ans;
+    }
+```
+
+然后就要处理第二部分了。也没什么复杂的逻辑，看注释就可以了解。
+
+关键是用到几个API
+
+1、`document.editors[0].selectedNodes`获取当前选中的节点list
+
+2、`document.outline.outlineColumn`当前focus的列，一行一列就确定了单元格
+
+3、`selectedItem.valueForColumn(targetColumn).string`获取某个单元格的内容
+
+4、`selectedItem.addChild`向一个item插入子节点，其中第一个参数表示插入位置，end表示插入到末尾。
+
+
+
+```js
+/*{
+    "author": "mzvast",
+    "targets": ["omnioutliner"],
+    "type": "action",
+    "identifier": "com.mycompany.createPlanFromMonth",
+    "version": "0.1",
+    "description": "A plug-in that...",
+    "label": "createPlanFromMonth",
+    "mediumLabel": "createPlanFromMonth",
+    "longLabel": "createPlanFromMonth",
+    "paletteLabel": "createPlanFromMonth",
+}*/
+(() => {
+    var action = new PlugIn.Action(function (selection) {
+        var selectedItems = document.editors[0].selectedNodes.map(function (
+            node
+        ) {
+            return node.object;
+        });
+				
+      // 同时支持单选和多选
+        selectedItems.forEach((item) => {
+            processItem(item);
+        });
+
+
+    });
+    // 处理一条记录
+    function processItem(selectedItem) {
+     
+        var targetColumn = document.outline.outlineColumn; // 获取当前的列
+        var itemValue = selectedItem.valueForColumn(targetColumn).string; // 当前单元格的内容
+        console.log('Invoked with selection', itemValue);
+        // 2022-1,2022-01
+      	// 数据校验
+        if (!/\d{4}-\d{2}/i.test(itemValue)) {
+            new Alert('bad date, expect YYYY-MM', itemValue).show(function (result) {});
+            return;
+        }
+
+        // 输入
+        // 2022-06
+        // getDay 0周日 1周一..6周六
+
+        const ans = generateCalender(itemValue);
+
+        // 最终的数据结构
+        // ans = [
+        //     ['6.1', '6.2', '6.3'],
+        //     ['6.5', '6.6', '6.7', '6.8', '6.9'],
+        // ];
+
+        // renderer
+        for (let i = 0; i < ans.length; i++) {
+            // i=> week
+            const week = selectedItem.addChild(
+                selectedItem.end,
+                function (item) {
+                    item.topic =`${ans[i][0]}-${ans[i][ans[i].length - 1]}`;
+                }
+            );
+            for (let j = 0; j < ans[i].length; j++) {
+                const day = week.addChild(week.end, function (item) {
+                    item.topic = ans[i][j];
+                });
+
+                day.addChild(day.end, function (item) {
+                    item.topic = 'TOP3';
+                });
+                day.addChild(day.end, function (item) {
+                    item.topic = '🧙‍♀️🐟';
+                });
+            }
+        }
+    }
+
+    function generateCalender(itemValue) {
+        // ...
+    }
+
+    return action;
+})();
+```
+
+
+
+
+
+### 总结
+
+这款插件在使得之后个人工作日志的迭代效率更max了。
+
+借此机会还深入了解了OO的文档结构和API，以后开发类似的插件就会更得心应手。
+
+也希望本文可以帮到对OO 插件感兴趣的同学。
