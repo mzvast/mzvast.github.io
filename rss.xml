@@ -4,7 +4,7 @@
         <title>OverRainbow</title>
         <link>/</link>
         <description>If Nothing Changes, Nothing Is Going to Change</description>
-        <lastBuildDate>Tue, 21 Jun 2022 10:30:05 GMT</lastBuildDate>
+        <lastBuildDate>Fri, 01 Jul 2022 03:37:15 GMT</lastBuildDate>
         <docs>http://blogs.law.harvard.edu/tech/rss</docs>
         <generator>https://github.com/jpmonette/feed</generator>
         <item>
@@ -3488,6 +3488,24 @@ module<span class="token punctuation">.</span>exports <span class="token operato
     <span class="token keyword">return</span> action<span class="token punctuation">;</span>
 <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
 </code></pre><h3 id="总结">总结</h3><p>这款插件在使得之后个人工作日志的迭代效率更max了。</p><p>借此机会还深入了解了OO的文档结构和API，以后开发类似的插件就会更得心应手。</p><p>也希望本文可以帮到对OO 插件感兴趣的同学。</p>]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Switch借助xray透明代理达成NAT full cone]]></title>
+            <link>/posts/2022-07-01-1024-SwitchxrayNAT-full-cone</link>
+            <guid>/posts/2022-07-01-1024-SwitchxrayNAT-full-cone</guid>
+            <content:encoded><![CDATA[<h2 id="你可以从本文了解到">你可以从本文了解到</h2><h3 id="背景">背景</h3><p>switch联机游戏大多是p2p方式，之前经常会遇到NAT穿越失败的问题，有时候不得不用加速器才能连接成功。</p><p>当时也是有点困惑，我已经用vps代理了，而且vps是有公网独立ipv4地址，按说不应该会存在NAT穿越失败问题。当时也没有深入去想这个事情，就在我心里一直是一个bug。</p><p>而最近我在看到xray的一些更新历史的内容中提到了NAT相关的内容，比如下面这些。</p><p><a href="https://github.com/XTLS/Xray-core/issues/734">如何实现full cone呢</a></p><p><a href="https://v2xtls.org/xray-core%E5%8F%91%E5%B8%831-3-0%E7%89%88%E6%9C%AC/">1.3.0更新内容</a></p><p>总之就是说v2ray在NAT上有bug，而xray修复改进了这个问题。</p><p>话不多说下面就讲讲如何从v2ray迁移到xray。</p><h3 id="从v2ray到xray">从v2ray到xray</h3><h4 id="服务端">服务端</h4><p>由于xray是fork的v2ray，因此在协议上是基本兼容的。</p><p>如果之前用的是vmess协议，我们切换到时候基本上可以复用v2ray的配置。</p><p>需要做下面几个事情(下面都是以root权限)</p><p>1、运行<a href="https://github.com/XTLS/Xray-install">自动安装脚本</a></p><pre><code class="language-shel" data-language="shel" data-highlighted-line-numbers=""># bash -c &quot;$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)&quot; @ install
+</code></pre><p>2、把v2ray的配置json复制到xray</p><pre><code class="language-shell" data-language="shell" data-highlighted-line-numbers=""><span class="token function">cp</span> /usr/local/etc/v2ray/config.json /usr/local/etc/xray/config.json
+</code></pre><p>3、停掉v2ray，启用xray</p><pre><code class="language-shell" data-language="shell" data-highlighted-line-numbers="">systemctl stop v2ray
+systemctl restart xray
+</code></pre><p>4、自己用客户端进行连接测试，如果ok，则禁用v2ray的自启动服务，改成用xray</p><pre><code class="language-shell" data-language="shell" data-highlighted-line-numbers="">systemctl disable v2ray
+systemctl <span class="token builtin class-name">enable</span> xray
+</code></pre><h4 id="客户端">客户端</h4><p>我这边试验下来，如果客户端之前是小火箭、v2rayN、树莓派，那完全就是兼容的，不需要升级。</p><h2 id="走向nat-full-cone">走向NAT full cone</h2><p>这里需要注意的是，如果客户端是基于v2ray-core，那就不能实现full cone，必须用xray-core。</p><p>因此，我的树莓派是作为家庭透明代理网关的，我的switch如果要用NAT full cone就得将v2ray替换成xray。</p><p>linux的无论是客户端还是服务端替换方法是一毛一样的，这里就不赘述了。区别只是json配置文件的内容不一样而已。</p><p>至此，switch连上树莓派的透明代理之后，就可以做到NAT full cone了。不会再有遇到明明是nat类型是B却连不到其他玩家的情况。</p><p>总之一句话就是：xray+透明代理。</p><h3 id="补充几个测试结论">补充几个测试结论</h3><p>1、vps端
+在开warp的nat类型是B。（主要取决于vps的网络环境）
+不开warp使用原生ip的nat类型是A。</p><p>2、树莓派和ns
+树莓派开xray，ns通过pi的透明代理，nat类型与vps的nat类型一致（与加速器效果类似）
+树莓派开v2ray，nat类型b，有大概率nat穿越失败。</p><p>ns不通过透明代理，直接配http代理，（不管是xray还是v2ray）nat类型是b，有大概率nat穿越失败。</p><p>结论
+最佳配置：xray+透明代理+warp
+既能p2p，又能看netflix，相对比较完美啦。</p><p>在ns运动里尝试了可以直接和大多数玩家稳定联机，以后就不需要加速器了。</p>]]></content:encoded>
         </item>
     </channel>
 </rss>
