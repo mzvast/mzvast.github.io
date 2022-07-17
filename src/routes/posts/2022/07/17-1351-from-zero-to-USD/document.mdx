@@ -1,0 +1,166 @@
+## 你可以从本文了解到
+
+### 背景
+
+[USD(Universal Scene Description)](https://github.com/PixarAnimationStudios/USD)是pixar开发的文件格式，用来描述3D场景。可以类比photoshop的PSD文件格式。
+
+我们可以用USD来描述一个3D场景，比如这个只有一个球的[场景](https://graphics.pixar.com/usd/release/tut_helloworld.html)。
+
+![](http://graphics.pixar.com/usd/docs/attachments/368705904/568921522.png)
+
+就可以用这样的USD描述。
+
+```python
+#usda 1.0
+
+def Xform "hello"
+{
+    def Sphere "world"
+    {
+    }
+}
+```
+
+那么为了生成这样的文件并看到渲染效果我们就需要USD和usdview这个可视化工具。
+
+对于windows和linux，nvidia有提供[编译好的binary](https://developer.nvidia.com/usd)。
+
+而唯独没有macOS的prebuilt binary，所以我们只能自己编译。也就是本文的初衷：记录编译和踩坑过程。
+
+
+
+### 如何在macOS上编译安装USD
+
+首先整体编译流程，需要参考官方流水线的[编译流程](https://github.com/PixarAnimationStudios/USD/blob/c6ff717c76724b576a841c41c0814fadd98e0bc2/azure-pipelines.yml)
+
+下面的步骤无非是对其进行了新系统的适配和细化（毕竟那个流水线有点古老`macOS-10.15`）
+
+#### 预设
+
+假设用户可以正常使用terminal，已经安装了homebrew，并且网络环境良好(github什么的可以正常访问)。
+
+#### 准备c++环境
+
+- 安装cmake
+
+```bash
+brew install cmake
+```
+
+#### 准备python环境
+
+首先我这台电脑是12.4（最新的系统默认已经去除了python2，有自带python3，但没有链接到python。）
+
+我们这里不用系统的python3，而是通过pyenv新安装一个python3。
+
+- 安装[pyenv](https://github.com/pyenv/pyenv)
+
+- 正确安装python3.7.13。[坑1](https://stackoverflow.com/questions/42245620/python-libpython3-5-dylib-not-found
+)[坑2](https://github.com/pyenv/pyenv/wiki#how-to-build-cpython-with-framework-support-on-os-x)
+```bash
+env PYTHON_CONFIGURE_OPTS="--enable-framework" pyenv install 3.7.13
+```
+
+此时可以看到我们系统的python版本情况。
+```bash
+$ pyenv versions
+* system 
+  3.7.13
+```
+
+让3.7.13变成系统默认的python版本。
+```bash
+$ pyenv global 3.7.13
+```
+
+- 安装python相关依赖
+
+```bash
+pip install pyside2 PyOpenGL
+```
+
+至此我们已经准备好了环境。
+
+#### 开始编译安装
+
+首先把代码down下来[USD](https://github.com/PixarAnimationStudios/USD)，可以看到`azure-pipelines.yml`文件里面有编译相关的指令。
+
+执行下面这条：
+
+```bash
+python build_scripts/build_usd.py --generator Xcode --build $HOME/USDgen/build --src $HOME/USDgen/src $HOME/USDinst -v
+```
+
+预期会看到一串安装日志，等待安装完成。（过程根据网络和机器性能差异可能需要20min以上）
+
+```
+Building with settings:
+  USD source directory          /Users/work/@Projects/USD
+  USD install directory         /Users/work/USDinst
+  3rd-party source directory    /Users/work/USDgen/src
+  3rd-party install directory   /Users/work/USDinst
+  Build directory               /Users/work/USDgen/build
+  CMake generator               Xcode
+  CMake toolset                 Default
+  Downloader                    curl
+
+  Building                      Shared libraries
+    Variant                     Release
+    Imaging                     On
+      Ptex support:             Off
+      OpenVDB support:          Off
+      OpenImageIO support:      Off 
+      OpenColorIO support:      Off 
+      PRMan support:            Off
+    UsdImaging                  On
+      usdview:                  On
+    Python support              On
+      Python Debug:             Off
+      Python 3:                 On
+    Documentation               Off
+    Tests                       Off
+    Examples                    On
+    Tutorials                   On
+    Tools                       On
+    Alembic Plugin              Off
+      HDF5 support:             Off
+    Draco Plugin                Off
+    MaterialX Plugin            Off
+
+  Dependencies                  zlib, boost, TBB, OpenSubdiv
+STATUS: Installing zlib...
+```
+
+#### 后续环境变量设置
+
+预期安装成功会提示你把一串PTYHONPATH和PATH添加到环境变量中。
+
+```bash
+export PYTHONPATH=$HOME/USDinst/lib/python:$PYTHONPATH
+export PATH=$HOME/USDinst/bin:$PATH
+```
+
+可以自行添加到`~/.zshrc`或者`~/.bashrc`中。
+
+然后就可以运行`usdview`工具了。
+
+#### 运行usdview遇到的坑及解决
+
+- `usdview xxx.usda`报错OpenGL找不到路径。[参考](https://github.com/PixarAnimationStudios/USD/issues/1372)
+
+问题的原因是这个库对于路径的解析存在bug，只判断了linux和windows，没有对macOS做判断。因此咱们需要patch一下文件`~/.pyenv/versions/3.7.13/Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages/OpenGL/platform/ctypesloader.py`
+
+由于这个文件pyenv直接安装在用户目录下，我们可以直接编辑它。
+在79行，把`fullName = util.find_library( name )`改成`fullName = '/System/Library/Frameworks/OpenGL.framework/OpenGL'`
+
+- 然后运行的时候可能会提示没有安装numPy，这是一个数学库，我们可以通过pip安装一下。
+
+```bash
+pip install numpy
+```
+
+应该到这里就没什么问题了，可以愉快的用usdview工具了。
+
+### 回顾与总结
+
+这次USD的安装，涉及到c++和python编译相关的工具，同时也有一些坑(c++那块没什么大问题，主要是python坑多)，如果不注意，容易卡住。好在其他人在不同的地方对这些问题进行了解决，我们找到这些问题的解决方案，汇总起来，就是这篇文章的意义。一方面记录踩坑的不易，另一方面希望可以对你有用。
