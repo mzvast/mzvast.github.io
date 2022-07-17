@@ -1,0 +1,2 @@
+(window.webpackJsonp=window.webpackJsonp||[]).push([[82],{309:function(t,n,o){"use strict";o.r(n),n.default={title:"from zero to USD",tags:["usd","c++","python"],spoiler:"how to setup a mac for USD",getContent:function(){return o.e(144).then(o.bind(null,238))}}}}]);
+//# sourceMappingURL=82.3390a227.chunk.js.map

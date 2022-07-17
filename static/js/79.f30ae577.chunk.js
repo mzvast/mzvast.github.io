@@ -1,2 +1,0 @@
-(window.webpackJsonp=window.webpackJsonp||[]).push([[79],{305:function(n,t,o){"use strict";o.r(t),t.default={title:"How to treat lock file",tags:["npm","yarn","lock"],spoiler:"how to make lock work again",getContent:function(){return o.e(140).then(o.bind(null,235))}}}}]);
-//# sourceMappingURL=79.f30ae577.chunk.js.map

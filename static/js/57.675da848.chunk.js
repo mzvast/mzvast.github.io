@@ -1,2 +1,0 @@
-(window.webpackJsonp=window.webpackJsonp||[]).push([[57],{283:function(e,n,t){"use strict";t.r(n),n.default={title:"Design principles of software development",tags:["principles"],spoiler:"\u8f6f\u4ef6\u5f00\u53d1\u7684\u8bbe\u8ba1\u539f\u5219",getContent:function(){return t.e(119).then(t.bind(null,212))}}}}]);
-//# sourceMappingURL=57.675da848.chunk.js.map

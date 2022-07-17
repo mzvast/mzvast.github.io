@@ -1,2 +1,0 @@
-(window.webpackJsonp=window.webpackJsonp||[]).push([[81],{307:function(t,n,e){"use strict";e.r(n),n.default={title:"Switch\u501f\u52a9xray\u900f\u660e\u4ee3\u7406\u8fbe\u6210NAT full cone",tags:["switch","xray","NAT","p2p","network","UDP"],spoiler:"how to make NS better at p2p gaming",getContent:function(){return e.e(142).then(e.bind(null,237))}}}}]);
-//# sourceMappingURL=81.f1fc6d48.chunk.js.map

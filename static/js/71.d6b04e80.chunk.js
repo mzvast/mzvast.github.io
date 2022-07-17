@@ -1,0 +1,2 @@
+(window.webpackJsonp=window.webpackJsonp||[]).push([[71],{298:function(e,n,t){"use strict";t.r(n),n.default={title:"Mermaid And Mdx",tags:["react","mdx","patch"],spoiler:"",getContent:function(){return Promise.all([t.e(0),t.e(134)]).then(t.bind(null,226))}}}}]);
+//# sourceMappingURL=71.d6b04e80.chunk.js.map
