@@ -16,6 +16,7 @@
     "hygen": "^5.0.3",
     "import-all.macro": "2.0.3",
     "lodash": "4.17.21",
+    "mdx-embed": "^1.1.2",
     "mdx-loader": "^3.0.2",
     "mdx-mermaid": "^1.1.0",
     "mermaid": "^8.12.1",
@@ -68,5 +69,4 @@
     "@oclif/plugin-plugins": "1.0.0",
     "ava": "2.0.0"
   }
-
 }

@@ -8,6 +8,7 @@ import styles from './BlogPostLayout.module.css';
 import Disqus from 'disqus-react';
 import ArticleToc from './ArticleToc';
 import {Helmet} from 'react-navi-helmet-async';
+import {MDXEmbedProvider} from 'mdx-embed';
 
 interface BlogPostLayoutProps {
     blogRoot: string;
@@ -53,7 +54,9 @@ function BlogPostLayout({blogRoot}: BlogPostLayoutProps) {
                     components={{
                         a: Link,
                         wrapper: ({children}) => (
-                            <div className={styles.content}>{children}</div>
+                            <MDXEmbedProvider>
+                                <div className={styles.content}>{children}</div>
+                            </MDXEmbedProvider>
                         )
                     }}
                 >

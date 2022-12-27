@@ -8035,6 +8035,11 @@ mdx-constant@^0.1.0:
   version "0.1.0"
   resolved "https://registry.npm.taobao.org/mdx-constant/download/mdx-constant-0.1.0.tgz#5d9b9981274bebb29127cd650fb5e4d9f557185d"
 
+mdx-embed@^1.1.2:
+  version "1.1.2"
+  resolved "https://registry.yarnpkg.com/mdx-embed/-/mdx-embed-1.1.2.tgz#04468e8dcb3be9fe3e65207e88a83d2f76555a24"
+  integrity sha512-AAronHC/sh4py+RhJOuX8+9+lyUbJsmCLquXNPCEHZ0llPWjMuwls77hII/lWI2kwBSPZPahrqti8kGTv1pi1w==
+
 mdx-loader@3.0.2, mdx-loader@^3.0.2:
   version "3.0.2"
   resolved "https://registry.nlark.com/mdx-loader/download/mdx-loader-3.0.2.tgz#3fc09067e65b04aa34e16d9c6c1482b4d5fe7de5"
