@@ -4,7 +4,7 @@
         <title>OverRainbow</title>
         <link>/</link>
         <description>If Nothing Changes, Nothing Is Going to Change</description>
-        <lastBuildDate>Sun, 17 Jul 2022 11:05:41 GMT</lastBuildDate>
+        <lastBuildDate>Tue, 27 Dec 2022 19:07:43 GMT</lastBuildDate>
         <docs>http://blogs.law.harvard.edu/tech/rss</docs>
         <generator>https://github.com/jpmonette/feed</generator>
         <item>
@@ -3567,6 +3567,156 @@ STATUS: Installing zlib...
 </code></pre><p>可以自行添加到<code>~/.zshrc</code>或者<code>~/.bashrc</code>中。</p><p>然后就可以运行<code>usdview</code>工具了。</p><h4 id="运行usdview遇到的坑及解决">运行usdview遇到的坑及解决</h4><ul><li><code>usdview xxx.usda</code>报错OpenGL找不到路径。<a href="https://github.com/PixarAnimationStudios/USD/issues/1372">参考</a></li></ul><p>问题的原因是这个库对于路径的解析存在bug，只判断了linux和windows，没有对macOS做判断。因此咱们需要patch一下文件<code>~/.pyenv/versions/3.7.13/Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages/OpenGL/platform/ctypesloader.py</code></p><p>由于这个文件pyenv直接安装在用户目录下，我们可以直接编辑它。
 在79行，把<code>fullName = util.find_library( name )</code>改成<code>fullName = &#x27;/System/Library/Frameworks/OpenGL.framework/OpenGL&#x27;</code></p><ul><li>然后运行的时候可能会提示没有安装numPy，这是一个数学库，我们可以通过pip安装一下。</li></ul><pre><code class="language-bash" data-language="bash" data-highlighted-line-numbers="">pip <span class="token function">install</span> numpy
 </code></pre><p>应该到这里就没什么问题了，可以愉快的用usdview工具了。</p><h3 id="回顾与总结">回顾与总结</h3><p>这次USD的安装，涉及到c++和python编译相关的工具，同时也有一些坑(c++那块没什么大问题，主要是python坑多)，如果不注意，容易卡住。好在其他人在不同的地方对这些问题进行了解决，我们找到这些问题的解决方案，汇总起来，就是这篇文章的意义。一方面记录踩坑的不易，另一方面希望可以对你有用。</p>]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Add MDX Embed support]]></title>
+            <link>/posts/2022-12-28-0006-Add-CodePen-support</link>
+            <guid>/posts/2022-12-28-0006-Add-CodePen-support</guid>
+            <content:encoded><![CDATA[<h2 id="你可以从本文了解到">你可以从本文了解到</h2><p>如何让 mdx 支持各种嵌入式内容，使得可展示的内容大大扩展。包括了几十种内容。</p><h2 id="最终效果-demo">最终效果 demo</h2><div tweetLink="studio_hungry/status/1278829444124282882?s=20" theme="dark"></div><div codePenId="PNaGbb"></div><h2 id="如何安装和使用">如何安装和使用</h2><p>1、安装依赖</p><p><a href="https://www.mdx-embed.com/?path=/docs/introduction--page">mdx-embed</a></p><pre><code class="language-bash" data-language="bash" data-highlighted-line-numbers=""><span class="token function">yarn</span> <span class="token function">add</span> mdx-embed
+</code></pre><p>2、将页面用<code>MDXEmbedProvider</code>包裹起来</p><pre><code class="language-ts" data-language="ts" data-highlighted-line-numbers=""><span class="token keyword">import</span> <span class="token punctuation">{</span>MDXEmbedProvider<span class="token punctuation">}</span> <span class="token keyword">from</span> <span class="token string">'mdx-embed'</span><span class="token punctuation">;</span>
+
+<span class="token comment">// ...</span>
+<span class="token keyword">export</span> <span class="token keyword">default</span> <span class="token keyword">function</span> <span class="token punctuation">(</span><span class="token parameter"><span class="token punctuation">{</span>children<span class="token punctuation">}</span></span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">return</span> <span class="token punctuation">(</span>
+        <span class="token operator">&lt;</span>MDXProvider
+            components<span class="token operator">=</span><span class="token punctuation">{</span><span class="token punctuation">{</span>
+                a<span class="token punctuation">:</span> Link<span class="token punctuation">,</span>
+                <span class="token function-variable function">wrapper</span><span class="token punctuation">:</span> <span class="token punctuation">(</span><span class="token parameter"><span class="token punctuation">{</span>children<span class="token punctuation">}</span></span><span class="token punctuation">)</span> <span class="token operator">=></span> <span class="token punctuation">(</span>
+<span class="highlighted-line">                    <span class="token operator">&lt;</span>MDXEmbedProvider<span class="token operator">></span></span>                        <span class="token operator">&lt;</span>div className<span class="token operator">=</span><span class="token punctuation">{</span>styles<span class="token punctuation">.</span>content<span class="token punctuation">}</span><span class="token operator">></span><span class="token punctuation">{</span>children<span class="token punctuation">}</span><span class="token operator">&lt;</span><span class="token operator">/</span>div<span class="token operator">></span>
+<span class="highlighted-line">                    <span class="token operator">&lt;</span><span class="token operator">/</span>MDXEmbedProvider<span class="token operator">></span></span>                <span class="token punctuation">)</span>
+            <span class="token punctuation">}</span><span class="token punctuation">}</span>
+        <span class="token operator">></span>
+            <span class="token operator">&lt;</span>MDXComponent <span class="token operator">/</span><span class="token operator">></span>
+        <span class="token operator">&lt;</span><span class="token operator">/</span>MDXProvider<span class="token operator">></span>
+    <span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+</code></pre><h2 id="原理小探">原理小探</h2><p>首先看<code>MDXEmbedProvider</code>的代码，如下，基本上就是在原来的<code>MDXProvider</code>上又增加一层封装，使得支持Embed组件</p><pre><code class="language-tsx" data-language="tsx" data-highlighted-line-numbers=""><span class="token keyword">import</span> React<span class="token punctuation">,</span> <span class="token punctuation">{</span> FunctionComponent <span class="token punctuation">}</span> <span class="token keyword">from</span> <span class="token string">'react'</span><span class="token punctuation">;</span>
+<span class="token keyword">import</span> <span class="token punctuation">{</span> MDXProvider <span class="token punctuation">}</span> <span class="token keyword">from</span> <span class="token string">'@mdx-js/react'</span><span class="token punctuation">;</span>
+
+<span class="token keyword">import</span> <span class="token punctuation">{</span> components <span class="token punctuation">}</span> <span class="token keyword">from</span> <span class="token string">'./components'</span><span class="token punctuation">;</span>
+
+<span class="token keyword">interface</span> <span class="token class-name">IMdxProviderProps</span> <span class="token punctuation">{</span>
+  <span class="token comment">/** React Children */</span>
+  children<span class="token punctuation">:</span> React<span class="token punctuation">.</span>ReactNode<span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+<span class="highlighted-line"><span class="token keyword">export</span> <span class="token keyword">const</span> MDXEmbedProvider<span class="token punctuation">:</span> FunctionComponent<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span><span class="token class-name">IMdxProviderProps</span></span><span class="token punctuation">></span></span><span class="token plain-text"> = ({ children }) => (</span></span><span class="token plain-text">  </span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span><span class="token class-name">MDXProvider</span></span> <span class="token attr-name">components</span><span class="token script language-javascript"><span class="token script-punctuation punctuation">=</span><span class="token punctuation">{</span>components<span class="token punctuation">}</span></span><span class="token punctuation">></span></span><span class="token punctuation">{</span>children<span class="token punctuation">}</span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span><span class="token class-name">MDXProvider</span></span><span class="token punctuation">></span></span><span class="token plain-text"></span>
+<span class="token plain-text">);</span>
+<span class="token plain-text"></span></code></pre><p>那我们去看一下<code>@mdx-js/react</code>中的<code>MDXProvider</code>做了什么</p><pre><code class="language-jsx" data-language="jsx" data-highlighted-line-numbers=""><span class="token keyword">export</span> <span class="token keyword">const</span> MDXContext <span class="token operator">=</span> React<span class="token punctuation">.</span><span class="token function">createContext</span><span class="token punctuation">(</span><span class="token punctuation">{</span><span class="token punctuation">}</span><span class="token punctuation">)</span>
+
+<span class="token keyword">const</span> emptyObject <span class="token operator">=</span> <span class="token punctuation">{</span><span class="token punctuation">}</span>
+
+<span class="token keyword">export</span> <span class="token keyword">function</span> <span class="token function">useMDXComponents</span><span class="token punctuation">(</span><span class="token parameter">components</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token keyword">const</span> contextComponents <span class="token operator">=</span> React<span class="token punctuation">.</span><span class="token function">useContext</span><span class="token punctuation">(</span>MDXContext<span class="token punctuation">)</span>
+  <span class="token comment">// Memoize to avoid unnecessary top-level context changes</span>
+  <span class="token keyword">return</span> React<span class="token punctuation">.</span><span class="token function">useMemo</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">=></span> <span class="token punctuation">{</span>
+    <span class="token comment">// Custom merge via a function prop</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token keyword">typeof</span> components <span class="token operator">===</span> <span class="token string">'function'</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+      <span class="token keyword">return</span> <span class="token function">components</span><span class="token punctuation">(</span>contextComponents<span class="token punctuation">)</span>
+    <span class="token punctuation">}</span>
+
+    <span class="token keyword">return</span> <span class="token punctuation">{</span><span class="token operator">...</span>contextComponents<span class="token punctuation">,</span> <span class="token operator">...</span>components<span class="token punctuation">}</span> <span class="token comment">// 合并 components和contextComponents</span>
+  <span class="token punctuation">}</span><span class="token punctuation">,</span> <span class="token punctuation">[</span>contextComponents<span class="token punctuation">,</span> components<span class="token punctuation">]</span><span class="token punctuation">)</span>
+<span class="token punctuation">}</span>
+
+
+<span class="token keyword">export</span> <span class="token keyword">function</span> <span class="token function">MDXProvider</span><span class="token punctuation">(</span><span class="token parameter"><span class="token punctuation">{</span>components<span class="token punctuation">,</span> children<span class="token punctuation">,</span> disableParentContext<span class="token punctuation">}</span></span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token keyword">let</span> allComponents <span class="token operator">=</span> <span class="token function">useMDXComponents</span><span class="token punctuation">(</span>components<span class="token punctuation">)</span> 
+
+  <span class="token keyword">if</span> <span class="token punctuation">(</span>disableParentContext<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    allComponents <span class="token operator">=</span> components <span class="token operator">||</span> emptyObject
+  <span class="token punctuation">}</span>
+
+  <span class="token keyword">return</span> React<span class="token punctuation">.</span><span class="token function">createElement</span><span class="token punctuation">(</span>
+    MDXContext<span class="token punctuation">.</span>Provider<span class="token punctuation">,</span>
+    <span class="token punctuation">{</span>value<span class="token punctuation">:</span> allComponents<span class="token punctuation">}</span><span class="token punctuation">,</span> <span class="token comment">// 将这些components提供给children</span>
+    children
+  <span class="token punctuation">)</span>
+<span class="token punctuation">}</span>
+</code></pre><p>下面看一个test case，这说明内层定义的组件优先先进行转换，未命中的才会又上层组件来处理。</p><pre><code class="language-jsx" data-language="jsx" data-highlighted-line-numbers=""><span class="token function">test</span><span class="token punctuation">(</span><span class="token string">'should support components as a function'</span><span class="token punctuation">,</span> <span class="token keyword">async</span> <span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">=></span> <span class="token punctuation">{</span>
+  <span class="token keyword">const</span> <span class="token punctuation">{</span><span class="token keyword">default</span><span class="token punctuation">:</span> Content<span class="token punctuation">}</span> <span class="token operator">=</span> <span class="token keyword">await</span> <span class="token function">evaluate</span><span class="token punctuation">(</span><span class="token string">'# hi\n## hello'</span><span class="token punctuation">,</span> <span class="token punctuation">{</span>
+    <span class="token operator">...</span>runtime<span class="token punctuation">,</span>
+    useMDXComponents
+  <span class="token punctuation">}</span><span class="token punctuation">)</span>
+
+  assert<span class="token punctuation">.</span><span class="token function">equal</span><span class="token punctuation">(</span>
+    <span class="token function">renderToString</span><span class="token punctuation">(</span>
+      <span class="token operator">&lt;</span>MDXProvider
+        components<span class="token operator">=</span><span class="token punctuation">{</span><span class="token punctuation">{</span>
+          <span class="token function-variable function">h1</span><span class="token punctuation">:</span> <span class="token punctuation">(</span><span class="token parameter">props</span><span class="token punctuation">)</span> <span class="token operator">=></span> <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>h1</span> <span class="token attr-name">style</span><span class="token script language-javascript"><span class="token script-punctuation punctuation">=</span><span class="token punctuation">{</span><span class="token punctuation">{</span>color<span class="token punctuation">:</span> <span class="token string">'tomato'</span><span class="token punctuation">}</span><span class="token punctuation">}</span></span> <span class="token spread"><span class="token punctuation">{</span><span class="token punctuation">...</span><span class="token attr-value">props</span><span class="token punctuation">}</span></span> <span class="token punctuation">/></span></span><span class="token punctuation">,</span>
+          <span class="token function-variable function">h2</span><span class="token punctuation">:</span> <span class="token punctuation">(</span><span class="token parameter">props</span><span class="token punctuation">)</span> <span class="token operator">=></span> <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>h2</span> <span class="token attr-name">style</span><span class="token script language-javascript"><span class="token script-punctuation punctuation">=</span><span class="token punctuation">{</span><span class="token punctuation">{</span>color<span class="token punctuation">:</span> <span class="token string">'rebeccapurple'</span><span class="token punctuation">}</span><span class="token punctuation">}</span></span> <span class="token spread"><span class="token punctuation">{</span><span class="token punctuation">...</span><span class="token attr-value">props</span><span class="token punctuation">}</span></span> <span class="token punctuation">/></span></span>
+        <span class="token punctuation">}</span><span class="token punctuation">}</span>
+      <span class="token operator">></span>
+        <span class="token operator">&lt;</span>MDXProvider
+          components<span class="token operator">=</span><span class="token punctuation">{</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">=></span> <span class="token punctuation">(</span><span class="token punctuation">{</span>
+            <span class="token function-variable function">h2</span><span class="token punctuation">:</span> <span class="token punctuation">(</span><span class="token parameter">props</span><span class="token punctuation">)</span> <span class="token operator">=></span> <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>h2</span> <span class="token attr-name">style</span><span class="token script language-javascript"><span class="token script-punctuation punctuation">=</span><span class="token punctuation">{</span><span class="token punctuation">{</span>color<span class="token punctuation">:</span> <span class="token string">'papayawhip'</span><span class="token punctuation">}</span><span class="token punctuation">}</span></span> <span class="token spread"><span class="token punctuation">{</span><span class="token punctuation">...</span><span class="token attr-value">props</span><span class="token punctuation">}</span></span> <span class="token punctuation">/></span></span>
+          <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">}</span>
+        <span class="token operator">></span>
+          <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span><span class="token class-name">Content</span></span> <span class="token punctuation">/></span></span>
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span><span class="token class-name">MDXProvider</span></span><span class="token punctuation">></span></span>
+      <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span><span class="token class-name">MDXProvider</span></span><span class="token punctuation">></span></span>
+    <span class="token punctuation">)</span><span class="token punctuation">,</span>
+    <span class="token string">'&lt;h1>hi&lt;/h1>\n&lt;h2 style="color:papayawhip">hello&lt;/h2>'</span>
+  <span class="token punctuation">)</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span>
+</code></pre><p>上面代码的运行顺序是</p><p>1、<code>&#x27;# hi\n## hello&#x27;</code>先被内层组件转换成<code>&#x27;# hi\n&lt;h2 style=&quot;color:papayawhip&quot;&gt;hello&lt;/h2&gt;&#x27;</code></p><p>2、<code>&#x27;# hi\n&lt;h2 style=&quot;color:papayawhip&quot;&gt;hello&lt;/h2&gt;&#x27;</code>被外层组件转换成<code>&#x27;&lt;h1&gt;hi&lt;/h1&gt;\n&lt;h2 style=&quot;color:papayawhip&quot;&gt;hello&lt;/h2&gt;&#x27;</code></p><p>那有人就要问了，为什么evaluate会执行这个转换，他怎么知道<code># hi</code>要命中<code>h1</code>组件呢？</p><p>那么我们就需要来看<code>evaluate</code>这个函数，他调用了compile进行编译，</p><pre><code class="language-jsx" data-language="jsx" data-highlighted-line-numbers=""><span class="token comment">// packages/mdx/lib/evaluate\.js</span>
+<span class="token keyword">export</span> <span class="token keyword">async</span> <span class="token keyword">function</span> <span class="token function">evaluate</span><span class="token punctuation">(</span><span class="token parameter">vfileCompatible<span class="token punctuation">,</span> evaluateOptions</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token keyword">const</span> <span class="token punctuation">{</span>compiletime<span class="token punctuation">,</span> runtime<span class="token punctuation">}</span> <span class="token operator">=</span> <span class="token function">resolveEvaluateOptions</span><span class="token punctuation">(</span>evaluateOptions<span class="token punctuation">)</span> <span class="token comment">// 分离编译时参数和运行时参数</span>
+  <span class="token comment">// V8 on Erbium.</span>
+  <span class="token comment">/* c8 ignore next 2 */</span>
+  <span class="token keyword">return</span> <span class="token function">run</span><span class="token punctuation">(</span><span class="token keyword">await</span> <span class="token function">compile</span><span class="token punctuation">(</span>vfileCompatible<span class="token punctuation">,</span> compiletime<span class="token punctuation">)</span><span class="token punctuation">,</span> runtime<span class="token punctuation">)</span>
+<span class="token punctuation">}</span>
+</code></pre><pre><code class="language-jsx" data-language="jsx" data-highlighted-line-numbers=""><span class="token comment">// packages/mdx/lib/compile\.js</span>
+<span class="token comment">/**
+ * Compile MDX to JS.
+ *
+ * @param {VFileCompatible} vfileCompatible
+ *   MDX document to parse (`string`, `Buffer`, `vfile`, anything that can be
+ *   given to `vfile`).
+ * @param {CompileOptions} [compileOptions]
+ * @return {Promise&lt;VFile>}
+ */</span>
+<span class="token keyword">export</span> <span class="token keyword">function</span> <span class="token function">compile</span><span class="token punctuation">(</span><span class="token parameter">vfileCompatible<span class="token punctuation">,</span> compileOptions</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token keyword">const</span> <span class="token punctuation">{</span>file<span class="token punctuation">,</span> options<span class="token punctuation">}</span> <span class="token operator">=</span> <span class="token function">resolveFileAndOptions</span><span class="token punctuation">(</span>vfileCompatible<span class="token punctuation">,</span> compileOptions<span class="token punctuation">)</span> <span class="token comment">// 生成一个VFile对象</span>
+  <span class="token keyword">return</span> <span class="token function">createProcessor</span><span class="token punctuation">(</span>options<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">process</span><span class="token punctuation">(</span>file<span class="token punctuation">)</span>
+<span class="token punctuation">}</span>
+</code></pre><p>VFile是<a href="https://github.com/unifiedjs/unified">unified</a>中用到的一个数据结构，用于在内存中进行文件操作。</p><p>调用了<code>createProcessor</code>方法，代码如下。其主要工作就是将mdx解析成AST，最终经过一系列插件运算，转换成JSON对象</p><p>其中经过了3个AST转换，分别是<code>mdast,hast,esast</code>。</p><p><code>MDAST（Markdown Abstract Syntax Tree）</code>是一种用于表示 Markdown 文本的抽象语法树（AST）格式。它是使用 Remark（一个用于处理 Markdown 文本的 JavaScript 库）解析 Markdown 文本后得到的结果。</p><p><code>HAST（HTML Abstract Syntax Tree）</code>是一种用于表示 HTML 文本的抽象语法树（AST）格式。它是使用 Rehype（一个用于处理 HTML 文本的 JavaScript 库）解析 HTML 文本后得到的结果。</p><p><code>ESAST（JavaScript Abstract Syntax Tree）</code>是一种用于表示 JavaScript 代码的抽象语法树（AST）格式。它是使用 Recast（一个用于处理 JavaScript 代码的 JavaScript 库）解析 JavaScript 代码后得到的结果。</p><p>因此，MDAST 用于表示 Markdown 文本，HAST 用于表示 HTML 文本，ESAST 用于表示 JavaScript 代码。</p><p>经过<code>mdx-loader</code>的处理后，会输出JS文件</p><pre><code class="language-jsx" data-language="jsx" data-highlighted-line-numbers=""><span class="token keyword">const</span> mdx <span class="token operator">=</span> <span class="token function">require</span><span class="token punctuation">(</span><span class="token string">'@mdx-js/mdx'</span><span class="token punctuation">)</span>
+<span class="token comment">// ...</span>
+module<span class="token punctuation">.</span><span class="token function-variable function">exports</span> <span class="token operator">=</span> <span class="token keyword">async</span> <span class="token keyword">function</span><span class="token punctuation">(</span><span class="token parameter">source</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token keyword">let</span> result
+  <span class="token comment">// ...</span>
+
+  <span class="token keyword">try</span> <span class="token punctuation">{</span>
+    result <span class="token operator">=</span> <span class="token keyword">await</span> <span class="token function">mdx</span><span class="token punctuation">(</span>mdxContent<span class="token punctuation">,</span> options<span class="token punctuation">)</span>
+  <span class="token punctuation">}</span> <span class="token keyword">catch</span><span class="token punctuation">(</span>err<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">return</span> <span class="token function">callback</span><span class="token punctuation">(</span>err<span class="token punctuation">)</span>
+  <span class="token punctuation">}</span>
+
+  <span class="token comment">// ...</span>
+  <span class="token keyword">let</span> code <span class="token operator">=</span> <span class="token template-string"><span class="token template-punctuation string">`</span><span class="token string">
+import React from 'react'
+import { mdx } from '@mdx-js/react' // 注入react  binding
+export const readingTime = </span><span class="token interpolation"><span class="token interpolation-punctuation punctuation">${</span><span class="token constant">JSON</span><span class="token punctuation">.</span><span class="token function">stringify</span><span class="token punctuation">(</span>estimatedReadingTime<span class="token punctuation">)</span><span class="token interpolation-punctuation punctuation">}</span></span><span class="token string">
+</span><span class="token interpolation"><span class="token interpolation-punctuation punctuation">${</span>result<span class="token interpolation-punctuation punctuation">}</span></span><span class="token string">
+</span><span class="token template-punctuation string">`</span></span>
+
+  <span class="token keyword">return</span> <span class="token function">callback</span><span class="token punctuation">(</span><span class="token keyword">null</span><span class="token punctuation">,</span> code<span class="token punctuation">)</span>
+<span class="token punctuation">}</span>
+</code></pre><p>那么<a href="https://sourcegraph.com/github.com/mdx-js/mdx@v1.6.22/-/blob/packages/react/src/create-element.js">mdx binding</a>是个啥呢？如下</p><p>在<code>compile</code>的过程中，会在处理这个mdx文件的时候会给上面这段代码增加一个注释<code>/* @jsx mdx */</code>，这就使得替换了React.createElement方法，也就起到了从components中映射自定义组件的能力。</p><pre><code class="language-jsx" data-language="jsx" data-highlighted-line-numbers=""><span class="token comment">// node_modules/@mdx-js/mdx/index.js</span>
+<span class="token keyword">async</span> <span class="token keyword">function</span> <span class="token function">compile</span><span class="token punctuation">(</span><span class="token parameter">mdx<span class="token punctuation">,</span> options <span class="token operator">=</span> <span class="token punctuation">{</span><span class="token punctuation">}</span></span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token keyword">const</span> opts <span class="token operator">=</span> Object<span class="token punctuation">.</span><span class="token function">assign</span><span class="token punctuation">(</span><span class="token punctuation">{</span><span class="token punctuation">}</span><span class="token punctuation">,</span> <span class="token constant">DEFAULT_OPTIONS</span><span class="token punctuation">,</span> options<span class="token punctuation">)</span>
+  <span class="token keyword">const</span> compiler <span class="token operator">=</span> <span class="token function">createCompiler</span><span class="token punctuation">(</span>opts<span class="token punctuation">)</span>
+
+  <span class="token keyword">const</span> fileOpts <span class="token operator">=</span> <span class="token punctuation">{</span>contents<span class="token punctuation">:</span> mdx<span class="token punctuation">}</span>
+  <span class="token keyword">if</span> <span class="token punctuation">(</span>opts<span class="token punctuation">.</span>filepath<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    fileOpts<span class="token punctuation">.</span>path <span class="token operator">=</span> opts<span class="token punctuation">.</span>filepath
+  <span class="token punctuation">}</span>
+
+  <span class="token keyword">const</span> <span class="token punctuation">{</span>contents<span class="token punctuation">}</span> <span class="token operator">=</span> <span class="token keyword">await</span> compiler<span class="token punctuation">.</span><span class="token function">process</span><span class="token punctuation">(</span>fileOpts<span class="token punctuation">)</span>
+
+  <span class="token keyword">return</span> <span class="token template-string"><span class="token template-punctuation string">`</span><span class="token string">/* @jsx mdx */
+</span><span class="token interpolation"><span class="token interpolation-punctuation punctuation">${</span>contents<span class="token interpolation-punctuation punctuation">}</span></span><span class="token template-punctuation string">`</span></span>
+<span class="token punctuation">}</span>
+</code></pre><p>总结一下就是</p><p>1、编译时，md通过mdx-loader转换成js文件</p><p>2、运行时，createElement被劫持，注入了自定义组件</p>]]></content:encoded>
         </item>
     </channel>
 </rss>

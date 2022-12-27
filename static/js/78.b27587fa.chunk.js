@@ -1,2 +1,0 @@
-(window.webpackJsonp=window.webpackJsonp||[]).push([[78],{305:function(e,t,n){"use strict";n.r(t),t.default={title:"how to build a level logger",tags:["javascript","logger"],spoiler:"level logger",getContent:function(){return n.e(140).then(n.bind(null,234))}}}}]);
-//# sourceMappingURL=78.b27587fa.chunk.js.map
