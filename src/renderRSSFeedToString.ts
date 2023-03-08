@@ -6,7 +6,7 @@ import ReactDOMServer from 'react-dom/server'
 import siteMetadata from './siteMetadata'
 
 async function renderRSSFeed({ routes }) {
-  let publicURL = process.env.PUBLIC_URL || '/'
+  let publicURL = siteMetadata.publicUrl || '/'
   let { paths } = await crawl({
     routes,
     root: '/posts',
@@ -32,7 +32,7 @@ async function renderRSSFeed({ routes }) {
       url: pathname,
     })
     let meta = route.meta || {}
-    let link = path.join(publicURL, pathname)
+    let link = publicURL+ pathname;
 
     // Each post's content is just an MDX component, which can be rendered
     // independently of the rest of the app.
