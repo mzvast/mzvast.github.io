@@ -11,6 +11,7 @@ function insertScript(src: string) {
     var hm = document.createElement('script');
     hm.src = src;
     var s = document.getElementsByTagName('script')[0];
+    s.async = true;
     // @ts-ignore
     s.parentNode.insertBefore(hm, s);
 }
@@ -20,6 +21,8 @@ function addBaidu() {
     insertScript('https://hm.baidu.com/hm.js?edf54a88a7b7ef99363b4a726e7b2dc6');
 }
 function addGoogle() {
+    const ID = 'G-BVEJB5TR0V';
+    insertScript(`https://www.googletagmanager.com/gtag/js?id=${ID}`);
     // @ts-ignore
     window.dataLayer = window.dataLayer || [];
     function gtag() {
@@ -29,8 +32,7 @@ function addGoogle() {
     // @ts-ignore
     gtag('js', new Date());
     // @ts-ignore
-    gtag('config', 'UA-87665383-1');
-    insertScript('https://www.googletagmanager.com/gtag/js?id=UA-87665383-1');
+    gtag('config', ID);
 }
 
 const AnalyticsWrap = (props) => {
