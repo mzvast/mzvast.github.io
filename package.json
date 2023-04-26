@@ -25,7 +25,7 @@
     "netlify-cli": "2.6.0",
     "patch-package": "^6.4.7",
     "poindexter": "^1.0.4",
-    "prismjs": "1.25.0",
+    "prismjs": "1.27.0",
     "react": "16.8.6",
     "react-dom": "16.8.6",
     "react-navi": "^0.14.4",
