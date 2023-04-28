@@ -1,0 +1,212 @@
+## 你可以从本文了解到
+
+探索如何使用大型语言模型进行文本转换任务，例如语言翻译、拼写和语法检查、语气调整和格式转换。
+
+
+## 翻译
+
+ChatGPT 使用多种语言的资源进行训练。这使模型能够进行翻译。以下是如何使用此功能的一些示例。
+
+```python
+prompt = f"""
+翻译成Spanish: \ 
+```Hi, I would like to order a blender```
+"""
+response = get_completion(prompt)
+print(response)
+# Hola, me gustaría ordenar una licuadora.
+
+
+prompt = f"""
+告诉我这是啥语言: 
+```Combien coûte le lampadaire?```
+"""
+response = get_completion(prompt)
+print(response)
+# This is French.
+
+prompt = f"""
+将以下文字翻译成法语、西班牙语和英语: \
+```I want to order a basketball```
+"""
+response = get_completion(prompt)
+print(response)
+
+# 法语：Je veux commander un ballon de basket
+# 西班牙语：Quiero pedir una pelota de baloncesto
+# 英语：I wanna order a basketball
+
+prompt = f"""
+将下面的文字翻译成西班牙语。
+正式和非正式的形式： 
+'Would you like to order a pillow?'
+"""
+response = get_completion(prompt)
+print(response)
+
+# ¿Le gustaría pedir una almohada? (Formal)
+# ¿Te gustaría pedir una almohada? (Informal)
+```
+
+## 通用翻译器 
+
+你需要一个万能翻译器！
+
+```python
+user_messages = [
+  "La performance du système est plus lente que d'habitude.",  # System performance is slower than normal         
+  "Mi monitor tiene píxeles que no se iluminan.",              # My monitor has pixels that are not lighting
+  "Il mio mouse non funziona",                                 # My mouse is not working
+  "Mój klawisz Ctrl jest zepsuty",                             # My keyboard has a broken control key
+  "我的屏幕在闪烁"                                               # My screen is flashing
+] 
+
+for issue in user_messages:
+    prompt = f"告诉我这是什么语言: ```{issue}```"
+    lang = get_completion(prompt)
+    print(f"Original message ({lang}): {issue}")
+
+    prompt = f"""
+    把下面文字翻译成英语和韩语: ```{issue}```
+    """
+    response = get_completion(prompt)
+    print(response, "\n")
+
+# Original message (这是法语。): La performance du système est plus lente que d'habitude.
+# 英语翻译：The system performance is slower than usual.
+# 韩语翻译：시스템 성능이 평소보다 느립니다. 
+
+# Original message (这是西班牙语。): Mi monitor tiene píxeles que no se iluminan.
+# 英语翻译：My monitor has pixels that don't light up.
+# 韩语翻译：내 모니터에는 불이 켜지지 않는 픽셀이 있습니다. 
+
+# Original message (这是意大利语。): Il mio mouse non funziona
+# 英语翻译：My mouse is not working.
+# 韩语翻译：내 마우스가 작동하지 않습니다. 
+
+# Original message (这是波兰语。): Mój klawisz Ctrl jest zepsuty
+# 英语翻译：My Ctrl key is broken.
+# 韩语翻译：제 Ctrl 키가 고장 났어요. 
+
+# Original message (这是中文。): 我的屏幕在闪烁
+# 英语：My screen is flickering.
+# 韩语：내 화면이 깜빡입니다. 
+```
+
+## 音调转换
+
+写作可以根据目标受众而有所不同。 ChatGPT 可以产生不同的音调。
+
+```python
+prompt = f"""
+将以下内容从俚语翻译成中文商业信函：: 
+'Dude, This is Joe, check out this spec on this standing lamp.'
+"""
+response = get_completion(prompt)
+print(response)
+
+# 尊敬的客户，我是Joe。请查看这个落地灯的规格。
+
+```
+
+
+## 格式转换
+
+ChatGPT 可以在格式之间进行转换。提示应描述输入和输出格式。
+
+```python
+data_json = { "resturant employees" :[ 
+    {"name":"Shyam", "email":"shyamjaiswal@gmail.com"},
+    {"name":"Bob", "email":"bob32@gmail.com"},
+    {"name":"Jai", "email":"jai87@gmail.com"}
+]}
+
+prompt = f"""
+把下面的python字典从JSON翻译成HTML \
+table with column headers and title: {data_json}
+"""
+response = get_completion(prompt)
+print(response)
+
+data_json = { "resturant employees" :[ 
+    {"name":"Shyam", "email":"shyamjaiswal@gmail.com"},
+    {"name":"Bob", "email":"bob32@gmail.com"},
+    {"name":"Jai", "email":"jai87@gmail.com"}
+]}
+
+prompt = f"""
+把下面的python字典从JSON翻译成HTML \
+table with column headers and title: {data_json}
+"""
+response = get_completion(prompt)
+print(response)
+data_json = { "resturant employees" :[ 
+    {"name":"Shyam", "email":"shyamjaiswal@gmail.com"},
+    {"name":"Bob", "email":"bob32@gmail.com"},
+    {"name":"Jai", "email":"jai87@gmail.com"}
+]}
+​
+prompt = f"""
+把下面的python字典从JSON翻译成HTML \
+table with column headers and title: {data_json}
+"""
+response = get_completion(prompt)
+print(response)
+# <table>
+#   <caption>Resturant Employees</caption>
+#   <thead>
+#     <tr>
+#       <th>Name</th>
+#       <th>Email</th>
+#     </tr>
+#   </thead>
+#   <tbody>
+#     <tr>
+#       <td>Shyam</td>
+#       <td>shyamjaiswal@gmail.com</td>
+#     </tr>
+#     <tr>
+#       <td>Bob</td>
+#       <td>bob32@gmail.com</td>
+#     </tr>
+#     <tr>
+#       <td>Jai</td>
+#       <td>jai87@gmail.com</td>
+#     </tr>
+#   </tbody>
+# </table>
+```
+
+## 拼写检查/语法检查。
+
+这里有一些常见的语法和拼写问题的例子以及LLM的回应。
+
+要向 LLM 发出您希望它校对您的文本的信号，您可以指示模型“校对”或“校对并更正”。
+
+```python
+text = [ 
+  "The girl with the black and white puppies have a ball.",  # The girl has a ball.
+  "Yolanda has her notebook.", # ok
+  "Its going to be a long day. Does the car need it’s oil changed?",  # Homonyms
+  "Their goes my freedom. There going to bring they’re suitcases.",  # Homonyms
+  "Your going to need you’re notebook.",  # Homonyms
+  "That medicine effects my ability to sleep. Have you heard of the butterfly affect?", # Homonyms
+  "This phrase is to cherck chatGPT for speling abilitty"  # spelling
+]
+for t in text:
+    prompt = f"""校对和纠正以下文本并重写更正后的版本。如果你没有发现错误，就说 "没有发现错误"。不要使用文本周围的任何标点:
+    ```{t}```"""
+    response = get_completion(prompt)
+    print(response)
+
+# The girl with the black and white puppies has a ball.
+# 没有发现错误。
+# It's going to be a long day. Does the car need its oil changed? 
+
+# 重写后的版本： 
+# 今天会是漫长的一天。汽车需要更换机油吗？
+# There goes my freedom. They're going to bring their suitcases.
+# You're going to need your notebook.
+# "That medicine affects my ability to sleep. Have you heard of the butterfly effect?"
+# This phrase is to check ChatGPT for spelling ability.
+```

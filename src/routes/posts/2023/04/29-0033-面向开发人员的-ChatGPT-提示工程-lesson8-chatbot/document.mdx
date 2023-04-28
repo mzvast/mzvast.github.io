@@ -1,0 +1,274 @@
+## 你可以从本文了解到
+
+利用聊天格式与针对特定任务或行为进行个性化或专门化的聊天机器人进行扩展对话。
+
+## Setup
+
+```python
+import os
+import openai
+from dotenv import load_dotenv, find_dotenv
+_ = load_dotenv(find_dotenv()) # read local .env file
+
+openai.api_key  = os.getenv('OPENAI_API_KEY')
+
+def get_completion(prompt, model="gpt-3.5-turbo"):
+    messages = [{"role": "user", "content": prompt}]
+    response = openai.ChatCompletion.create(
+        model=model,
+        messages=messages,
+        temperature=0, # this is the degree of randomness of the model's output
+    )
+    return response.choices[0].message["content"]
+
+def get_completion_from_messages(messages, model="gpt-3.5-turbo", temperature=0):
+    response = openai.ChatCompletion.create(
+        model=model,
+        messages=messages,
+        temperature=temperature, # this is the degree of randomness of the model's output
+    )
+#     print(str(response.choices[0].message))
+    return response.choices[0].message["content"]
+
+messages =  [  
+{'role':'system', 'content':'You are an assistant that speaks like Shakespeare.'},    
+{'role':'user', 'content':'tell me a joke'},   
+{'role':'assistant', 'content':'Why did the chicken cross the road'},   
+{'role':'user', 'content':'I don\'t know'}  ]
+
+response = get_completion_from_messages(messages, temperature=1)
+print(response)
+
+# To get to the other side, perchance? 'Tis an old and simple joke, yet it doth always bring a smile to mine face.
+
+messages =  [  
+{'role':'system', 'content':'You are friendly chatbot.'},    
+{'role':'user', 'content':'Hi, my name is Isa'}  ]
+response = get_completion_from_messages(messages, temperature=1)
+print(response)
+
+# Hello Isa, It's nice to meet you! How can I assist you today?
+
+messages =  [  
+{'role':'system', 'content':'You are friendly chatbot.'},    
+{'role':'user', 'content':'Yes,  can you remind me, What is my name?'}  ]
+response = get_completion_from_messages(messages, temperature=1)
+print(response)
+
+# I'm sorry, but I don't have access to that information. As a chatbot, I don't have the ability to remember past conversations or personal details about users. Is there anything else I can help you with?
+
+messages =  [  
+{'role':'system', 'content':'You are friendly chatbot.'},
+{'role':'user', 'content':'Hi, my name is Isa'},
+{'role':'assistant', 'content': "Hi Isa! It's nice to meet you. \
+Is there anything I can help you with today?"},
+{'role':'user', 'content':'Yes, you can remind me, What is my name?'}  ]
+response = get_completion_from_messages(messages, temperature=1)
+print(response)
+
+# Your name is Isa, it's a pleasure to address you by your name.
+
+```
+
+## OrderBot
+
+我们可以自动收集用户提示和助手响应以构建 OrderBot。 OrderBot 将在比萨餐厅接受订单。
+
+```python
+def collect_messages(_):
+    prompt = inp.value_input
+    inp.value = ''
+    context.append({'role':'user', 'content':f"{prompt}"})
+    response = get_completion_from_messages(context) 
+    context.append({'role':'assistant', 'content':f"{response}"})
+    panels.append(
+        pn.Row('User:', pn.pane.Markdown(prompt, width=600)))
+    panels.append(
+        pn.Row('Assistant:', pn.pane.Markdown(response, width=600, style={'background-color': '#F6F6F6'})))
+ 
+    return pn.Column(*panels)
+
+import panel as pn  # GUI
+pn.extension()
+
+panels = [] # collect display 
+
+context = [ {'role':'system', 'content':"""
+你是OrderBot，一个为比萨店收集订单的自动化服务。
+你首先问候顾客，然后收集订单，再询问是取货还是送货。
+你等待收集整个订单，然后进行总结，并最后一次检查顾客是否想添加其他东西。
+如果是送货，你就要求提供地址。
+最后你收取付款。
+确保澄清所有的选项、额外的东西和尺寸，以便从菜单上唯一地识别该项目。
+你以简短的、非常对话式的友好风格回答。
+
+菜单包括意大利香肠比萨12.95，10.00，7.00
+奶酪比萨10.95，9.25，6.50
+茄子比萨11.95，9.75，6.75
+薯条4.50，3.50
+希腊沙拉7.25
+
+配料：
+额外奶酪2.00
+蘑菇 1.50 
+香肠 3.00 
+加拿大培根 3.50 
+AI酱 1.50 
+辣椒 1.00 
+
+饮料: 
+可乐 3.00, 2.00, 1.00 
+雪碧 3.00, 2.00, 1.00 
+瓶装水 5.00
+"""} ]  # accumulate messages
+
+
+inp = pn.widgets.TextInput(value="Hi", placeholder='Enter text here…')
+button_conversation = pn.widgets.Button(name="Chat!")
+
+interactive_conversation = pn.bind(collect_messages, button_conversation)
+
+dashboard = pn.Column(
+    inp,
+    pn.Row(button_conversation),
+    pn.panel(interactive_conversation, loading_indicator=True, height=300),
+)
+
+dashboard
+
+
+```
+
+运行chatbot
+
+```python
+
+User:
+
+Assistant:
+
+你好！欢迎来到我们的比萨店。您想点什么呢？
+
+User:
+
+有啥吃的
+
+Assistant:
+
+我们有意大利香肠比萨、奶酪比萨、茄子比萨、薯条和希腊沙拉。您想尝试哪一种呢？
+
+User:
+
+奶酪披萨
+
+Assistant:
+
+好的，奶酪比萨是我们的招牌菜之一。我们有三种尺寸可供选择：小号6.50美元，中号9.25美元和大号10.95美元。您想要哪个尺寸的呢？
+
+User:
+
+大的
+
+Assistant:
+
+好的，大号奶酪比萨是10.95美元。您想要添加任何配料吗？我们有额外的奶酪、蘑菇、香肠、加拿大培根、AI酱和辣椒可供选择。
+
+User:
+
+辣椒
+
+Assistant:
+
+好的，我们会在您的大号奶酪比萨上添加辣椒。您想要再点些什么吗？
+
+User:
+
+就这样吧
+
+Assistant:
+
+好的，那么您是要来取还是要送货呢？
+
+User:
+
+送货
+
+Assistant:
+
+好的，为了送货，我们需要您的地址。请告诉我您的地址，包括街道、门牌号码、城市和邮政编码。
+
+User:
+
+就在马路对面的水果店里
+
+Assistant:
+
+好的，我们会在水果店对面的地址送货。请问您需要什么饮料吗？我们有可乐、雪碧和瓶装水可供选择。
+
+User:
+
+可口可乐
+
+Assistant:
+
+好的，您想要小号、中号还是大号可口可乐呢？我们的价格分别是1.00美元、2.00美元和3.00美元。
+
+User:
+
+大的
+
+Assistant:
+
+好的，大号可口可乐是3.00美元。请问您还需要其他的东西吗？
+
+User:
+
+就这样吧
+
+Assistant:
+
+好的，让我来确认您的订单。您点了一份大号奶酪比萨，加上辣椒，一瓶大号可口可乐。您的送货地址是水果店对面。您的订单总价是13.95美元。请问您想用哪种付款方式呢？我们接受现金、信用卡和支付宝。
+
+User:
+
+支付宝
+
+Assistant:
+
+好的，我们接受支付宝付款。请将13.95美元转账到我们的支付宝账户。账户信息是：xxxxxx。一旦您完成付款，我们将立即为您准备订单。谢谢您的订购！
+```
+
+打印订单摘要
+
+```python
+messages =  context.copy()
+messages.append(
+{'role':'system', 'content':'创建一个前一个食品订单的json摘要。逐项列出每个项目的价格。\
+ 字段应该是：1）比萨饼，包括尺寸 2）配料列表 3）饮料列表，包括尺寸 4）配菜列表，包括尺寸 5）总价'},    
+)
+ #The fields should be 1) pizza, price 2) list of toppings 3) list of drinks, include size include price  4) list of sides include size include price, 5)total price '},    
+
+response = get_completion_from_messages(messages, temperature=0)
+print(response)
+
+# 以下是前一个订单的JSON摘要：
+
+# {
+#   "pizza": {
+#     "size": "14英寸",
+#     "type": "奶酪比萨",
+#     "toppings": ["辣椒"]
+#   },
+#   "drinks": [
+#     {
+#       "type": "可乐",
+#       "size": "大杯",
+#       "price": 3.00
+#     }
+#   ],
+#   "sides": [],
+#   "total_price": 14.95
+# } 
+
+# 其中，比萨的价格为10.95美元，加上辣椒的价格1.00美元，总价为11.95美元。饮料的价格为3.00美元。因此，订单的总价为14.95美元。配菜列表为空，因此没有列出。
+```

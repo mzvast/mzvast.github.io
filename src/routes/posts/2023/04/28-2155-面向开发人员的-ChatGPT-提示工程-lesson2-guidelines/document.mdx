@@ -1,0 +1,300 @@
+## 你可以从本文了解到
+本系列是对[chatgpt-prompt-engineering-for-developers](https://www.deeplearning.ai/short-courses/chatgpt-prompt-engineering-for-developers/)的学习和梳理。
+
+# Guidelines
+
+## 提示原则 
+
+## 原则 1：编写清晰具体的说明
+
+
+### 策略 1：使用分隔符清楚地指示输入的不同部分 
+
+ 分隔符可以是： ` ```、"""、< >、 <tag> </tag> 、 :`
+
+Q:
+```
+将以三个反斜线为界的文字概括为一个句子。变成一个单一的句子
+```你应该通过提供尽可能明确和具体的指令来表达你希望模型执行的任务。
+这将引导模型朝着期望的输出方向发展，并减少接收到无关或不正确响应的机会。
+不要混淆清晰的提示与简短的提示。
+在许多情况下，更长的提示提供了更多的清晰度和上下文信息，
+这可能会导致更详细和相关的输出。```
+```
+
+A:
+```
+应该提供清晰具体的说明来指导模型获得所需的输出，较长的提示可以为模型提供更多的清晰度和上下文，从而产生更详细和相关的输出。
+```
+
+
+### 策略 2：请求结构化输出
+
+Q:
+```
+生成三个虚构的书名及其作者和流派的列表。
+使用以下键以 JSON 格式：book_id、title、author、genre。
+```
+
+A:
+```json
+[
+  {
+    "book_id": 1,
+    "title": "The Lost City of Zorath",
+    "author": "Aria Blackwood",
+    "genre": "Fantasy"
+  },
+  {
+    "book_id": 2,
+    "title": "The Last Survivors",
+    "author": "Ethan Stone",
+    "genre": "Science Fiction"
+  },
+  {
+    "book_id": 3,
+    "title": "The Secret of the Haunted Mansion",
+    "author": "Lila Rose",
+    "genre": "Mystery"
+  }
+]
+```
+
+### 策略 3：要求模型检查条件是否满足
+
+Q:
+```
+你将获得由三重引号分隔的文本。如果它包含指令序列，
+ 以下列格式重写这些指令：步骤 1 - ... 步骤 2 - ...... 步骤 N - ...... 如果文本不包含指令序列，
+ 然后简单地写   “未提供步骤。“
+ 
+ """泡一杯茶很简单！首先，你需要烧开水。当发生这种情况时，\
+  拿起一个杯子并在其中放入一个茶包。一旦水足够热，就把它倒在茶包上。 \
+   让它静置一会儿，这样茶就可以陡峭了。几分钟后，取出茶包。如果你喜欢，可以加些糖或牛奶调味。 \
+    就是这样！您已经为自己准备了一杯可口的\茶来享用"""
+```
+
+A:
+```
+步骤 1 - 烧开水。​
+步骤 2 - 拿起一个杯子并在其中放入一个茶包。​
+步骤 3 - 一旦水足够热，​就把它倒在茶包上。​
+步骤 4 - 让它静置一会儿，​这样茶就可以陡峭了。​
+步骤 5 - 几分钟后，​取出茶包。​
+步骤 6 - 如果你喜欢，​可以加些糖或牛奶调味。​
+```
+
+Q:
+```
+你将获得由三重引号分隔的文本。如果它包含指令序列，
+ 以下列格式重写这些指令：步骤 1 - ... 步骤 2 - ...... 步骤 N - ...... 如果文本不包含指令序列，
+ 然后简单地写   “未提供步骤。“
+ 
+ """今天阳光灿烂，鸟儿在歌唱。这是去公园散步的好日子。鲜花盛开，树木在微风中轻轻摇曳。人们外出走动，享受着宜人的天气。 
+  有的在野餐，有的在玩
+  游戏或者只是在草地上放松。这是度过户外时光并欣赏大自然之美的完美日子"""
+```
+
+A:
+```
+提供步骤未被提供。
+
+由于文本中没有包含指令序列，因此我只能简单地回答“未提供步骤”。但是，我希望你享受你在公园散步的美好时光，并欣赏大自然之美。
+```
+
+### 策略 4：“Few-shot”小样本提示
+
+Q:
+```
+你的任务是以一致的风格作答。
+ <孩子>：教我耐心。 
+ <祖父母>：雕刻最深
+ 山谷的河流来自谦虚的泉水； 
+  最伟大的交响乐源于一个音符； 
+   最复杂的挂毯始于一根单独的线。 
+<孩子>：教我韧性。
+```
+
+A:
+```
+<祖父母>：坚韧不拔是一种品质，
+  它来自于不断挑战自己的勇气，
+  从失败中学习，从挫折中成长，
+  坚持不懈地追求目标，
+  直到最终实现自己的梦想。
+```
+
+## 原则 2：给模型时间“思考”
+
+### 策略 1：指定完成任务所需的步骤 
+
+Q:
+```
+ 执行以下操作： 
+ 1 - 总结以下由三个反引号分隔的文本和 1 个句子。 
+ 2 - 将摘要翻译成法语。 
+ 3 - 在法语摘要中列出每个名字。 
+ 4 - 输出包含以下键的 json 对象：french_summary、num_names。用换行符分隔你的答案
+
+```在一个迷人的村庄里，杰克和吉尔兄妹开始去山顶打井取水。当他们欢呼雀跃地攀登时，
+不幸降临了——杰克被一块石头绊倒，从山上滚下，吉尔也跟着跌倒。 
+虽然受到了轻微的打击，但两人回到家中
+ 安慰的拥抱。尽管发生了事故，
+ 他们的冒险精神丝毫未减，他们继续愉快地探索。```
+```
+
+A:
+```
+1 - 该文本描述了杰克和吉尔兄妹去山顶打井取水的冒险之旅，但不幸发生了事故，杰克被一块石头绊倒滚下山，吉尔也跟着跌倒，尽管受到了轻微的打击，但两人最终回到家中安慰的拥抱，并继续他们的探险旅程。
+
+2 - Dans un charmant village, les frère et soeur Jack et Jill ont commencé à monter la montagne pour puiser de l'eau dans le puits. Alors qu'ils escaladaient avec enthousiasme, un malheur est survenu - Jack a été renversé par une pierre et a roulé en bas de la montagne, entraînant également Jill dans sa chute. Bien qu'ils aient été légèrement blessés, les deux sont retournés chez eux avec une étreinte réconfortante. Malgré l'accident, leur esprit d'aventure n'a pas diminué d'un iota et ils ont continué à explorer joyeusement.
+
+3 - Les noms dans le résumé en français sont : Jack et Jill.
+
+4 -
+{
+"french_summary": "Dans un charmant village, les frère et soeur Jack et Jill ont commencé à monter la montagne pour puiser de l'eau dans le puits. Alors qu'ils escaladaient avec enthousiasme, un malheur est survenu - Jack a été renversé par une pierre et a roulé en bas de la montagne, entraînant également Jill dans sa chute. Bien qu'ils aient été légèrement blessés, les deux sont retournés chez eux avec une étreinte réconfortante. Malgré l'accident, leur esprit d'aventure n'a pas diminué d'un iota et ils ont continué à explorer joyeusement.",
+"num_names": 2
+}
+```
+
+请求指定格式的输出
+
+Q:
+```
+您的任务是执行以下操作：
+1-用1个句子总结以下由<>分隔的文本。
+​2-将摘要翻译成法语。
+​3-列出法语摘要中的每个名称。
+​4-输出一个包含以下键的json对象：french_summary，​num_names。​
+
+使用以下格式：
+文本：<text to summarize>
+摘要：<summary>
+翻译：<summary translation>
+名称：<list of names in Italian summary>
+输出JSON：<json with summary and num_names>
+
+文本：<在一个迷人的村庄里，杰克和吉尔兄妹开始去山顶打井取水。当他们欢呼雀跃地攀登时，
+不幸降临了——杰克被一块石头绊倒，从山上滚下，吉尔也跟着跌倒。 
+虽然受到了轻微的打击，但两人回到家中
+ 安慰的拥抱。尽管发生了事故，
+ 他们的冒险精神丝毫未减，他们继续愉快地探索。>
+```
+
+A:
+```
+文本：<在一个迷人的村庄里，杰克和吉尔兄妹开始去山顶打井取水。当他们欢呼雀跃地攀登时，
+不幸降临了——杰克被一块石头绊倒，从山上滚下，吉尔也跟着跌倒。
+虽然受到了轻微的打击，但两人回到家中
+安慰的拥抱。尽管发生了事故，
+他们的冒险精神丝毫未减，他们继续愉快地探索。>
+摘要：杰克和吉尔兄妹在山顶打井取水时遭遇事故，但他们并未放弃冒险精神，继续探索。
+翻译：Les frères et sœurs Jack et Jill ont eu un accident en allant chercher de l'eau sur la montagne, mais ils n'ont pas abandonné leur esprit d'aventure et ont continué à explorer.
+名称：杰克、吉尔（Jack, Jill）
+输出JSON：{"french_summary": "Les frères et sœurs Jack et Jill ont eu un accident en allant chercher de l'eau sur la montagne, mais ils n'ont pas abandonné leur esprit d'aventure et ont continué à explorer.", "num_names": 2}
+```
+
+### 策略 2：在匆忙下结论之前指示模型制定出自己的解决方案
+
+Q:
+```
+判断学生的解决方案是否正确。
+
+问题：
+我正在建造一个太阳能发电站，需要帮助计算财务。
+
+- 土地成本为每平方英尺100美元。
+- 我可以以每平方英尺250美元的价格购买太阳能电池板。
+- 我谈判了一份维护合同，每年的费用为固定的10万美元，以及每平方英尺额外的10美元。
+作为平方英尺数量的函数，第一年运营的总成本是多少。
+
+学生的解决方案：
+设x为以平方英尺为单位的发电站面积。
+成本：
+
+1、土地成本：100x
+2、太阳能电池板成本：250x
+3、维护成本：100,000 + 100x
+总成本：100x + 250x + 100,000 + 100x = 450x + 100,000
+```
+
+A:
+```
+学生的解决方案是正确的。
+```
+
+请注意，该学生的解决方案实际上是不正确的
+
+我们可以通过指示模型首先计算出自己的解决方案来解决这个问题。
+
+Q:
+```
+请执行以下操作： 
+- 首先，找出您自己的问题解决方案。 
+- 然后将您的解决方案与学生的解决方案进行比较并评估学生的解决方案是否正确。在你自己完成问题之前，不要判断学生的解决方案是否正确。使用以下格式： 
+
+问题：```问题在这里``` 
+学生的解决方案： ```学生的解决方案在这里 ``` 
+实际解决方案： ```计算解决方案的步骤和您的解决方案 ``` 
+是学生的解决方案与实际解决方案相同刚刚计算：```是或否```
+学生成绩：```正确或不正确```
+
+问题：```
+我正在建造一个太阳能发电站，需要帮助计算财务。
+
+- 土地成本为每平方英尺100美元。
+- 我可以以每平方英尺250美元的价格购买太阳能电池板。
+- 我谈判了一份维护合同，每年的费用为固定的10万美元，以及每平方英尺额外的10美元。
+作为平方英尺数量的函数，第一年运营的总成本是多少。 ``` 
+学生的解决方案：```设x为以平方英尺为单位的发电站面积。
+成本：
+
+1、土地成本：100x
+2、太阳能电池板成本：250x
+3、维护成本：100,000 + 100x
+总成本：100x + 250x + 100,000 + 100x = 450x + 100,000```
+
+实际解决方案：
+```
+
+A:
+（这个问题GPT3.5推理会出错，GPT4回答正确）
+```
+成本：
+
+1、土地成本：100x
+2、太阳能电池板成本：250x
+3、维护成本：100,000 + 10x
+总成本：100x + 250x + 100,000 + 10x = 360x + 100,000```
+是学生的解决方案与实际解决方案相同刚刚计算：```否```
+学生成绩：```不正确```
+```
+
+## 模型限制：幻觉
+
+如果模型在训练过程中接触到大量知识，它并没有完美地记住它所看到的信息，因此它不能很好地了解它的知识边界。这意味着它可能会尝试回答有关晦涩主题的问题，并且可以编造一些听起来似是而非的事情。我们称这些捏造的想法为幻觉
+
+Q:
+```
+告诉我有关 Boy 的 AeroGlide 超薄智能牙刷的信息
+```
+
+模型将来自一家真实牙刷公司的虚构产品名称的描述混为一谈
+
+A:
+```
+当然，我很乐意告诉你有关 Boy AeroGlide 超薄智能牙刷的信息。
+
+Boy AeroGlide 是一款高品质的智能牙刷，具有许多令人印象深刻的特点。以下是一些你可能会感兴趣的信息：
+
+- 超薄设计：Boy AeroGlide 牙刷的厚度只有 6.5 毫米，比其他牙刷要薄得多。这使得牙刷更加易于携带和使用，而且能够更好地到达牙齿后面的难以清洁的区域。
+
+- 智能振动：这款牙刷配备了高效的振动功能，可以在每分钟 31,000 次的频率下震动。这有助于有效地去除牙齿表面的污垢和细菌，并促进口腔健康。
+
+- 长续航时间：Boy AeroGlide 牙刷可通过 USB 充电器进行充电，一次充电可以使用 30 天。这使得它成为旅行时的理想选择，而且更加环保。
+
+- 优质材料：牙刷采用了高品质的材料，包括食品级硅胶和 ABS 塑料。这些材料不仅安全无害，而且能够耐用，长时间使用也不易变形。
+
+总的来说，Boy AeroGlide 超薄智能牙刷是一款非常出色的牙刷，具有许多令人印象深刻的特点。如果你正在寻找高品质的牙刷，它绝对值得一试。
+```

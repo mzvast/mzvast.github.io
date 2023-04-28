@@ -1,0 +1,229 @@
+## 你可以从本文了解到
+
+产品评论文字
+
+```python
+lamp_review = """
+Needed a nice lamp for my bedroom, and this one had \
+additional storage and not too high of a price point. \
+Got it fast.  The string to our lamp broke during the \
+transit and the company happily sent over a new one. \
+Came within a few days as well. It was easy to put \
+together.  I had a missing part, so I contacted their \
+support and they very quickly got me the missing piece! \
+Lumina seems to me to be a great company that cares \
+about their customers and products!!
+"""
+```
+
+### 情绪（正面/负面） 
+
+```python
+prompt = f"""
+以下产品评论的情感是什么、 
+用三条反斜线划定界限？
+
+Review text: '''{lamp_review}'''
+"""
+response = get_completion(prompt)
+print(response)
+
+# Positive
+```
+
+```python
+prompt = f"""
+以下产品评论的情感是什么、 
+用三条反斜线划定界限？
+
+请用一个词来回答，可以是 "正面 "或 "负面"。
+或 "负面"。
+
+Review text: '''{lamp_review}'''
+"""
+response = get_completion(prompt)
+print(response)
+# 正面
+```
+
+### 识别情绪类型 
+
+```python
+prompt = f"""
+确定以下评论的作者所表达的情绪的清单。包括不超过 
+列表中的五个项目。你的答案的格式为 
+用逗号隔开的小写词语。
+
+Review text: '''{lamp_review}'''
+"""
+response = get_completion(prompt)
+print(response)
+satisfied, grateful, impressed, content, pleased
+```
+
+### 识别愤怒
+
+```python
+prompt = f"""
+以下评论的作者是在表达愤怒吗？
+该评论用三个反斜线划定。
+请给出您的答案，是或不是。
+
+Review text: '''{lamp_review}'''
+"""
+response = get_completion(prompt)
+print(response)
+# 不是。
+
+```
+
+### 从客户评论中提取产品和公司名称
+
+```python
+prompt = f"""
+从评论文本中找出以下物品： 
+- 评论者购买的物品
+- 制造该物品的公司
+
+该评论以三条反斜线为界。
+将你的响应格式化为一个JSON对象，以 
+"Item "和 "Brand "为键。
+如果信息不存在，使用 "未知 "作为值。
+作为值。
+使你的响应尽可能的短。
+  
+Review text: '''{lamp_review}'''
+"""
+response = get_completion(prompt)
+print(response)
+
+# {
+#   "Item": "lamp with additional storage",
+#   "Brand": "Lumina"
+# }
+```
+
+### 一次执行多个任务
+
+```python
+prompt = f"""
+从评论文本中找出以下物品： 
+- 情绪（积极或消极）
+- 评论者是否在表达愤怒？(真或假)
+- 评论者购买的物品
+- 制造该物品的公司
+
+评论以三条反斜线为界。
+将您的回复格式化为JSON对象，其中包括 
+"Sentiment", "Anger", "Item "和 "Brand "作为键。
+如果这些信息不存在，请使用 "未知"。
+作为值。
+使你的回答尽可能简短。
+将 "愤怒 "的值格式化为一个布尔值。
+
+Review text: '''{lamp_review}'''
+"""
+response = get_completion(prompt)
+print(response)
+
+# {
+#   "Sentiment": "积极",
+#   "Anger": false,
+#   "Item": "灯",
+#   "Brand": "Lumina"
+# }
+```
+
+### 推断主题
+```python
+story = """
+In a recent survey conducted by the government, 
+public sector employees were asked to rate their level 
+of satisfaction with the department they work at. 
+The results revealed that NASA was the most popular 
+department with a satisfaction rating of 95%.
+
+One NASA employee, John Smith, commented on the findings, 
+stating, "I'm not surprised that NASA came out on top. 
+It's a great place to work with amazing people and 
+incredible opportunities. I'm proud to be a part of 
+such an innovative organization."
+
+The results were also welcomed by NASA's management team, 
+with Director Tom Johnson stating, "We are thrilled to 
+hear that our employees are satisfied with their work at NASA. 
+We have a talented and dedicated team who work tirelessly 
+to achieve our goals, and it's fantastic to see that their 
+hard work is paying off."
+
+The survey also revealed that the 
+Social Security Administration had the lowest satisfaction 
+rating, with only 45% of employees indicating they were 
+satisfied with their job. The government has pledged to 
+address the concerns raised by employees in the survey and 
+work towards improving job satisfaction across all departments.
+"""
+```
+
+
+### 推断 5 个主题
+
+```python
+prompt = f"""
+确定在以下文本中讨论的五个主题。
+下面的文字是由三个反斜线划定的。
+
+使每个项目有一到两个字的长度。
+
+将你的回答格式化为由逗号分隔的项目清单。
+
+Text sample: '''{story}'''
+"""
+response = get_completion(prompt)
+print(response)
+
+# 主题清单：
+# - 调查公共部门员工的满意度
+# - NASA是最受欢迎的部门
+# - NASA员工对工作的评价
+# - 社会保障管理局的满意度最低
+# - 政府承诺改善所有部门的工作满意度
+```
+
+### 对某些主题进行新闻提醒 
+
+```python
+response.split(sep=',')
+# ['主题清单：\n- 调查公共部门员工的满意度\n- NASA是最受欢迎的部门\n- NASA员工对工作的评价\n- 社会保障管理局的满意度最低\n- 政府承诺改善所有部门的工作满意度']
+
+topic_list = [
+    "nasa", "local government", "engineering", 
+    "employee satisfaction", "federal government"
+]
+
+prompt = f"""
+判断以下列表中的每个项目是否是以下文本中的一个主题？
+中的每一项是否是下面文本中的一个主题，该文本
+是用三条反斜线划定的。
+
+请以列表的形式给出你的答案，每个主题的答案为0或1。
+
+List of topics: {", ".join(topic_list)}
+
+Text sample: '''{story}'''
+"""
+response = get_completion(prompt)
+print(response)
+
+# nasa: 1
+# local government: 0
+# engineering: 0
+# employee satisfaction: 1
+# federal government: 1
+
+topic_dict = {i.split(': ')[0]: int(i.split(': ')[1]) for i in response.split(sep='\n')}
+if topic_dict['nasa'] == 1:
+    print("ALERT: New NASA story!")
+
+# ALERT: New NASA story!
+```

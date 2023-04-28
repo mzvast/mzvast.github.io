@@ -1,0 +1,108 @@
+## 你可以从本文了解到
+
+生成针对每位客户的评论量身定制的客户服务电子邮件
+
+### 自定义自动回复客户电子邮件
+
+```python
+# given the sentiment from the lesson on "inferring",
+# and the original customer message, customize the email
+sentiment = "negative"
+
+# review for a blender
+review = f"""
+So, they still had the 17 piece system on seasonal \
+sale for around $49 in the month of November, about \
+half off, but for some reason (call it price gouging) \
+around the second week of December the prices all went \
+up to about anywhere from between $70-$89 for the same \
+system. And the 11 piece system went up around $10 or \
+so in price also from the earlier sale price of $29. \
+So it looks okay, but if you look at the base, the part \
+where the blade locks into place doesn’t look as good \
+as in previous editions from a few years ago, but I \
+plan to be very gentle with it (example, I crush \
+very hard items like beans, ice, rice, etc. in the \ 
+blender first then pulverize them in the serving size \
+I want in the blender then switch to the whipping \
+blade for a finer flour, and use the cross cutting blade \
+first when making smoothies, then use the flat blade \
+if I need them finer/less pulpy). Special tip when making \
+smoothies, finely cut and freeze the fruits and \
+vegetables (if using spinach-lightly stew soften the \ 
+spinach then freeze until ready for use-and if making \
+sorbet, use a small to medium sized food processor) \ 
+that you plan to use that way you can avoid adding so \
+much ice if at all-when making your smoothie. \
+After about a year, the motor was making a funny noise. \
+I called customer service but the warranty expired \
+already, so I had to buy another one. FYI: The overall \
+quality has gone done in these types of products, so \
+they are kind of counting on brand recognition and \
+consumer loyalty to maintain sales. Got it in about \
+two days.
+"""
+
+prompt = f"""
+你是一个客户服务的AI助理。
+你的任务是给一个有价值的客户发送电子邮件回复。
+给出以```为界的客户电子邮件、 
+生成一个回复，感谢客户的评论。
+如果意见是积极的或中立的，就感谢他们的 
+他们的评论。
+如果评价是负面的，则表示歉意并建议 
+他们可以接触到客户服务。
+确保使用评论中的具体细节。
+用简明和专业的语气来写。
+在电子邮件中署名为 "AI客户代理"。
+Customer review: ```{review}```
+Review sentiment: {sentiment}
+"""
+response = get_completion(prompt)
+print(response)
+
+# 尊敬的客户，
+
+# 我们非常感谢您对我们产品的评论。我们很抱歉您对我们的产品不满意。我们一直致力于提供高质量的产品和服务，但我们似乎没有达到您的期望。
+
+# 我们非常重视您的反馈，我们将会把您的意见反馈给我们的团队，以便改进我们的产品和服务。如果您需要任何帮助或有任何问题，请随时联系我们的客户服务团队，他们将竭诚为您服务。
+
+# 再次感谢您的评论，我们期待着为您提供更好的服务。
+
+# 祝您一切顺利！
+
+# AI客户代理
+```
+
+### 提醒模型使用客户电子邮件中的详细信息
+
+
+```python
+prompt = f"""
+你是一个客户服务的AI助理。
+你的任务是给一个有价值的客户发送电子邮件回复。
+给出以```为界的客户电子邮件、 
+生成一个回复，感谢客户的评论。
+如果意见是积极的或中立的，就感谢他们的 
+他们的评论。
+如果评价是负面的，则表示歉意并建议 
+他们可以接触到客户服务。
+确保使用评论中的具体细节。
+用简明和专业的语气来写。
+在电子邮件中署名为 "AI客户代理"。
+Customer review: ```{review}```
+Review sentiment: {sentiment}
+"""
+response = get_completion(prompt, temperature=0.7)
+print(response)
+
+# 尊敬的客户，
+
+# 我们很抱歉听到您的不满意。我们非常感谢您分享您的反馈和具体细节。我们一直致力于提供高品质的产品和服务，但似乎我们未能完全满足您的期望。我们将向我们的团队传达您的反馈，以确保我们的产品和服务得到改进。
+
+# 如果您需要进一步的帮助，请联系我们的客户服务团队。他们将非常乐意为您提供帮助。再次感谢您的反馈，我们期待为您提供更好的服务。
+
+# 最好的问候，
+
+# AI客户代理
+```
