@@ -1,0 +1,2 @@
+(window.webpackJsonp=window.webpackJsonp||[]).push([[54],{367:function(e,n,t){"use strict";t.r(n),n.default={title:"Why does academic qualification depreciate",tags:["life"],spoiler:"\u5b66\u5386\u4e3a\u4ec0\u4e48\u4f1a\u8d2c\u503c",getContent:function(){return t.e(125).then(t.bind(null,287))}}}}]);
+//# sourceMappingURL=54.aae71f13.chunk.js.map

@@ -1,0 +1,195 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><link rel="shortcut icon" href="/logo.jpeg"><script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5541093187129817" crossorigin="anonymous"></script><meta name="google-site-verification" content="X6zApyaV_oHUlJwAuIA8IN1y8NsqQxxdQR9BuL8vhZk"/><meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no"><meta name="theme-color" content="#000000"><link rel="manifest" href="/manifest.json"><link rel="canonical" href="/posts/2023-04-28-2155-ChatGPT-lesson2-guidelines" />
+
+      <title data-rh="true">面向开发人员的 ChatGPT 提示工程 lesson2 guidelines</title>
+      <meta data-rh="true" name="title" content="面向开发人员的 ChatGPT 提示工程 lesson2 guidelines"/><meta data-rh="true" name="description" content="面向开发人员的 ChatGPT 提示工程 lesson2 guidelines"/><meta data-rh="true" name="keywords" content="chatgpt,openai,PromptEngineering"/>
+      
+    <script>window.__NAVI_STATE__={"__navi__":{"requestDataWithoutState":{}}};</script><link href="/static/css/main.8967581b.chunk.css" rel="stylesheet"></head><body class="light"><noscript>You need to enable JavaScript to run this app.</noscript><div id="root"><div class="BlogLayout_container__1fiRb"><div class="
+        LoadingIndicator_LoadingIndicator__3KSl0
+        
+        undefined
+      "></div><header><h3 class="BlogLayout_title__3HyDU"><a class=" " style="box-shadow:none" href="/">OverRainbow</a></h3></header><main><div class="sc-bdfBQB dmuEyV sc-iqHYmW cLtQHX"><input value=""/></div><article><header class="BlogPostLayout_header__1Ny4T"><h1 class="BlogPostLayout_title__2L_2_"><a class=" " style="box-shadow:none" href="/posts/2023-04-28-2155-ChatGPT-lesson2-guidelines">面向开发人员的 ChatGPT 提示工程 lesson2 guidelines</a></h1><small><time dateTime="Fri, 28 Apr 2023 00:00:00 GMT">April 28, 2023</time> <!-- -->•<!-- --> <ul class="ArticleMeta_tags__1IJ9w"><li><a class=" " href="/tags/chatgpt">chatgpt</a></li><li><a class=" " href="/tags/openai">openai</a></li><li><a class=" " href="/tags/PromptEngineering">PromptEngineering</a></li></ul> <!-- -->•<!-- --> <span>☕️<!-- --> <!-- -->4<!-- --> min read</span></small></header><blockquote class="ArticleToc_blockquote__2xzi1"><div><ul><li data-key="你可以从本文了解到"><a class=" " href="/posts/2023-04-28-2155-ChatGPT-lesson2-guidelines/#你可以从本文了解到">你可以从本文了解到</a></li><li data-key="提示原则"><a class=" " href="/posts/2023-04-28-2155-ChatGPT-lesson2-guidelines/#提示原则">提示原则</a></li><li data-key="原则-1：编写清晰具体的说明"><a class=" " href="/posts/2023-04-28-2155-ChatGPT-lesson2-guidelines/#原则-1：编写清晰具体的说明">原则 1：编写清晰具体的说明</a></li><ul><li data-key="策略-1：使用分隔符清楚地指示输入的不同部分"><a class=" " href="/posts/2023-04-28-2155-ChatGPT-lesson2-guidelines/#策略-1：使用分隔符清楚地指示输入的不同部分">策略 1：使用分隔符清楚地指示输入的不同部分</a></li><li data-key="策略-2：请求结构化输出"><a class=" " href="/posts/2023-04-28-2155-ChatGPT-lesson2-guidelines/#策略-2：请求结构化输出">策略 2：请求结构化输出</a></li><li data-key="策略-3：要求模型检查条件是否满足"><a class=" " href="/posts/2023-04-28-2155-ChatGPT-lesson2-guidelines/#策略-3：要求模型检查条件是否满足">策略 3：要求模型检查条件是否满足</a></li><li data-key="策略-4：few-shot小样本提示"><a class=" " href="/posts/2023-04-28-2155-ChatGPT-lesson2-guidelines/#策略-4：few-shot小样本提示">策略 4：“Few-shot”小样本提示</a></li></ul><li data-key="原则-2：给模型时间思考"><a class=" " href="/posts/2023-04-28-2155-ChatGPT-lesson2-guidelines/#原则-2：给模型时间思考">原则 2：给模型时间“思考”</a></li><ul><li data-key="策略-1：指定完成任务所需的步骤"><a class=" " href="/posts/2023-04-28-2155-ChatGPT-lesson2-guidelines/#策略-1：指定完成任务所需的步骤">策略 1：指定完成任务所需的步骤</a></li><li data-key="策略-2：在匆忙下结论之前指示模型制定出自己的解决方案"><a class=" " href="/posts/2023-04-28-2155-ChatGPT-lesson2-guidelines/#策略-2：在匆忙下结论之前指示模型制定出自己的解决方案">策略 2：在匆忙下结论之前指示模型制定出自己的解决方案</a></li></ul><li data-key="模型限制：幻觉"><a class=" " href="/posts/2023-04-28-2155-ChatGPT-lesson2-guidelines/#模型限制：幻觉">模型限制：幻觉</a></li></ul></div></blockquote><div class="BlogPostLayout_content__1mzTO"><h2 id="你可以从本文了解到">你可以从本文了解到</h2><p>本系列是对<a class=" " href="https://www.deeplearning.ai/short-courses/chatgpt-prompt-engineering-for-developers/">chatgpt-prompt-engineering-for-developers</a>的学习和梳理。</p><h1 id="guidelines">Guidelines</h1><h2 id="提示原则">提示原则</h2><h2 id="原则-1：编写清晰具体的说明">原则 1：编写清晰具体的说明</h2><h3 id="策略-1：使用分隔符清楚地指示输入的不同部分">策略 1：使用分隔符清楚地指示输入的不同部分</h3><p> 分隔符可以是： <code>```、&quot;&quot;&quot;、&lt; &gt;、 &lt;tag&gt; &lt;/tag&gt; 、 :</code></p><p>Q:</p><pre><code>将以三个反斜线为界的文字概括为一个句子。变成一个单一的句子
+```你应该通过提供尽可能明确和具体的指令来表达你希望模型执行的任务。
+这将引导模型朝着期望的输出方向发展，并减少接收到无关或不正确响应的机会。
+不要混淆清晰的提示与简短的提示。
+在许多情况下，更长的提示提供了更多的清晰度和上下文信息，
+这可能会导致更详细和相关的输出。```
+</code></pre><p>A:</p><pre><code>应该提供清晰具体的说明来指导模型获得所需的输出，较长的提示可以为模型提供更多的清晰度和上下文，从而产生更详细和相关的输出。
+</code></pre><h3 id="策略-2：请求结构化输出">策略 2：请求结构化输出</h3><p>Q:</p><pre><code>生成三个虚构的书名及其作者和流派的列表。
+使用以下键以 JSON 格式：book_id、title、author、genre。
+</code></pre><p>A:</p><pre><code class="language-json" data-language="json" data-highlighted-line-numbers=""><span class="token punctuation">[</span>
+  <span class="token punctuation">{</span>
+    <span class="token property">"book_id"</span><span class="token operator">:</span> <span class="token number">1</span><span class="token punctuation">,</span>
+    <span class="token property">"title"</span><span class="token operator">:</span> <span class="token string">"The Lost City of Zorath"</span><span class="token punctuation">,</span>
+    <span class="token property">"author"</span><span class="token operator">:</span> <span class="token string">"Aria Blackwood"</span><span class="token punctuation">,</span>
+    <span class="token property">"genre"</span><span class="token operator">:</span> <span class="token string">"Fantasy"</span>
+  <span class="token punctuation">}</span><span class="token punctuation">,</span>
+  <span class="token punctuation">{</span>
+    <span class="token property">"book_id"</span><span class="token operator">:</span> <span class="token number">2</span><span class="token punctuation">,</span>
+    <span class="token property">"title"</span><span class="token operator">:</span> <span class="token string">"The Last Survivors"</span><span class="token punctuation">,</span>
+    <span class="token property">"author"</span><span class="token operator">:</span> <span class="token string">"Ethan Stone"</span><span class="token punctuation">,</span>
+    <span class="token property">"genre"</span><span class="token operator">:</span> <span class="token string">"Science Fiction"</span>
+  <span class="token punctuation">}</span><span class="token punctuation">,</span>
+  <span class="token punctuation">{</span>
+    <span class="token property">"book_id"</span><span class="token operator">:</span> <span class="token number">3</span><span class="token punctuation">,</span>
+    <span class="token property">"title"</span><span class="token operator">:</span> <span class="token string">"The Secret of the Haunted Mansion"</span><span class="token punctuation">,</span>
+    <span class="token property">"author"</span><span class="token operator">:</span> <span class="token string">"Lila Rose"</span><span class="token punctuation">,</span>
+    <span class="token property">"genre"</span><span class="token operator">:</span> <span class="token string">"Mystery"</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">]</span>
+</code></pre><h3 id="策略-3：要求模型检查条件是否满足">策略 3：要求模型检查条件是否满足</h3><p>Q:</p><pre><code>你将获得由三重引号分隔的文本。如果它包含指令序列，
+ 以下列格式重写这些指令：步骤 1 - ... 步骤 2 - ...... 步骤 N - ...... 如果文本不包含指令序列，
+ 然后简单地写   “未提供步骤。“
+ 
+ &quot;&quot;&quot;泡一杯茶很简单！首先，你需要烧开水。当发生这种情况时，\
+  拿起一个杯子并在其中放入一个茶包。一旦水足够热，就把它倒在茶包上。 \
+   让它静置一会儿，这样茶就可以陡峭了。几分钟后，取出茶包。如果你喜欢，可以加些糖或牛奶调味。 \
+    就是这样！您已经为自己准备了一杯可口的\茶来享用&quot;&quot;&quot;
+</code></pre><p>A:</p><pre><code>步骤 1 - 烧开水。​
+步骤 2 - 拿起一个杯子并在其中放入一个茶包。​
+步骤 3 - 一旦水足够热，​就把它倒在茶包上。​
+步骤 4 - 让它静置一会儿，​这样茶就可以陡峭了。​
+步骤 5 - 几分钟后，​取出茶包。​
+步骤 6 - 如果你喜欢，​可以加些糖或牛奶调味。​
+</code></pre><p>Q:</p><pre><code>你将获得由三重引号分隔的文本。如果它包含指令序列，
+ 以下列格式重写这些指令：步骤 1 - ... 步骤 2 - ...... 步骤 N - ...... 如果文本不包含指令序列，
+ 然后简单地写   “未提供步骤。“
+ 
+ &quot;&quot;&quot;今天阳光灿烂，鸟儿在歌唱。这是去公园散步的好日子。鲜花盛开，树木在微风中轻轻摇曳。人们外出走动，享受着宜人的天气。 
+  有的在野餐，有的在玩
+  游戏或者只是在草地上放松。这是度过户外时光并欣赏大自然之美的完美日子&quot;&quot;&quot;
+</code></pre><p>A:</p><pre><code>提供步骤未被提供。
+
+由于文本中没有包含指令序列，因此我只能简单地回答“未提供步骤”。但是，我希望你享受你在公园散步的美好时光，并欣赏大自然之美。
+</code></pre><h3 id="策略-4：few-shot小样本提示">策略 4：“Few-shot”小样本提示</h3><p>Q:</p><pre><code>你的任务是以一致的风格作答。
+ &lt;孩子&gt;：教我耐心。 
+ &lt;祖父母&gt;：雕刻最深
+ 山谷的河流来自谦虚的泉水； 
+  最伟大的交响乐源于一个音符； 
+   最复杂的挂毯始于一根单独的线。 
+&lt;孩子&gt;：教我韧性。
+</code></pre><p>A:</p><pre><code>&lt;祖父母&gt;：坚韧不拔是一种品质，
+  它来自于不断挑战自己的勇气，
+  从失败中学习，从挫折中成长，
+  坚持不懈地追求目标，
+  直到最终实现自己的梦想。
+</code></pre><h2 id="原则-2：给模型时间思考">原则 2：给模型时间“思考”</h2><h3 id="策略-1：指定完成任务所需的步骤">策略 1：指定完成任务所需的步骤</h3><p>Q:</p><pre><code> 执行以下操作： 
+ 1 - 总结以下由三个反引号分隔的文本和 1 个句子。 
+ 2 - 将摘要翻译成法语。 
+ 3 - 在法语摘要中列出每个名字。 
+ 4 - 输出包含以下键的 json 对象：french_summary、num_names。用换行符分隔你的答案
+
+```在一个迷人的村庄里，杰克和吉尔兄妹开始去山顶打井取水。当他们欢呼雀跃地攀登时，
+不幸降临了——杰克被一块石头绊倒，从山上滚下，吉尔也跟着跌倒。 
+虽然受到了轻微的打击，但两人回到家中
+ 安慰的拥抱。尽管发生了事故，
+ 他们的冒险精神丝毫未减，他们继续愉快地探索。```
+</code></pre><p>A:</p><pre><code>1 - 该文本描述了杰克和吉尔兄妹去山顶打井取水的冒险之旅，但不幸发生了事故，杰克被一块石头绊倒滚下山，吉尔也跟着跌倒，尽管受到了轻微的打击，但两人最终回到家中安慰的拥抱，并继续他们的探险旅程。
+
+2 - Dans un charmant village, les frère et soeur Jack et Jill ont commencé à monter la montagne pour puiser de l&#x27;eau dans le puits. Alors qu&#x27;ils escaladaient avec enthousiasme, un malheur est survenu - Jack a été renversé par une pierre et a roulé en bas de la montagne, entraînant également Jill dans sa chute. Bien qu&#x27;ils aient été légèrement blessés, les deux sont retournés chez eux avec une étreinte réconfortante. Malgré l&#x27;accident, leur esprit d&#x27;aventure n&#x27;a pas diminué d&#x27;un iota et ils ont continué à explorer joyeusement.
+
+3 - Les noms dans le résumé en français sont : Jack et Jill.
+
+4 -
+{
+&quot;french_summary&quot;: &quot;Dans un charmant village, les frère et soeur Jack et Jill ont commencé à monter la montagne pour puiser de l&#x27;eau dans le puits. Alors qu&#x27;ils escaladaient avec enthousiasme, un malheur est survenu - Jack a été renversé par une pierre et a roulé en bas de la montagne, entraînant également Jill dans sa chute. Bien qu&#x27;ils aient été légèrement blessés, les deux sont retournés chez eux avec une étreinte réconfortante. Malgré l&#x27;accident, leur esprit d&#x27;aventure n&#x27;a pas diminué d&#x27;un iota et ils ont continué à explorer joyeusement.&quot;,
+&quot;num_names&quot;: 2
+}
+</code></pre><p>请求指定格式的输出</p><p>Q:</p><pre><code>您的任务是执行以下操作：
+1-用1个句子总结以下由&lt;&gt;分隔的文本。
+​2-将摘要翻译成法语。
+​3-列出法语摘要中的每个名称。
+​4-输出一个包含以下键的json对象：french_summary，​num_names。​
+
+使用以下格式：
+文本：&lt;text to summarize&gt;
+摘要：&lt;summary&gt;
+翻译：&lt;summary translation&gt;
+名称：&lt;list of names in Italian summary&gt;
+输出JSON：&lt;json with summary and num_names&gt;
+
+文本：&lt;在一个迷人的村庄里，杰克和吉尔兄妹开始去山顶打井取水。当他们欢呼雀跃地攀登时，
+不幸降临了——杰克被一块石头绊倒，从山上滚下，吉尔也跟着跌倒。 
+虽然受到了轻微的打击，但两人回到家中
+ 安慰的拥抱。尽管发生了事故，
+ 他们的冒险精神丝毫未减，他们继续愉快地探索。&gt;
+</code></pre><p>A:</p><pre><code>文本：&lt;在一个迷人的村庄里，杰克和吉尔兄妹开始去山顶打井取水。当他们欢呼雀跃地攀登时，
+不幸降临了——杰克被一块石头绊倒，从山上滚下，吉尔也跟着跌倒。
+虽然受到了轻微的打击，但两人回到家中
+安慰的拥抱。尽管发生了事故，
+他们的冒险精神丝毫未减，他们继续愉快地探索。&gt;
+摘要：杰克和吉尔兄妹在山顶打井取水时遭遇事故，但他们并未放弃冒险精神，继续探索。
+翻译：Les frères et sœurs Jack et Jill ont eu un accident en allant chercher de l&#x27;eau sur la montagne, mais ils n&#x27;ont pas abandonné leur esprit d&#x27;aventure et ont continué à explorer.
+名称：杰克、吉尔（Jack, Jill）
+输出JSON：{&quot;french_summary&quot;: &quot;Les frères et sœurs Jack et Jill ont eu un accident en allant chercher de l&#x27;eau sur la montagne, mais ils n&#x27;ont pas abandonné leur esprit d&#x27;aventure et ont continué à explorer.&quot;, &quot;num_names&quot;: 2}
+</code></pre><h3 id="策略-2：在匆忙下结论之前指示模型制定出自己的解决方案">策略 2：在匆忙下结论之前指示模型制定出自己的解决方案</h3><p>Q:</p><pre><code>判断学生的解决方案是否正确。
+
+问题：
+我正在建造一个太阳能发电站，需要帮助计算财务。
+
+- 土地成本为每平方英尺100美元。
+- 我可以以每平方英尺250美元的价格购买太阳能电池板。
+- 我谈判了一份维护合同，每年的费用为固定的10万美元，以及每平方英尺额外的10美元。
+作为平方英尺数量的函数，第一年运营的总成本是多少。
+
+学生的解决方案：
+设x为以平方英尺为单位的发电站面积。
+成本：
+
+1、土地成本：100x
+2、太阳能电池板成本：250x
+3、维护成本：100,000 + 100x
+总成本：100x + 250x + 100,000 + 100x = 450x + 100,000
+</code></pre><p>A:</p><pre><code>学生的解决方案是正确的。
+</code></pre><p>请注意，该学生的解决方案实际上是不正确的</p><p>我们可以通过指示模型首先计算出自己的解决方案来解决这个问题。</p><p>Q:</p><pre><code>请执行以下操作： 
+- 首先，找出您自己的问题解决方案。 
+- 然后将您的解决方案与学生的解决方案进行比较并评估学生的解决方案是否正确。在你自己完成问题之前，不要判断学生的解决方案是否正确。使用以下格式： 
+
+问题：```问题在这里``` 
+学生的解决方案： ```学生的解决方案在这里 ``` 
+实际解决方案： ```计算解决方案的步骤和您的解决方案 ``` 
+是学生的解决方案与实际解决方案相同刚刚计算：```是或否```
+学生成绩：```正确或不正确```
+
+问题：```
+我正在建造一个太阳能发电站，需要帮助计算财务。
+
+- 土地成本为每平方英尺100美元。
+- 我可以以每平方英尺250美元的价格购买太阳能电池板。
+- 我谈判了一份维护合同，每年的费用为固定的10万美元，以及每平方英尺额外的10美元。
+作为平方英尺数量的函数，第一年运营的总成本是多少。 ``` 
+学生的解决方案：```设x为以平方英尺为单位的发电站面积。
+成本：
+
+1、土地成本：100x
+2、太阳能电池板成本：250x
+3、维护成本：100,000 + 100x
+总成本：100x + 250x + 100,000 + 100x = 450x + 100,000```
+
+实际解决方案：
+</code></pre><p>A:
+（这个问题GPT3.5推理会出错，GPT4回答正确）</p><pre><code>成本：
+
+1、土地成本：100x
+2、太阳能电池板成本：250x
+3、维护成本：100,000 + 10x
+总成本：100x + 250x + 100,000 + 10x = 360x + 100,000```
+是学生的解决方案与实际解决方案相同刚刚计算：```否```
+学生成绩：```不正确```
+</code></pre><h2 id="模型限制：幻觉">模型限制：幻觉</h2><p>如果模型在训练过程中接触到大量知识，它并没有完美地记住它所看到的信息，因此它不能很好地了解它的知识边界。这意味着它可能会尝试回答有关晦涩主题的问题，并且可以编造一些听起来似是而非的事情。我们称这些捏造的想法为幻觉</p><p>Q:</p><pre><code>告诉我有关 Boy 的 AeroGlide 超薄智能牙刷的信息
+</code></pre><p>模型将来自一家真实牙刷公司的虚构产品名称的描述混为一谈</p><p>A:</p><pre><code>当然，我很乐意告诉你有关 Boy AeroGlide 超薄智能牙刷的信息。
+
+Boy AeroGlide 是一款高品质的智能牙刷，具有许多令人印象深刻的特点。以下是一些你可能会感兴趣的信息：
+
+- 超薄设计：Boy AeroGlide 牙刷的厚度只有 6.5 毫米，比其他牙刷要薄得多。这使得牙刷更加易于携带和使用，而且能够更好地到达牙齿后面的难以清洁的区域。
+
+- 智能振动：这款牙刷配备了高效的振动功能，可以在每分钟 31,000 次的频率下震动。这有助于有效地去除牙齿表面的污垢和细菌，并促进口腔健康。
+
+- 长续航时间：Boy AeroGlide 牙刷可通过 USB 充电器进行充电，一次充电可以使用 30 天。这使得它成为旅行时的理想选择，而且更加环保。
+
+- 优质材料：牙刷采用了高品质的材料，包括食品级硅胶和 ABS 塑料。这些材料不仅安全无害，而且能够耐用，长时间使用也不易变形。
+
+总的来说，Boy AeroGlide 超薄智能牙刷是一款非常出色的牙刷，具有许多令人印象深刻的特点。如果你正在寻找高品质的牙刷，它绝对值得一试。
+</code></pre></div><div id="disqus_thread"></div><footer class="BlogPostLayout_footer__3ofxa"><h3 class="BlogPostLayout_title__2L_2_"><a class=" " href="/">OverRainbow</a></h3><div class="
+      Bio_Bio__1ks_2
+      BlogPostLayout_bio__diNn9
+    "><img src="https://www.gravatar.com/avatar/45ec3437106463d8ff90b66c9a047806.jpg?s=56&amp;d=identicon" alt="Me"/><p>Personal blog by <a href="https://twitter.com/mzvast/">mzvast</a>.<br/>If Nothing Changes, Nothing Is Going to Change</p></div><section class="BlogPostLayout_links__-LX2X"><div style="margin-bottom:14px"><a class=" " href="/posts/2023-04-28-2344-ChatGPT-lesson3-iterative">← <!-- -->面向开发人员的 ChatGPT 提示工程 lesson3 iterative</a></div><div style="margin-bottom:14px"><a class="BlogPostLayout_next__KrMHx " href="/posts/2022-12-28-0006-Add-CodePen-support">Add MDX Embed support<!-- --> →</a></div></section></footer></article></main></div></div><script>!function(o){function e(e){for(var c,f,d=e[0],a=e[1],t=e[2],r=0,n=[];r<d.length;r++)f=d[r],l[f]&&n.push(l[f][0]),l[f]=0;for(c in a)Object.prototype.hasOwnProperty.call(a,c)&&(o[c]=a[c]);for(p&&p(e);n.length;)n.shift()();return u.push.apply(u,t||[]),b()}function b(){for(var e,c=0;c<u.length;c++){for(var f=u[c],d=!0,a=1;a<f.length;a++){var t=f[a];0!==l[t]&&(d=!1)}d&&(u.splice(c--,1),e=s(s.s=f[0]))}return e}var f={},i={2:0},l={2:0},u=[];function s(e){if(f[e])return f[e].exports;var c=f[e]={i:e,l:!1,exports:{}};return o[e].call(c.exports,c,c.exports,s),c.l=!0,c.exports}s.e=function(u){var e=[];i[u]?e.push(i[u]):0!==i[u]&&{5:1,6:1,7:1}[u]&&e.push(i[u]=new Promise(function(e,d){for(var c="static/css/"+({}[u]||u)+"."+{0:"31d6cfe0",4:"31d6cfe0",5:"17727e1f",6:"da39761a",7:"15f7c63d",8:"31d6cfe0",9:"31d6cfe0",10:"31d6cfe0",11:"31d6cfe0",12:"31d6cfe0",13:"31d6cfe0",14:"31d6cfe0",15:"31d6cfe0",16:"31d6cfe0",17:"31d6cfe0",18:"31d6cfe0",19:"31d6cfe0",20:"31d6cfe0",21:"31d6cfe0",22:"31d6cfe0",23:"31d6cfe0",24:"31d6cfe0",25:"31d6cfe0",26:"31d6cfe0",27:"31d6cfe0",28:"31d6cfe0",29:"31d6cfe0",30:"31d6cfe0",31:"31d6cfe0",32:"31d6cfe0",33:"31d6cfe0",34:"31d6cfe0",35:"31d6cfe0",36:"31d6cfe0",37:"31d6cfe0",38:"31d6cfe0",39:"31d6cfe0",40:"31d6cfe0",41:"31d6cfe0",42:"31d6cfe0",43:"31d6cfe0",44:"31d6cfe0",45:"31d6cfe0",46:"31d6cfe0",47:"31d6cfe0",48:"31d6cfe0",49:"31d6cfe0",50:"31d6cfe0",51:"31d6cfe0",52:"31d6cfe0",53:"31d6cfe0",54:"31d6cfe0",55:"31d6cfe0",56:"31d6cfe0",57:"31d6cfe0",58:"31d6cfe0",59:"31d6cfe0",60:"31d6cfe0",61:"31d6cfe0",62:"31d6cfe0",63:"31d6cfe0",64:"31d6cfe0",65:"31d6cfe0",66:"31d6cfe0",67:"31d6cfe0",68:"31d6cfe0",69:"31d6cfe0",70:"31d6cfe0",71:"31d6cfe0",72:"31d6cfe0",73:"31d6cfe0",74:"31d6cfe0",75:"31d6cfe0",76:"31d6cfe0",77:"31d6cfe0",78:"31d6cfe0",79:"31d6cfe0",80:"31d6cfe0",81:"31d6cfe0",82:"31d6cfe0",83:"31d6cfe0",84:"31d6cfe0",85:"31d6cfe0",86:"31d6cfe0",87:"31d6cfe0",88:"31d6cfe0",89:"31d6cfe0",90:"31d6cfe0",91:"31d6cfe0",92:"31d6cfe0",93:"31d6cfe0",94:"31d6cfe0",95:"31d6cfe0",96:"31d6cfe0",97:"31d6cfe0",98:"31d6cfe0",99:"31d6cfe0",100:"31d6cfe0",101:"31d6cfe0",102:"31d6cfe0",103:"31d6cfe0",104:"31d6cfe0",105:"31d6cfe0",106:"31d6cfe0",107:"31d6cfe0",108:"31d6cfe0",109:"31d6cfe0",110:"31d6cfe0",111:"31d6cfe0",112:"31d6cfe0",113:"31d6cfe0",114:"31d6cfe0",115:"31d6cfe0",116:"31d6cfe0",117:"31d6cfe0",118:"31d6cfe0",119:"31d6cfe0",120:"31d6cfe0",121:"31d6cfe0",122:"31d6cfe0",123:"31d6cfe0",124:"31d6cfe0",125:"31d6cfe0",126:"31d6cfe0",127:"31d6cfe0",128:"31d6cfe0",129:"31d6cfe0",130:"31d6cfe0",131:"31d6cfe0",132:"31d6cfe0",133:"31d6cfe0",134:"31d6cfe0",135:"31d6cfe0",136:"31d6cfe0",137:"31d6cfe0",138:"31d6cfe0",139:"31d6cfe0",140:"31d6cfe0",141:"31d6cfe0",142:"31d6cfe0",143:"31d6cfe0",144:"31d6cfe0",145:"31d6cfe0",146:"31d6cfe0",147:"31d6cfe0",148:"31d6cfe0",149:"31d6cfe0",150:"31d6cfe0",151:"31d6cfe0",152:"31d6cfe0",153:"31d6cfe0",154:"31d6cfe0",155:"31d6cfe0",156:"31d6cfe0",157:"31d6cfe0",158:"31d6cfe0",159:"31d6cfe0",160:"31d6cfe0"}[u]+".chunk.css",a=s.p+c,f=document.getElementsByTagName("link"),t=0;t<f.length;t++){var r=(o=f[t]).getAttribute("data-href")||o.getAttribute("href");if("stylesheet"===o.rel&&(r===c||r===a))return e()}var n=document.getElementsByTagName("style");for(t=0;t<n.length;t++){var o;if((r=(o=n[t]).getAttribute("data-href"))===c||r===a)return e()}var b=document.createElement("link");b.rel="stylesheet",b.type="text/css",b.onload=e,b.onerror=function(e){var c=e&&e.target&&e.target.src||a,f=new Error("Loading CSS chunk "+u+" failed.\n("+c+")");f.request=c,delete i[u],b.parentNode.removeChild(b),d(f)},b.href=a,document.getElementsByTagName("head")[0].appendChild(b)}).then(function(){i[u]=0}));var f=l[u];if(0!==f)if(f)e.push(f[2]);else{var c=new Promise(function(e,c){f=l[u]=[e,c]});e.push(f[2]=c);var d,t=document.createElement("script");t.charset="utf-8",t.timeout=120,s.nc&&t.setAttribute("nonce",s.nc),t.src=s.p+"static/js/"+({}[u]||u)+"."+{0:"cb3a5fee",4:"aa7074e9",5:"f62d157c",6:"719d14d5",7:"70659818",8:"be5ae466",9:"a78058cf",10:"8b73e711",11:"392d4d0a",12:"b7cef298",13:"d42883c0",14:"b67d13b4",15:"d4abdf66",16:"3b36e4d8",17:"5b5cff48",18:"bd2a241f",19:"360e1e60",20:"fe9da954",21:"63c580f5",22:"4437c249",23:"94e5a359",24:"24cab92c",25:"277b0400",26:"0905aa7f",27:"4b759be8",28:"4874c099",29:"9744392d",30:"c479fe8d",31:"d9497a19",32:"811cd975",33:"ffecffaf",34:"f0285e8e",35:"2eccc7c3",36:"6f9232f9",37:"2fc1934d",38:"3bf04efa",39:"a2b6802a",40:"78c92029",41:"ea7ec548",42:"fa42bb11",43:"cd211aa6",44:"fa6d4bcf",45:"5ac974e7",46:"eb7843ec",47:"79c37f1b",48:"dffc7527",49:"1f9584d5",50:"04ceefe4",51:"f47f1abe",52:"a08776b2",53:"62698da9",54:"aae71f13",55:"7799de16",56:"54ae0b5e",57:"ed6ab3e0",58:"1355ecb6",59:"ed5fbfb0",60:"b2568998",61:"2cf77b4f",62:"d4aca9f8",63:"7b80b163",64:"414676b5",65:"0c76c1e4",66:"40bf13fa",67:"d3279765",68:"32da3978",69:"c43c8ac8",70:"c9d368ac",71:"14e20d16",72:"13feabf4",73:"96ae7d35",74:"ba5f58b4",75:"fd57d27b",76:"f3fa621d",77:"c9f9c727",78:"24eba8f5",79:"274fbd60",80:"a9414f36",81:"34f781c4",82:"c6b9593f",83:"980ee241",84:"c09f9722",85:"c4fc18fd",86:"26689659",87:"7cdd91f0",88:"13bbec82",89:"e9632be8",90:"f294df0d",91:"29a30422",92:"2e980f63",93:"56f607dd",94:"d63be4b2",95:"f270157d",96:"05b2c50b",97:"ec416164",98:"0950b477",99:"5bcd77b6",100:"6c538d8f",101:"f5b4b71b",102:"d8853f3b",103:"2ef0defe",104:"01c660f3",105:"eacdb86c",106:"21c4cfc3",107:"7291aa63",108:"792088d7",109:"bd53dc4d",110:"37a35ce4",111:"b47d0a67",112:"9127af19",113:"898a6856",114:"5d880b75",115:"aaa2aa5b",116:"d7a95217",117:"11874cb8",118:"ca344dcd",119:"14d54162",120:"95b37e24",121:"97d1e1fe",122:"d8639956",123:"630159c2",124:"4cc945af",125:"3d8a412c",126:"144a8040",127:"a5b3f4d8",128:"88ec48d2",129:"fbf27b42",130:"8840a821",131:"571a0090",132:"019af251",133:"4a15395e",134:"9e697d2b",135:"7dd8aa2c",136:"2cf9c4dc",137:"5ad53730",138:"580e7c75",139:"58cdae70",140:"741a8bed",141:"c3ae67e6",142:"363cde9a",143:"93d61630",144:"7b9a62c4",145:"2843aebf",146:"ce82117a",147:"6452c456",148:"6fe6a320",149:"6e4b3640",150:"c5cef421",151:"9fca29ee",152:"c4020a87",153:"f80f5c57",154:"56904b76",155:"24346b5b",156:"c2112ce9",157:"d60965f7",158:"5ea8a909",159:"c31f339e",160:"fbe9b91a"}[u]+".chunk.js",d=function(e){t.onerror=t.onload=null,clearTimeout(r);var c=l[u];if(0!==c){if(c){var f=e&&("load"===e.type?"missing":e.type),d=e&&e.target&&e.target.src,a=new Error("Loading chunk "+u+" failed.\n("+f+": "+d+")");a.type=f,a.request=d,c[1](a)}l[u]=void 0}};var r=setTimeout(function(){d({type:"timeout",target:t})},12e4);t.onerror=t.onload=d,document.head.appendChild(t)}return Promise.all(e)},s.m=o,s.c=f,s.d=function(e,c,f){s.o(e,c)||Object.defineProperty(e,c,{enumerable:!0,get:f})},s.r=function(e){"undefined"!=typeof Symbol&&Symbol.toStringTag&&Object.defineProperty(e,Symbol.toStringTag,{value:"Module"}),Object.defineProperty(e,"__esModule",{value:!0})},s.t=function(c,e){if(1&e&&(c=s(c)),8&e)return c;if(4&e&&"object"==typeof c&&c&&c.__esModule)return c;var f=Object.create(null);if(s.r(f),Object.defineProperty(f,"default",{enumerable:!0,value:c}),2&e&&"string"!=typeof c)for(var d in c)s.d(f,d,function(e){return c[e]}.bind(null,d));return f},s.n=function(e){var c=e&&e.__esModule?function(){return e.default}:function(){return e};return s.d(c,"a",c),c},s.o=function(e,c){return Object.prototype.hasOwnProperty.call(e,c)},s.p="/",s.oe=function(e){throw console.error(e),e};var c=window.webpackJsonp=window.webpackJsonp||[],d=c.push.bind(c);c.push=e,c=c.slice();for(var a=0;a<c.length;a++)e(c[a]);var p=d;b()}([])</script><script src="/static/js/3.f24c4a9e.chunk.js"></script><script src="/static/js/main.ac5018f4.chunk.js"></script></body></html>

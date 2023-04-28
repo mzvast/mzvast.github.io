@@ -1,0 +1,107 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><link rel="shortcut icon" href="/logo.jpeg"><script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5541093187129817" crossorigin="anonymous"></script><meta name="google-site-verification" content="X6zApyaV_oHUlJwAuIA8IN1y8NsqQxxdQR9BuL8vhZk"/><meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no"><meta name="theme-color" content="#000000"><link rel="manifest" href="/manifest.json"><link rel="canonical" href="/posts/2023-04-29-0030-ChatGPT-lesson7-expanding" />
+
+      <title data-rh="true">面向开发人员的 ChatGPT 提示工程 lesson7 expanding</title>
+      <meta data-rh="true" name="title" content="面向开发人员的 ChatGPT 提示工程 lesson7 expanding"/><meta data-rh="true" name="description" content="面向开发人员的 ChatGPT 提示工程 lesson7 expanding"/><meta data-rh="true" name="keywords" content="chatgpt,openai,PromptEngineering"/>
+      
+    <script>window.__NAVI_STATE__={"__navi__":{"requestDataWithoutState":{}}};</script><link href="/static/css/main.8967581b.chunk.css" rel="stylesheet"></head><body class="light"><noscript>You need to enable JavaScript to run this app.</noscript><div id="root"><div class="BlogLayout_container__1fiRb"><div class="
+        LoadingIndicator_LoadingIndicator__3KSl0
+        
+        undefined
+      "></div><header><h3 class="BlogLayout_title__3HyDU"><a class=" " style="box-shadow:none" href="/">OverRainbow</a></h3></header><main><div class="sc-bdfBQB dmuEyV sc-iqHYmW cLtQHX"><input value=""/></div><article><header class="BlogPostLayout_header__1Ny4T"><h1 class="BlogPostLayout_title__2L_2_"><a class=" " style="box-shadow:none" href="/posts/2023-04-29-0030-ChatGPT-lesson7-expanding">面向开发人员的 ChatGPT 提示工程 lesson7 expanding</a></h1><small><time dateTime="Sat, 29 Apr 2023 00:00:00 GMT">April 29, 2023</time> <!-- -->•<!-- --> <ul class="ArticleMeta_tags__1IJ9w"><li><a class=" " href="/tags/chatgpt">chatgpt</a></li><li><a class=" " href="/tags/openai">openai</a></li><li><a class=" " href="/tags/PromptEngineering">PromptEngineering</a></li></ul> <!-- -->•<!-- --> <span>☕️<!-- --> <!-- -->2<!-- --> min read</span></small></header><blockquote class="ArticleToc_blockquote__2xzi1"><div><ul><li data-key="你可以从本文了解到"><a class=" " href="/posts/2023-04-29-0030-ChatGPT-lesson7-expanding/#你可以从本文了解到">你可以从本文了解到</a></li><ul><li data-key="自定义自动回复客户电子邮件"><a class=" " href="/posts/2023-04-29-0030-ChatGPT-lesson7-expanding/#自定义自动回复客户电子邮件">自定义自动回复客户电子邮件</a></li><li data-key="提醒模型使用客户电子邮件中的详细信息"><a class=" " href="/posts/2023-04-29-0030-ChatGPT-lesson7-expanding/#提醒模型使用客户电子邮件中的详细信息">提醒模型使用客户电子邮件中的详细信息</a></li></ul></ul></div></blockquote><div class="BlogPostLayout_content__1mzTO"><h2 id="你可以从本文了解到">你可以从本文了解到</h2><p>生成针对每位客户的评论量身定制的客户服务电子邮件</p><h3 id="自定义自动回复客户电子邮件">自定义自动回复客户电子邮件</h3><pre><code class="language-python" data-language="python" data-highlighted-line-numbers=""><span class="token comment"># given the sentiment from the lesson on "inferring",</span>
+<span class="token comment"># and the original customer message, customize the email</span>
+sentiment <span class="token operator">=</span> <span class="token string">"negative"</span>
+
+<span class="token comment"># review for a blender</span>
+review <span class="token operator">=</span> <span class="token string-interpolation"><span class="token string">f"""
+So, they still had the 17 piece system on seasonal \
+sale for around $49 in the month of November, about \
+half off, but for some reason (call it price gouging) \
+around the second week of December the prices all went \
+up to about anywhere from between $70-$89 for the same \
+system. And the 11 piece system went up around $10 or \
+so in price also from the earlier sale price of $29. \
+So it looks okay, but if you look at the base, the part \
+where the blade locks into place doesn’t look as good \
+as in previous editions from a few years ago, but I \
+plan to be very gentle with it (example, I crush \
+very hard items like beans, ice, rice, etc. in the \ 
+blender first then pulverize them in the serving size \
+I want in the blender then switch to the whipping \
+blade for a finer flour, and use the cross cutting blade \
+first when making smoothies, then use the flat blade \
+if I need them finer/less pulpy). Special tip when making \
+smoothies, finely cut and freeze the fruits and \
+vegetables (if using spinach-lightly stew soften the \ 
+spinach then freeze until ready for use-and if making \
+sorbet, use a small to medium sized food processor) \ 
+that you plan to use that way you can avoid adding so \
+much ice if at all-when making your smoothie. \
+After about a year, the motor was making a funny noise. \
+I called customer service but the warranty expired \
+already, so I had to buy another one. FYI: The overall \
+quality has gone done in these types of products, so \
+they are kind of counting on brand recognition and \
+consumer loyalty to maintain sales. Got it in about \
+two days.
+"""</span></span>
+
+prompt <span class="token operator">=</span> <span class="token string-interpolation"><span class="token string">f"""
+你是一个客户服务的AI助理。
+你的任务是给一个有价值的客户发送电子邮件回复。
+给出以```为界的客户电子邮件、 
+生成一个回复，感谢客户的评论。
+如果意见是积极的或中立的，就感谢他们的 
+他们的评论。
+如果评价是负面的，则表示歉意并建议 
+他们可以接触到客户服务。
+确保使用评论中的具体细节。
+用简明和专业的语气来写。
+在电子邮件中署名为 "AI客户代理"。
+Customer review: ```</span><span class="token interpolation"><span class="token punctuation">{</span>review<span class="token punctuation">}</span></span><span class="token string">```
+Review sentiment: </span><span class="token interpolation"><span class="token punctuation">{</span>sentiment<span class="token punctuation">}</span></span><span class="token string">
+"""</span></span>
+response <span class="token operator">=</span> get_completion<span class="token punctuation">(</span>prompt<span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span>response<span class="token punctuation">)</span>
+
+<span class="token comment"># 尊敬的客户，</span>
+
+<span class="token comment"># 我们非常感谢您对我们产品的评论。我们很抱歉您对我们的产品不满意。我们一直致力于提供高质量的产品和服务，但我们似乎没有达到您的期望。</span>
+
+<span class="token comment"># 我们非常重视您的反馈，我们将会把您的意见反馈给我们的团队，以便改进我们的产品和服务。如果您需要任何帮助或有任何问题，请随时联系我们的客户服务团队，他们将竭诚为您服务。</span>
+
+<span class="token comment"># 再次感谢您的评论，我们期待着为您提供更好的服务。</span>
+
+<span class="token comment"># 祝您一切顺利！</span>
+
+<span class="token comment"># AI客户代理</span>
+</code></pre><h3 id="提醒模型使用客户电子邮件中的详细信息">提醒模型使用客户电子邮件中的详细信息</h3><pre><code class="language-python" data-language="python" data-highlighted-line-numbers="">prompt <span class="token operator">=</span> <span class="token string-interpolation"><span class="token string">f"""
+你是一个客户服务的AI助理。
+你的任务是给一个有价值的客户发送电子邮件回复。
+给出以```为界的客户电子邮件、 
+生成一个回复，感谢客户的评论。
+如果意见是积极的或中立的，就感谢他们的 
+他们的评论。
+如果评价是负面的，则表示歉意并建议 
+他们可以接触到客户服务。
+确保使用评论中的具体细节。
+用简明和专业的语气来写。
+在电子邮件中署名为 "AI客户代理"。
+Customer review: ```</span><span class="token interpolation"><span class="token punctuation">{</span>review<span class="token punctuation">}</span></span><span class="token string">```
+Review sentiment: </span><span class="token interpolation"><span class="token punctuation">{</span>sentiment<span class="token punctuation">}</span></span><span class="token string">
+"""</span></span>
+response <span class="token operator">=</span> get_completion<span class="token punctuation">(</span>prompt<span class="token punctuation">,</span> temperature<span class="token operator">=</span><span class="token number">0.7</span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span>response<span class="token punctuation">)</span>
+
+<span class="token comment"># 尊敬的客户，</span>
+
+<span class="token comment"># 我们很抱歉听到您的不满意。我们非常感谢您分享您的反馈和具体细节。我们一直致力于提供高品质的产品和服务，但似乎我们未能完全满足您的期望。我们将向我们的团队传达您的反馈，以确保我们的产品和服务得到改进。</span>
+
+<span class="token comment"># 如果您需要进一步的帮助，请联系我们的客户服务团队。他们将非常乐意为您提供帮助。再次感谢您的反馈，我们期待为您提供更好的服务。</span>
+
+<span class="token comment"># 最好的问候，</span>
+
+<span class="token comment"># AI客户代理</span>
+</code></pre></div><div id="disqus_thread"></div><footer class="BlogPostLayout_footer__3ofxa"><h3 class="BlogPostLayout_title__2L_2_"><a class=" " href="/">OverRainbow</a></h3><div class="
+      Bio_Bio__1ks_2
+      BlogPostLayout_bio__diNn9
+    "><img src="https://www.gravatar.com/avatar/45ec3437106463d8ff90b66c9a047806.jpg?s=56&amp;d=identicon" alt="Me"/><p>Personal blog by <a href="https://twitter.com/mzvast/">mzvast</a>.<br/>If Nothing Changes, Nothing Is Going to Change</p></div><section class="BlogPostLayout_links__-LX2X"><div style="margin-bottom:14px"><a class=" " href="/posts/2023-04-29-0033-ChatGPT-lesson8-chatbot">← <!-- -->面向开发人员的 ChatGPT 提示工程 lesson8 chatbot</a></div><div style="margin-bottom:14px"><a class="BlogPostLayout_next__KrMHx " href="/posts/2023-04-29-0030-ChatGPT-lesson6-transforming">面向开发人员的 ChatGPT 提示工程 lesson6 transforming<!-- --> →</a></div></section></footer></article></main></div></div><script>!function(o){function e(e){for(var c,f,d=e[0],a=e[1],t=e[2],r=0,n=[];r<d.length;r++)f=d[r],l[f]&&n.push(l[f][0]),l[f]=0;for(c in a)Object.prototype.hasOwnProperty.call(a,c)&&(o[c]=a[c]);for(p&&p(e);n.length;)n.shift()();return u.push.apply(u,t||[]),b()}function b(){for(var e,c=0;c<u.length;c++){for(var f=u[c],d=!0,a=1;a<f.length;a++){var t=f[a];0!==l[t]&&(d=!1)}d&&(u.splice(c--,1),e=s(s.s=f[0]))}return e}var f={},i={2:0},l={2:0},u=[];function s(e){if(f[e])return f[e].exports;var c=f[e]={i:e,l:!1,exports:{}};return o[e].call(c.exports,c,c.exports,s),c.l=!0,c.exports}s.e=function(u){var e=[];i[u]?e.push(i[u]):0!==i[u]&&{5:1,6:1,7:1}[u]&&e.push(i[u]=new Promise(function(e,d){for(var c="static/css/"+({}[u]||u)+"."+{0:"31d6cfe0",4:"31d6cfe0",5:"17727e1f",6:"da39761a",7:"15f7c63d",8:"31d6cfe0",9:"31d6cfe0",10:"31d6cfe0",11:"31d6cfe0",12:"31d6cfe0",13:"31d6cfe0",14:"31d6cfe0",15:"31d6cfe0",16:"31d6cfe0",17:"31d6cfe0",18:"31d6cfe0",19:"31d6cfe0",20:"31d6cfe0",21:"31d6cfe0",22:"31d6cfe0",23:"31d6cfe0",24:"31d6cfe0",25:"31d6cfe0",26:"31d6cfe0",27:"31d6cfe0",28:"31d6cfe0",29:"31d6cfe0",30:"31d6cfe0",31:"31d6cfe0",32:"31d6cfe0",33:"31d6cfe0",34:"31d6cfe0",35:"31d6cfe0",36:"31d6cfe0",37:"31d6cfe0",38:"31d6cfe0",39:"31d6cfe0",40:"31d6cfe0",41:"31d6cfe0",42:"31d6cfe0",43:"31d6cfe0",44:"31d6cfe0",45:"31d6cfe0",46:"31d6cfe0",47:"31d6cfe0",48:"31d6cfe0",49:"31d6cfe0",50:"31d6cfe0",51:"31d6cfe0",52:"31d6cfe0",53:"31d6cfe0",54:"31d6cfe0",55:"31d6cfe0",56:"31d6cfe0",57:"31d6cfe0",58:"31d6cfe0",59:"31d6cfe0",60:"31d6cfe0",61:"31d6cfe0",62:"31d6cfe0",63:"31d6cfe0",64:"31d6cfe0",65:"31d6cfe0",66:"31d6cfe0",67:"31d6cfe0",68:"31d6cfe0",69:"31d6cfe0",70:"31d6cfe0",71:"31d6cfe0",72:"31d6cfe0",73:"31d6cfe0",74:"31d6cfe0",75:"31d6cfe0",76:"31d6cfe0",77:"31d6cfe0",78:"31d6cfe0",79:"31d6cfe0",80:"31d6cfe0",81:"31d6cfe0",82:"31d6cfe0",83:"31d6cfe0",84:"31d6cfe0",85:"31d6cfe0",86:"31d6cfe0",87:"31d6cfe0",88:"31d6cfe0",89:"31d6cfe0",90:"31d6cfe0",91:"31d6cfe0",92:"31d6cfe0",93:"31d6cfe0",94:"31d6cfe0",95:"31d6cfe0",96:"31d6cfe0",97:"31d6cfe0",98:"31d6cfe0",99:"31d6cfe0",100:"31d6cfe0",101:"31d6cfe0",102:"31d6cfe0",103:"31d6cfe0",104:"31d6cfe0",105:"31d6cfe0",106:"31d6cfe0",107:"31d6cfe0",108:"31d6cfe0",109:"31d6cfe0",110:"31d6cfe0",111:"31d6cfe0",112:"31d6cfe0",113:"31d6cfe0",114:"31d6cfe0",115:"31d6cfe0",116:"31d6cfe0",117:"31d6cfe0",118:"31d6cfe0",119:"31d6cfe0",120:"31d6cfe0",121:"31d6cfe0",122:"31d6cfe0",123:"31d6cfe0",124:"31d6cfe0",125:"31d6cfe0",126:"31d6cfe0",127:"31d6cfe0",128:"31d6cfe0",129:"31d6cfe0",130:"31d6cfe0",131:"31d6cfe0",132:"31d6cfe0",133:"31d6cfe0",134:"31d6cfe0",135:"31d6cfe0",136:"31d6cfe0",137:"31d6cfe0",138:"31d6cfe0",139:"31d6cfe0",140:"31d6cfe0",141:"31d6cfe0",142:"31d6cfe0",143:"31d6cfe0",144:"31d6cfe0",145:"31d6cfe0",146:"31d6cfe0",147:"31d6cfe0",148:"31d6cfe0",149:"31d6cfe0",150:"31d6cfe0",151:"31d6cfe0",152:"31d6cfe0",153:"31d6cfe0",154:"31d6cfe0",155:"31d6cfe0",156:"31d6cfe0",157:"31d6cfe0",158:"31d6cfe0",159:"31d6cfe0",160:"31d6cfe0"}[u]+".chunk.css",a=s.p+c,f=document.getElementsByTagName("link"),t=0;t<f.length;t++){var r=(o=f[t]).getAttribute("data-href")||o.getAttribute("href");if("stylesheet"===o.rel&&(r===c||r===a))return e()}var n=document.getElementsByTagName("style");for(t=0;t<n.length;t++){var o;if((r=(o=n[t]).getAttribute("data-href"))===c||r===a)return e()}var b=document.createElement("link");b.rel="stylesheet",b.type="text/css",b.onload=e,b.onerror=function(e){var c=e&&e.target&&e.target.src||a,f=new Error("Loading CSS chunk "+u+" failed.\n("+c+")");f.request=c,delete i[u],b.parentNode.removeChild(b),d(f)},b.href=a,document.getElementsByTagName("head")[0].appendChild(b)}).then(function(){i[u]=0}));var f=l[u];if(0!==f)if(f)e.push(f[2]);else{var c=new Promise(function(e,c){f=l[u]=[e,c]});e.push(f[2]=c);var d,t=document.createElement("script");t.charset="utf-8",t.timeout=120,s.nc&&t.setAttribute("nonce",s.nc),t.src=s.p+"static/js/"+({}[u]||u)+"."+{0:"cb3a5fee",4:"aa7074e9",5:"f62d157c",6:"719d14d5",7:"70659818",8:"be5ae466",9:"a78058cf",10:"8b73e711",11:"392d4d0a",12:"b7cef298",13:"d42883c0",14:"b67d13b4",15:"d4abdf66",16:"3b36e4d8",17:"5b5cff48",18:"bd2a241f",19:"360e1e60",20:"fe9da954",21:"63c580f5",22:"4437c249",23:"94e5a359",24:"24cab92c",25:"277b0400",26:"0905aa7f",27:"4b759be8",28:"4874c099",29:"9744392d",30:"c479fe8d",31:"d9497a19",32:"811cd975",33:"ffecffaf",34:"f0285e8e",35:"2eccc7c3",36:"6f9232f9",37:"2fc1934d",38:"3bf04efa",39:"a2b6802a",40:"78c92029",41:"ea7ec548",42:"fa42bb11",43:"cd211aa6",44:"fa6d4bcf",45:"5ac974e7",46:"eb7843ec",47:"79c37f1b",48:"dffc7527",49:"1f9584d5",50:"04ceefe4",51:"f47f1abe",52:"a08776b2",53:"62698da9",54:"aae71f13",55:"7799de16",56:"54ae0b5e",57:"ed6ab3e0",58:"1355ecb6",59:"ed5fbfb0",60:"b2568998",61:"2cf77b4f",62:"d4aca9f8",63:"7b80b163",64:"414676b5",65:"0c76c1e4",66:"40bf13fa",67:"d3279765",68:"32da3978",69:"c43c8ac8",70:"c9d368ac",71:"14e20d16",72:"13feabf4",73:"96ae7d35",74:"ba5f58b4",75:"fd57d27b",76:"f3fa621d",77:"c9f9c727",78:"24eba8f5",79:"274fbd60",80:"a9414f36",81:"34f781c4",82:"c6b9593f",83:"980ee241",84:"c09f9722",85:"c4fc18fd",86:"26689659",87:"7cdd91f0",88:"13bbec82",89:"e9632be8",90:"f294df0d",91:"29a30422",92:"2e980f63",93:"56f607dd",94:"d63be4b2",95:"f270157d",96:"05b2c50b",97:"ec416164",98:"0950b477",99:"5bcd77b6",100:"6c538d8f",101:"f5b4b71b",102:"d8853f3b",103:"2ef0defe",104:"01c660f3",105:"eacdb86c",106:"21c4cfc3",107:"7291aa63",108:"792088d7",109:"bd53dc4d",110:"37a35ce4",111:"b47d0a67",112:"9127af19",113:"898a6856",114:"5d880b75",115:"aaa2aa5b",116:"d7a95217",117:"11874cb8",118:"ca344dcd",119:"14d54162",120:"95b37e24",121:"97d1e1fe",122:"d8639956",123:"630159c2",124:"4cc945af",125:"3d8a412c",126:"144a8040",127:"a5b3f4d8",128:"88ec48d2",129:"fbf27b42",130:"8840a821",131:"571a0090",132:"019af251",133:"4a15395e",134:"9e697d2b",135:"7dd8aa2c",136:"2cf9c4dc",137:"5ad53730",138:"580e7c75",139:"58cdae70",140:"741a8bed",141:"c3ae67e6",142:"363cde9a",143:"93d61630",144:"7b9a62c4",145:"2843aebf",146:"ce82117a",147:"6452c456",148:"6fe6a320",149:"6e4b3640",150:"c5cef421",151:"9fca29ee",152:"c4020a87",153:"f80f5c57",154:"56904b76",155:"24346b5b",156:"c2112ce9",157:"d60965f7",158:"5ea8a909",159:"c31f339e",160:"fbe9b91a"}[u]+".chunk.js",d=function(e){t.onerror=t.onload=null,clearTimeout(r);var c=l[u];if(0!==c){if(c){var f=e&&("load"===e.type?"missing":e.type),d=e&&e.target&&e.target.src,a=new Error("Loading chunk "+u+" failed.\n("+f+": "+d+")");a.type=f,a.request=d,c[1](a)}l[u]=void 0}};var r=setTimeout(function(){d({type:"timeout",target:t})},12e4);t.onerror=t.onload=d,document.head.appendChild(t)}return Promise.all(e)},s.m=o,s.c=f,s.d=function(e,c,f){s.o(e,c)||Object.defineProperty(e,c,{enumerable:!0,get:f})},s.r=function(e){"undefined"!=typeof Symbol&&Symbol.toStringTag&&Object.defineProperty(e,Symbol.toStringTag,{value:"Module"}),Object.defineProperty(e,"__esModule",{value:!0})},s.t=function(c,e){if(1&e&&(c=s(c)),8&e)return c;if(4&e&&"object"==typeof c&&c&&c.__esModule)return c;var f=Object.create(null);if(s.r(f),Object.defineProperty(f,"default",{enumerable:!0,value:c}),2&e&&"string"!=typeof c)for(var d in c)s.d(f,d,function(e){return c[e]}.bind(null,d));return f},s.n=function(e){var c=e&&e.__esModule?function(){return e.default}:function(){return e};return s.d(c,"a",c),c},s.o=function(e,c){return Object.prototype.hasOwnProperty.call(e,c)},s.p="/",s.oe=function(e){throw console.error(e),e};var c=window.webpackJsonp=window.webpackJsonp||[],d=c.push.bind(c);c.push=e,c=c.slice();for(var a=0;a<c.length;a++)e(c[a]);var p=d;b()}([])</script><script src="/static/js/3.f24c4a9e.chunk.js"></script><script src="/static/js/main.ac5018f4.chunk.js"></script></body></html>

@@ -1,2 +1,0 @@
-(window.webpackJsonp=window.webpackJsonp||[]).push([[80],{385:function(n,t,i){"use strict";i.r(t),t.default={title:"omni outliner plugin try try",tags:["omni outliner","plugin"],spoiler:"how to make an omni outliner plugin",getContent:function(){return i.e(143).then(i.bind(null,313))}}}}]);
-//# sourceMappingURL=80.9262856c.chunk.js.map

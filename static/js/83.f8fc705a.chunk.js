@@ -1,2 +1,0 @@
-(window.webpackJsonp=window.webpackJsonp||[]).push([[83],{388:function(e,n,t){"use strict";t.r(n),n.default={title:"Add MDX Embed support",tags:["codepen","mdx"],spoiler:"enable MDX Embed support",getContent:function(){return t.e(146).then(t.bind(null,316))}}}}]);
-//# sourceMappingURL=83.f8fc705a.chunk.js.map

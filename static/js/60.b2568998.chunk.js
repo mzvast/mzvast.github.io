@@ -1,0 +1,2 @@
+(window.webpackJsonp=window.webpackJsonp||[]).push([[60],{373:function(e,t,i){"use strict";i.r(t),t.default={title:"official website project review part1",tags:["react","webpack","review"],spoiler:"Review of our latest project",getContent:function(){return i.e(131).then(i.bind(null,293))}}}}]);
+//# sourceMappingURL=60.b2568998.chunk.js.map
